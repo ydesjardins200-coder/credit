@@ -376,21 +376,47 @@ a:hover { text-decoration: underline; }
 }
 
 .score-card {
-  /* Dark navy matching hero gradient's mid-tone, with emerald border
-     and soft emerald glow. Anchors the card to the rest of the hero's
-     visual language (same grammar as the mini-stats below). */
-  background: linear-gradient(160deg, #11355a 0%, #0f2e4d 100%);
+  /* Dark navy matching hero gradient's mid-tone, with emerald border,
+     soft emerald glow, and subtle 3D via layered insets + top sheen.
+     Anchors the card to the rest of the hero's visual language. */
+  position: relative;
+  background: linear-gradient(160deg, #143a62 0%, #10355a 50%, #0c2a47 100%);
   color: #fff;
   border-radius: 20px;
   box-shadow:
-    0 24px 56px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(46, 204, 113, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 24px 56px rgba(0, 0, 0, 0.45),
+    0 0 60px rgba(46, 204, 113, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
   padding: 1.25rem;
   width: 100%;
   max-width: 400px;
   margin: 0 0 0 auto;
-  border: 1px solid rgba(46, 204, 113, 0.28);
+  border: 1px solid rgba(46, 204, 113, 0.32);
+  overflow: hidden;
+}
+
+/* Specular sheen — a faint light-reflection streak across the top of
+   the card that sells the 'glossy' feel without tipping into plastic. */
+.score-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  border-radius: 20px 20px 0 0;
+  z-index: 0;
+}
+
+/* All direct children of the scorecard sit above the sheen. */
+.score-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .score-card-header {
@@ -603,34 +629,55 @@ a:hover { text-decoration: underline; }
 }
 
 .mini-stat {
+  position: relative;
   padding: 0.75rem 0.65rem 0.7rem;
-  background: linear-gradient(135deg,
-    rgba(46, 204, 113, 0.12) 0%,
-    rgba(255, 255, 255, 0.04) 100%);
-  border: 1px solid rgba(46, 204, 113, 0.25);
+  background: linear-gradient(180deg,
+    rgba(46, 204, 113, 0.18) 0%,
+    rgba(46, 204, 113, 0.06) 60%,
+    rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(46, 204, 113, 0.3);
   border-radius: 10px;
   min-width: 0;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
   /* Stack icon above title above subtitle, centered */
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 0.4rem;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* Specular sheen on mini-stats for the same glossy hint as the scorecard */
+.mini-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  border-radius: 10px 10px 0 0;
 }
 
 .mini-stat:hover {
-  border-color: rgba(46, 204, 113, 0.45);
-  background: linear-gradient(135deg,
-    rgba(46, 204, 113, 0.18) 0%,
-    rgba(255, 255, 255, 0.06) 100%);
+  border-color: rgba(46, 204, 113, 0.55);
+  transform: translateY(-1px);
+  background: linear-gradient(180deg,
+    rgba(46, 204, 113, 0.25) 0%,
+    rgba(46, 204, 113, 0.1) 60%,
+    rgba(255, 255, 255, 0.04) 100%);
 }
 
-/* Icon sits as a centered 'top-hat' above the title. No longer in a
-   flex row with the title — that was causing the title to wrap into
-   ~65% of the card width and producing 3-line titles for 'Zero hidden
-   fees'. Now the title gets the full card width. */
 .mini-stat-head {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -675,6 +722,8 @@ a:hover { text-decoration: underline; }
 
 /* Subtitle: same 2-line reservation so the 3 cards' bottoms align. */
 .mini-stat-sub {
+  position: relative;
+  z-index: 1;
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.65);
   line-height: 1.4;
