@@ -1305,6 +1305,18 @@ a:hover { text-decoration: underline; }
   line-height: 1.45;
 }
 
+/* The text content lives in a single <span> so inline <strong>s inside don't
+   become sibling flex items alongside the ::before bullet. */
+.benefit-list li > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.benefit-list li > span strong {
+  font-weight: 700;
+  color: #fff;
+}
+
 .benefit-list li::before {
   content: '';
   flex-shrink: 0;
