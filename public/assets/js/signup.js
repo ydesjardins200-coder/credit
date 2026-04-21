@@ -102,6 +102,21 @@
     if (session) window.location.replace(t.accountPath);
   })();
 
+  // ----- FAQ mini accordion (in signup intro column) -----
+  // Kept here rather than loading landing.js, because landing.js has unrelated
+  // currency-toggle + header-swap logic that doesn't apply on auth pages.
+  document.querySelectorAll('.faq-mini-question').forEach(function (btn) {
+    btn.setAttribute('aria-expanded', 'false');
+    const answer = btn.nextElementSibling;
+    if (answer) answer.setAttribute('data-open', 'false');
+
+    btn.addEventListener('click', function () {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (answer) answer.setAttribute('data-open', open ? 'false' : 'true');
+    });
+  });
+
   // ----- Submit -----
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
