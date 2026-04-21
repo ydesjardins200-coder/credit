@@ -703,41 +703,6 @@ a:hover { text-decoration: underline; }
   margin-top: var(--space-2);
 }
 
-/* ---------- Press bar ---------- */
-.press-bar {
-  padding: var(--space-5) 0;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.press-bar-label {
-  text-align: center;
-  color: var(--color-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: var(--space-3);
-}
-
-.press-logos {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-5);
-  align-items: center;
-}
-
-.press-placeholder {
-  padding: 0.5rem 1rem;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius);
-  color: var(--color-muted);
-  font-size: 0.85rem;
-  font-style: italic;
-}
-
 /* ---------- Pillars ---------- */
 .pillars-grid {
   display: grid;
@@ -2306,6 +2271,254 @@ body.auth-page .site-footer .container {
 
 .password-toggle[aria-pressed="true"] .icon-eye { display: none; }
 .password-toggle[aria-pressed="true"] .icon-eye-off { display: block; }
+
+/* =======================================================================
+   TRUST & COMPLIANCE (YMYL) SECTION
+   Document-feel block with 3 columns of compliance/security/planned items.
+   Each item is a card with a status pill. External-source links carry an
+   outbound-arrow (.ext) hint.
+   ======================================================================= */
+
+.trust-section {
+  /* Give it more breathing room than a standard .section — this is
+     document-dense content and should feel calm, not marketing. */
+  padding: var(--space-10) 0 var(--space-10);
+}
+
+/* Draft banner — amber, prominent. Remove when content goes live. */
+.trust-draft-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 920px;
+  margin: 0 auto var(--space-5);
+  padding: 0.85rem 1.1rem;
+  background: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-left: 4px solid #d97706;
+  border-radius: var(--radius);
+  color: #78350f;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.trust-draft-banner strong {
+  color: #78350f;
+  display: inline-block;
+  margin-right: 0.25rem;
+}
+
+.trust-section .section-header {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.trust-section .section-header p {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--color-fg-soft);
+}
+
+/* ---------- 3-column grid ---------- */
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .trust-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+}
+
+.trust-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.trust-col-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-1);
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.trust-col-lead {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  line-height: 1.55;
+  margin: 0 0 var(--space-2);
+  font-style: italic;
+}
+
+/* ---------- Individual item card ---------- */
+
+.trust-item {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+}
+
+.trust-item + .trust-item { margin-top: 0; }
+
+.trust-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.trust-item h4 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  /* Allow the heading to wrap before the pill */
+  flex: 1;
+  min-width: 0;
+}
+
+.trust-item-sub {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-style: italic;
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+}
+
+.trust-item p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--color-fg-soft);
+  margin: 0 0 0.5rem;
+}
+
+.trust-item p:last-child { margin-bottom: 0; }
+
+.trust-item a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.trust-item a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Outbound-link hint arrow */
+.ext {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.75em;
+  color: var(--color-muted);
+  vertical-align: 0.1em;
+  font-weight: 500;
+}
+
+/* ---------- Status pills ---------- */
+
+.trust-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.trust-pill-active {
+  background: var(--color-accent-soft);
+  color: #065f46;
+  border: 1px solid #86efac;
+}
+
+.trust-pill-disclosure {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.trust-pill-planned {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+/* ---------- Metadata row (Issuing body / Regulator / Standard) ---------- */
+
+.trust-meta {
+  font-size: 0.76rem !important;
+  color: var(--color-muted) !important;
+  line-height: 1.5 !important;
+  margin-top: 0.4rem !important;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+/* Inline note (not a terminal meta row) */
+.trust-meta-note {
+  font-style: italic;
+  background: var(--color-surface-2);
+  padding: 0.5rem 0.7rem !important;
+  border-radius: var(--radius);
+  border-top: 0 !important;
+  margin-top: 0.4rem !important;
+}
+
+/* ---------- Honest disclosure footer ---------- */
+
+.trust-footer {
+  max-width: 820px;
+  margin: var(--space-6) auto 0;
+  padding: var(--space-4) var(--space-4);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+}
+
+.trust-footer h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-2);
+  line-height: 1.35;
+}
+
+.trust-footer p {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--color-fg-soft);
+  margin: 0 0 var(--space-2);
+}
+
+.trust-footer p:last-child { margin-bottom: 0; }
+
+.trust-footer a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* ---------- Motion preferences ---------- */
 @media (prefers-reduced-motion: reduce) {
