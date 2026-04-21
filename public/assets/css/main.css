@@ -287,7 +287,7 @@ a:hover { text-decoration: underline; }
 
 .hero-hub {
   position: relative;
-  padding: var(--space-7) 0 var(--space-8);
+  padding: var(--space-8) 0 var(--space-8);
   background:
     radial-gradient(ellipse 50% 40% at 50% 75%, rgba(46, 204, 113, 0.28) 0%, transparent 55%),
     radial-gradient(ellipse 35% 30% at 15% 25%, rgba(56, 189, 248, 0.10) 0%, transparent 55%),
