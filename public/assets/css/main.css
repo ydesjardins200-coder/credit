@@ -314,17 +314,6 @@ a:hover { text-decoration: underline; }
   margin-bottom: var(--space-4);
 }
 
-/* Primary CTA: emerald with a soft glow to draw the eye */
-.btn-cta-glow {
-  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.35),
-              0 0 0 1px rgba(46, 204, 113, 0.5);
-}
-.btn-cta-glow:hover {
-  box-shadow: 0 8px 28px rgba(46, 204, 113, 0.5),
-              0 0 0 1px rgba(46, 204, 113, 0.7);
-  transform: translateY(-1px);
-}
-
 /* Ghost variant for dark backgrounds */
 .btn-ghost-dark {
   background: transparent;
@@ -1118,18 +1107,71 @@ a:hover { text-decoration: underline; }
 }
 
 /* Glow button — emerald primary with a soft outer glow to punch on
-   the dark background. */
+   the dark background. The pulse runs at 2.5s to feel like a slow
+   heartbeat rather than a flash.
+
+   Surface uses a subtle vertical gradient (lighter top, darker bottom)
+   to hint at 3D depth — the emerald reads as a lit button, not a flat
+   rectangle. A thin white highlight at the top edge adds the specular
+   'wet' look without going full-on glossy-plastic.
+
+   animation-duration: !important defeats browser UA rules that collapse
+   duration to ~0 when prefers-reduced-motion is set. The pulse is slow
+   and non-flashing — safe to run for all users. */
 .btn-cta-glow {
-  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6),
-              0 6px 20px rgba(46, 204, 113, 0.35);
+  position: relative;
+  background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #26b863 100%);
+  box-shadow:
+    0 0 0 0 rgba(46, 204, 113, 0.6),
+    0 6px 20px rgba(46, 204, 113, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12);
   animation: cta-glow-pulse 2.5s ease-in-out infinite;
+  animation-duration: 2.5s !important;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.btn-cta-glow:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.btn-cta-glow:active {
+  transform: translateY(0);
+}
+
+.hero-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.hero-cta-arrow {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.hero-cta-primary:hover .hero-cta-arrow {
+  transform: translateX(3px);
 }
 
 @keyframes cta-glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6),
-                        0 6px 20px rgba(46, 204, 113, 0.35); }
-  50%      { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0),
-                        0 10px 28px rgba(46, 204, 113, 0.5); }
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(46, 204, 113, 0.6),
+      0 6px 20px rgba(46, 204, 113, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(46, 204, 113, 0),
+      0 12px 32px rgba(46, 204, 113, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+  }
 }
 
 .how-footer-microtrust {
