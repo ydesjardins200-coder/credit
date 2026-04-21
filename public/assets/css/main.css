@@ -600,14 +600,20 @@ a:hover { text-decoration: underline; }
 }
 
 .mini-stat {
-  padding: 0.7rem 0.75rem;
+  padding: 0.75rem 0.65rem 0.7rem;
   background: linear-gradient(135deg,
     rgba(46, 204, 113, 0.12) 0%,
     rgba(255, 255, 255, 0.04) 100%);
   border: 1px solid rgba(46, 204, 113, 0.25);
   border-radius: 10px;
-  min-width: 0;       /* allow label truncation in grid */
+  min-width: 0;
   transition: border-color 0.2s ease, background 0.2s ease;
+  /* Stack icon above title above subtitle, centered */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.4rem;
 }
 
 .mini-stat:hover {
@@ -617,19 +623,25 @@ a:hover { text-decoration: underline; }
     rgba(255, 255, 255, 0.06) 100%);
 }
 
+/* Icon sits as a centered 'top-hat' above the title. No longer in a
+   flex row with the title — that was causing the title to wrap into
+   ~65% of the card width and producing 3-line titles for 'Zero hidden
+   fees'. Now the title gets the full card width. */
 .mini-stat-head {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.35rem;
+  gap: 0.4rem;
+  width: 100%;
+  margin-bottom: 0;
 }
 
 .mini-stat-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   background: rgba(46, 204, 113, 0.25);
   border-radius: 6px;
   color: #6ee7a8;
@@ -641,18 +653,33 @@ a:hover { text-decoration: underline; }
   height: 14px;
 }
 
+/* Title: reserves 2 lines of height so short titles (e.g. '$30 / month')
+   and long titles ('Zero hidden fees') render at identical card heights.
+   Center-aligned vertically via flex so single-line titles don't stick
+   to the top of the 2-line slot. */
 .mini-stat-title {
   font-size: 0.88rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.25;
+  min-height: 2.5em;        /* 2 lines × 1.25 line-height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
+/* Subtitle: same 2-line reservation so the 3 cards' bottoms align. */
 .mini-stat-sub {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.65);
-  line-height: 1.35;
+  line-height: 1.4;
+  min-height: 2.8em;        /* 2 lines × 1.4 line-height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Mobile tweaks */
