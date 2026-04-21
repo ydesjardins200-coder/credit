@@ -1939,6 +1939,63 @@ body.signup-page .site-footer .container {
   line-height: 1.4;
 }
 
+/* ---------- Password show/hide toggle ---------- */
+.password-wrap {
+  position: relative;
+  display: block;
+}
+
+/* Extra right padding on the input so typed characters don't slide under
+   the toggle button. The button is 40px wide + some breathing room. */
+.password-wrap input[type="password"],
+.password-wrap input[type="text"] {
+  padding-right: 2.75rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.password-toggle:hover {
+  color: var(--color-fg);
+  background: var(--color-surface-2);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  color: var(--color-fg);
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* Show the eye icon when the password is hidden (button not pressed),
+   show the eye-off icon when the password is visible (button pressed). */
+.password-toggle .icon-eye-off { display: none; }
+
+.password-toggle[aria-pressed="true"] .icon-eye { display: none; }
+.password-toggle[aria-pressed="true"] .icon-eye-off { display: block; }
+
 /* ---------- Motion preferences ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

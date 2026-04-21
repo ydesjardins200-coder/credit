@@ -129,6 +129,29 @@
     });
   });
 
+  // ----- Password show/hide toggle -----
+  // The button lives inside .password-wrap next to the input. Pressing it
+  // swaps input type between 'password' and 'text', and updates the
+  // aria-label + aria-pressed so screen readers announce the new state.
+  const pwToggle = document.getElementById('password-toggle');
+  if (pwToggle && pwInput) {
+    pwToggle.addEventListener('click', function () {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      pwToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+      const label = isHidden
+        ? (pwToggle.dataset.labelHide || 'Hide password')
+        : (pwToggle.dataset.labelShow || 'Show password');
+      pwToggle.setAttribute('aria-label', label);
+      // Keep focus on the input so typing can continue seamlessly. Moving
+      // focus to the input also puts the caret at the end of the current value.
+      pwInput.focus();
+      const val = pwInput.value;
+      pwInput.value = '';
+      pwInput.value = val;
+    });
+  }
+
   // ----- Submit -----
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
