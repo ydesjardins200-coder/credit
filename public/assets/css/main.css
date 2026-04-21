@@ -222,6 +222,31 @@ a:hover { text-decoration: underline; }
   overflow: hidden;
 }
 
+/* Full-viewport hero on desktop. min-height keeps content from getting
+   clipped on short laptops — if the copy + scorecard stack is taller
+   than the viewport, the hero grows rather than squeezes.
+
+   Uses 100dvh where supported (modern browsers, avoids Safari iOS
+   address-bar flicker) with 100vh fallback. Header is ~70px tall —
+   subtract it so the hero's bottom edge sits exactly at the viewport
+   bottom on first paint.
+
+   Flex layout lets us vertically center the container inside the
+   tall hero so the content doesn't stick to the top with dead space
+   below. */
+@media (min-width: 860px) {
+  .hero-dark {
+    min-height: calc(100vh - 70px);
+    min-height: calc(100dvh - 70px);
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-dark > .container {
+    flex: 1;
+  }
+}
+
 .hero-motif {
   position: absolute;
   inset: 0;
