@@ -568,13 +568,14 @@
 
           <!-- Feature 3 -->
           <div class="feature-row">
-            <div class="feature-content">
+            <div class="feature-content feature-content-lg">
               <span class="badge">AI-powered</span>
               <h3>Advice that's actually about <em>you</em>.</h3>
               <p>
                 Most credit advice is generic. Our AI looks at your actual
-                accounts, utilization, and payment patterns to tell you exactly
-                what to do next — this week, next month, and in 6 months.
+                accounts, utilization, and payment patterns to tell you
+                exactly what to do next — this week, next month, and in
+                six months.
               </p>
               <ul>
                 <li>What to pay first, and by how much</li>
@@ -584,20 +585,73 @@
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="mock-screen">
-                <div class="mock-screen-header">
-                  <div class="mock-screen-title">AI recommendations</div>
-                  <div class="tag" style="font-size:0.7rem">Updated 2h ago</div>
+              <div class="ai-tip-showcase" aria-label="Live example of AI credit recommendations">
+                <div class="ai-tip-showcase-header">
+                  <div class="ai-tip-showcase-title">AI recommendations</div>
+                  <div class="ai-tip-showcase-status">
+                    <span class="ai-tip-showcase-dot" aria-hidden="true"></span>
+                    Updated 2h ago
+                  </div>
                 </div>
-                <div class="mock-ai">
-                  <span class="mock-ai-label">💡 High impact</span>
-                  Pay $120 on your Visa by the 18th to drop utilization below 30%.
-                  Expected score impact: <strong>+12 pts</strong>.
+
+                <div class="ai-tip-viewport" aria-live="off">
+                  <div class="ai-tip-stack">
+                    <article class="ai-tip ai-tip-impact">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">High impact</span>
+                        <span class="ai-tip-metric ai-tip-metric-positive">+12 pts</span>
+                      </div>
+                      <p>Pay $120 on your Visa by the 18th to drop utilization below 30%.</p>
+                    </article>
+
+                    <article class="ai-tip ai-tip-reminder">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">Reminder</span>
+                        <span class="ai-tip-metric ai-tip-metric-neutral">4 days</span>
+                      </div>
+                      <p>Your Mastercard statement closes in 4 days. Keep the balance under $450.</p>
+                    </article>
+
+                    <article class="ai-tip ai-tip-strategy">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">Strategy</span>
+                        <span class="ai-tip-metric ai-tip-metric-warning">−15 pts</span>
+                      </div>
+                      <p>Keep the Chase card open. It's your oldest tradeline (7 years). Closing it would cost 15–20 pts.</p>
+                    </article>
+
+                    <article class="ai-tip ai-tip-opportunity">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">Opportunity</span>
+                        <span class="ai-tip-metric ai-tip-metric-positive">28% → 18%</span>
+                      </div>
+                      <p>Your Citi card is eligible for a limit increase. A $1,500 bump drops utilization from 28% to 18%.</p>
+                    </article>
+
+                    <article class="ai-tip ai-tip-warning">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">Watch</span>
+                        <span class="ai-tip-metric ai-tip-metric-warning">30 days</span>
+                      </div>
+                      <p>Hard inquiry detected Oct 12. Avoid new applications for 30 days or your score will dip further.</p>
+                    </article>
+
+                    <article class="ai-tip ai-tip-impact" aria-hidden="true">
+                      <div class="ai-tip-head">
+                        <span class="ai-tip-cat">High impact</span>
+                        <span class="ai-tip-metric ai-tip-metric-positive">+12 pts</span>
+                      </div>
+                      <p>Pay $120 on your Visa by the 18th to drop utilization below 30%.</p>
+                    </article>
+                  </div>
                 </div>
-                <div class="mock-ai" style="margin-top:0.6rem">
-                  <span class="mock-ai-label">⏰ Reminder</span>
-                  Your Mastercard statement closes in 4 days. Keep the balance
-                  under $450.
+
+                <div class="ai-tip-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  5 new recommendations this week
                 </div>
               </div>
             </div>

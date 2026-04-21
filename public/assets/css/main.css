@@ -1244,6 +1244,266 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
+   FEATURE ROW — large size variant (used on the AI-powered row) +
+   AI tip showcase with rolling-tip animation
+   ======================================================================= */
+
+/* Upsize the text in the left column when content needs more visual weight
+   (used specifically on the AI-powered feature because the right column is
+   a large dashboard mock). */
+.feature-content-lg .badge {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.85rem;
+  margin-bottom: var(--space-3);
+}
+
+.feature-content-lg h3 {
+  font-size: 2.15rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: var(--space-2);
+}
+
+.feature-content-lg > p {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--color-fg-soft);
+  margin-bottom: var(--space-3);
+}
+
+.feature-content-lg ul { margin-top: var(--space-2); }
+
+.feature-content-lg li {
+  font-size: 1.02rem;
+  padding-left: 1.9rem;
+  margin-bottom: 0.65rem;
+  line-height: 1.55;
+}
+
+.feature-content-lg li::before {
+  top: 0.3rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.78rem;
+}
+
+/* ---------- AI tip showcase (right column) ---------- */
+
+.ai-tip-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1rem 1.1rem 0.9rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ai-tip-showcase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ai-tip-showcase-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--color-fg);
+}
+
+.ai-tip-showcase-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.ai-tip-showcase-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  animation: ai-tip-dot-pulse 2s ease-out infinite;
+}
+
+@keyframes ai-tip-dot-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+  70%  { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+/* Viewport: the fixed-height window that shows 2 tips at a time.
+   overflow:hidden clips the stack that slides upward underneath. */
+.ai-tip-viewport {
+  height: 240px;
+  overflow: hidden;
+  position: relative;
+  /* Fade out the top and bottom edges so tips seem to enter and exit
+     through a mist rather than popping at a hard line. */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+
+/* Stack: the scrolling column of tips. 5 unique tips + 1 duplicate at the
+   end (the first tip repeated) to make the loop seamless — when the
+   animation wraps from bottom to top, the user sees the same tip land
+   twice in a row, which reads as continuous motion rather than a jump. */
+.ai-tip-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  /* With 6 children and a gap, computed total height is predictable.
+     Each .ai-tip is ~104px tall (padding + head + one-line paragraph) + gap.
+     The 5-tip cycle needs to translateY through 5 slot-widths, each
+     slot = tip height (104) + gap (8.8) = 112.8px.
+     We use calc() for robust maintenance. */
+  --ai-tip-slot: 105px;  /* tip height (96px min) + flex gap (~9px) */
+  animation: ai-tip-roll 25s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes ai-tip-roll {
+  /* 5 tips × ~5s each. Each tip holds at the top of the viewport
+     for ~4s, then slides to the next over ~1s. */
+  0%,  16% { transform: translateY(0); }
+  20%, 36% { transform: translateY(calc(var(--ai-tip-slot) * -1)); }
+  40%, 56% { transform: translateY(calc(var(--ai-tip-slot) * -2)); }
+  60%, 76% { transform: translateY(calc(var(--ai-tip-slot) * -3)); }
+  80%, 96% { transform: translateY(calc(var(--ai-tip-slot) * -4)); }
+  100%     { transform: translateY(calc(var(--ai-tip-slot) * -5)); }
+}
+
+/* Individual tip */
+.ai-tip {
+  background: linear-gradient(135deg,
+    var(--color-accent-soft),
+    rgba(209, 250, 229, 0.35));
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  flex-shrink: 0;
+  /* Fixed height so the translateY math is stable. */
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ai-tip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ai-tip-cat {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #065f46;
+}
+
+.ai-tip-metric {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.ai-tip-metric-positive {
+  background: var(--color-accent-soft);
+  color: #065f46;
+}
+
+.ai-tip-metric-neutral {
+  background: var(--color-surface-2);
+  color: var(--color-fg-soft);
+}
+
+.ai-tip-metric-warning {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.ai-tip p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-fg);
+}
+
+/* Variant border-tints for visual variety across categories */
+.ai-tip-reminder {
+  background: linear-gradient(135deg, #e0f2fe, rgba(224, 242, 254, 0.35));
+  border-color: #7dd3fc;
+}
+.ai-tip-reminder .ai-tip-cat { color: #075985; }
+
+.ai-tip-strategy {
+  background: linear-gradient(135deg, #f3e8ff, rgba(243, 232, 255, 0.35));
+  border-color: #c4b5fd;
+}
+.ai-tip-strategy .ai-tip-cat { color: #5b21b6; }
+
+.ai-tip-opportunity {
+  background: linear-gradient(135deg, var(--color-accent-soft), rgba(209, 250, 229, 0.35));
+  border-color: var(--color-accent);
+}
+
+.ai-tip-warning {
+  background: linear-gradient(135deg, #fef3c7, rgba(254, 243, 199, 0.35));
+  border-color: #fcd34d;
+}
+.ai-tip-warning .ai-tip-cat { color: #92400e; }
+
+/* Footer note beneath the viewport */
+.ai-tip-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.ai-tip-showcase-footer svg {
+  width: 13px;
+  height: 13px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Freeze the rolling animation for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ai-tip-stack {
+    animation: none;
+    transform: translateY(0);
+  }
+  .ai-tip-showcase-dot {
+    animation: none;
+  }
+}
+
+/* =======================================================================
    PRICING — 3 tiers: Free (lead magnet), Essential (featured), Complete
    ======================================================================= */
 
