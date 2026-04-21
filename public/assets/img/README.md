@@ -2,6 +2,17 @@
 
 All image assets for iBoost live here. Served by Netlify at `/assets/img/...`.
 
+## Current assets
+
+### /brand/
+- `logo-horizontal.png` (1765×607) — full "shield + Iboost" logo, transparent background, master resolution
+- `logo-horizontal-80.png` / `-160.png` / `-320.png` — pre-resized versions for web use (80/160/320 px tall)
+- `shield.png` (219×257) — shield icon alone, transparent background, master
+- `shield-16.png` / `-32.png` / `-48.png` / `-96.png` / `-192.png` / `-512.png` — pre-resized shield for favicons, PWA icons, social sharing
+
+### /favicon.ico (in /public, not /img)
+- Multi-resolution ICO (16+32+48 px) for legacy browser tab icons
+
 ## Folder structure
 
 Feel free to create subfolders as the library grows. Suggested layout:
