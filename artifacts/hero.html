@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>iBoost Hero — Portable Artifact</title>
+
+<!--
+  ============================================================================
+  iBoost Hero — Self-contained artifact
+  ============================================================================
+  Built-up during the 2026-04-21 iBoost design session.
+
+  What this is:
+    A fully self-contained hero section extracted from iboostcredit.netlify.app.
+    Everything needed to render it is in this single file — CSS, JS, markup,
+    and inline SVG. No external dependencies. Drop it into any project and
+    it works.
+
+  What's included:
+    - The branded header with inline-SVG logo lockup
+    - Hero section: dark-navy "night" background with amplified emerald
+      gradient + electric-blue accent + bottom vignette
+    - Decorative ascending-curve SVG motif
+    - Left column: eyebrow pill, H1, lead paragraph, microtrust line,
+      pulsing glow CTA button with moving arrow, ghost CTA, social-proof strip
+    - Right column: interactive 12-month credit-score animation with
+      trend chart, tier milestones, score bar, rotating AI tip box,
+      replay controls (play/pause + scrubber slider)
+    - 3 supporting mini-stat cards ($30 / month, All 3 bureaus, 100% transparent)
+    - Glossy-3D treatment: inset highlights, specular sheen, emerald glow
+
+  Reusing on a new site:
+    1. Copy this file to your new project
+    2. Rename IDs / classes if they conflict with your existing CSS
+    3. Update the copy to match your product
+    4. Replace the MONTHS array in the <script> to tell YOUR journey
+    5. Swap the logo SVG paths if you're not iBoost
+    6. Adjust the color palette via the CSS variables at the top of <style>
+
+  Tested in Chrome, Safari, Firefox (desktop + mobile). Requires no build
+  step — just open the file in a browser or link to it from any server.
+  ============================================================================
+-->
+
+<style>
+  /* =========================================================================
+     COLOR + SPACING TOKENS — change these to re-theme the hero
+     ========================================================================= */
+  :root {
+    --color-primary: #0A2540;
+    --color-primary-hover: #083152;
+    --color-accent: #2ECC71;
+    --color-accent-hover: #27ae60;
+    --color-accent-soft: #d1fae5;
+    --color-fg: #0f172a;
+    --color-fg-soft: #475569;
+    --color-muted: #64748b;
+    --color-border: #e2e8f0;
+    --color-border-strong: #cbd5e1;
+    --color-surface: #f8fafc;
+    --color-surface-2: #f1f5f9;
+
+    --space-1: 0.5rem;
+    --space-2: 1rem;
+    --space-3: 1.5rem;
+    --space-4: 2rem;
+    --space-5: 2.5rem;
+    --space-6: 3rem;
+    --space-7: 4rem;
+    --space-8: 5rem;
+
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  /* =========================================================================
+     RESET + BASE
+     ========================================================================= */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-fg);
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, p { margin: 0; }
+
+  a { color: inherit; text-decoration: none; }
+
+  button { font-family: inherit; cursor: pointer; }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-3);
+  }
+
+  /* =========================================================================
+     HEADER
+     ========================================================================= */
+  .site-header {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-2) 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: saturate(180%) blur(10px);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    line-height: 0;
+  }
+
+  .logo-mark { width: 36px; height: 36px; }
+
+  .logo-wordmark {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .nav-link-secondary {
+    color: var(--color-fg-soft);
+    font-weight: 500;
+    transition: color 0.15s ease;
+  }
+  .nav-link-secondary:hover { color: var(--color-primary); }
+
+  /* =========================================================================
+     BUTTONS
+     ========================================================================= */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    line-height: 1.2;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--color-accent-hover); }
+
+  .btn-lg { padding: 0.85rem 1.5rem; font-size: 1rem; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-border);
+  }
+  .btn-ghost:hover { border-color: var(--color-primary); }
+
+  /* Ghost variant for dark backgrounds */
+  .btn-ghost-dark {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+  .btn-ghost-dark:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  /* Glossy glow CTA with pulsing halo */
+  .btn-cta-glow {
+    position: relative;
+    background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #26b863 100%);
+    box-shadow:
+      0 0 0 0 rgba(46, 204, 113, 0.6),
+      0 6px 20px rgba(46, 204, 113, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+    animation: cta-glow-pulse 2.5s ease-in-out infinite;
+    animation-duration: 2.5s !important;
+  }
+
+  .btn-cta-glow:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+  }
+
+  .btn-cta-glow:active { transform: translateY(0); }
+
+  @keyframes cta-glow-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 0 rgba(46, 204, 113, 0.6),
+        0 6px 20px rgba(46, 204, 113, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+    }
+    50% {
+      box-shadow:
+        0 0 0 8px rgba(46, 204, 113, 0),
+        0 12px 32px rgba(46, 204, 113, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .hero-cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .hero-cta-arrow {
+    width: 18px; height: 18px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .hero-cta-primary:hover .hero-cta-arrow { transform: translateX(3px); }
+
+  /* =========================================================================
+     HERO — dark navy with vibrant-night gradient stack
+     ========================================================================= */
+  .hero-dark {
+    position: relative;
+    padding: var(--space-8) 0 var(--space-8);
+    background:
+      radial-gradient(ellipse 80% 60% at 5% 100%, rgba(46, 204, 113, 0.38) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 45% at 85% 55%, rgba(46, 204, 113, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 0%, rgba(56, 189, 248, 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 80% at 50% 100%, transparent 50%, rgba(4, 20, 38, 0.6) 100%),
+      linear-gradient(165deg, #0A2540 0%, #0e2d4d 50%, #041426 100%);
+    color: #fff;
+    overflow: hidden;
+  }
+
+  @media (min-width: 860px) {
+    .hero-dark {
+      min-height: calc(100vh - 70px);
+      min-height: calc(100dvh - 70px);
+      display: flex;
+      align-items: center;
+    }
+    .hero-dark > .container { flex: 1; }
+  }
+
+  .hero-motif {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .hero-dark .container { position: relative; z-index: 1; }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    .hero-grid {
+      grid-template-columns: 1.1fr 1fr;
+      gap: var(--space-6);
+    }
+  }
+
+  /* ---- Left column ---- */
+  .hero-copy { min-width: 0; }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.4);
+    border-radius: 100px;
+    color: #6ee7a8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-eyebrow-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+    animation: eyebrow-pulse 2s ease-out infinite;
+    animation-duration: 2s !important;
+  }
+
+  @keyframes eyebrow-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+    70%  { box-shadow: 0 0 0 9px rgba(46, 204, 113, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+  }
+
+  .hero-dark h1 {
+    font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-dark .lead {
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 540px;
+    margin: 0 0 var(--space-1);
+  }
+
+  .hero-dark .lead-price {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .hero-microtrust {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0 0 var(--space-3);
+    letter-spacing: 0.01em;
+  }
+
+  .hero-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: var(--space-3);
+  }
+
+  /* ---- Social proof ---- */
+  .hero-social {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: var(--space-2);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .hero-avatars {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    margin-left: -6px;
+    border: 2px solid #0e2d4d;
+  }
+  .avatar:first-child { margin-left: 0; }
+  .avatar-1 { background: #3b82f6; }
+  .avatar-2 { background: #2ECC71; }
+  .avatar-3 { background: #8b5cf6; }
+  .avatar-4 { background: #f59e0b; }
+
+  .hero-social-text {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.4;
+  }
+
+  /* =========================================================================
+     SCORECARD — interactive 12-month credit journey
+     ========================================================================= */
+  .hero-visual { min-width: 0; }
+
+  .score-card {
+    position: relative;
+    background: linear-gradient(160deg, #143a62 0%, #10355a 50%, #0c2a47 100%);
+    color: #fff;
+    border-radius: 20px;
+    box-shadow:
+      0 24px 56px rgba(0, 0, 0, 0.45),
+      0 0 60px rgba(46, 204, 113, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    padding: 1.25rem;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 0 0 auto;
+    border: 1px solid rgba(46, 204, 113, 0.32);
+    overflow: hidden;
+  }
+
+  .score-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+    border-radius: 20px 20px 0 0;
+    z-index: 0;
+  }
+
+  .score-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .score-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-2);
+  }
+
+  .sc-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #fff;
+    margin-bottom: 0.15rem;
+  }
+
+  .sc-month-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .score-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--color-accent-soft);
+    color: #065f46;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .score-change-icon {
+    width: 16px; height: 16px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.6rem;
+  }
+
+  .score-dial {
+    text-align: center;
+    padding: 0.25rem 0 0.5rem;
+  }
+
+  .score-number {
+    font-size: clamp(2.6rem, 6vw, 3.3rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    transition: color 0.3s ease;
+    text-shadow: 0 2px 20px rgba(46, 204, 113, 0.15);
+  }
+
+  .score-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 0.2rem;
+  }
+
+  .sc-trend {
+    width: 100%;
+    height: 90px;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .score-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    overflow: hidden;
+    margin: 0.4rem 0 var(--space-2);
+    position: relative;
+  }
+
+  .score-bar-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #2ECC71 80%, #059669 100%);
+    border-radius: 100px;
+    opacity: 0.9;
+  }
+
+  .score-bar-marker {
+    position: absolute;
+    top: -4px;
+    left: 25%;
+    width: 14px; height: 14px;
+    background: #fff;
+    border: 3px solid #2ECC71;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    transition: left 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .mock-ai {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.6rem 0.7rem;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.18) 0%, rgba(46, 204, 113, 0.08) 100%);
+    border: 1px solid rgba(46, 204, 113, 0.45);
+    border-radius: 10px;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.92);
+    height: 84px;
+    overflow: hidden;
+    transition: opacity 0.25s ease;
+  }
+
+  .mock-ai-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #6ee7a8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.15rem;
+  }
+
+  .sc-controls {
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .sc-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+
+  .sc-controls-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sc-play-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .sc-play-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(46, 204, 113, 0.5);
+  }
+
+  .sc-slider {
+    width: 100%;
+    accent-color: var(--color-accent);
+  }
+
+  .sc-disclaimer {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    text-align: right;
+    margin: 0.5rem 0 0 auto;
+    max-width: 400px;
+    padding-right: 0.25rem;
+  }
+
+  .sc-disclaimer a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: underline;
+  }
+
+  /* =========================================================================
+     MINI-STATS — 3 supporting cards below the scorecard
+     ========================================================================= */
+  .hero-mini-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin: var(--space-3) 0 0 auto;
+    max-width: 400px;
+  }
+
+  .mini-stat {
+    position: relative;
+    padding: 0.75rem 0.65rem 0.7rem;
+    background: linear-gradient(180deg,
+      rgba(46, 204, 113, 0.18) 0%,
+      rgba(46, 204, 113, 0.06) 60%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    border-radius: 10px;
+    min-width: 0;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.4rem;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  .mini-stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .mini-stat:hover {
+    border-color: rgba(46, 204, 113, 0.55);
+    transform: translateY(-1px);
+    background: linear-gradient(180deg,
+      rgba(46, 204, 113, 0.25) 0%,
+      rgba(46, 204, 113, 0.1) 60%,
+      rgba(255, 255, 255, 0.04) 100%);
+  }
+
+  .mini-stat-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .mini-stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    background: rgba(46, 204, 113, 0.25);
+    border-radius: 6px;
+    color: #6ee7a8;
+    flex-shrink: 0;
+  }
+
+  .mini-stat-icon svg {
+    width: 14px; height: 14px;
+  }
+
+  .mini-stat-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    min-height: 2.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mini-stat-sub {
+    position: relative;
+    z-index: 1;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.4;
+    min-height: 2.8em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* =========================================================================
+     MOBILE TWEAKS
+     ========================================================================= */
+  @media (max-width: 899px) {
+    .hero-visual { margin-top: var(--space-3); }
+    .score-card, .sc-disclaimer, .hero-mini-stats { margin-left: auto; margin-right: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============= HEADER ============= -->
+<header class="site-header">
+  <div class="container">
+    <a href="/" class="logo" aria-label="iBoost home">
+      <svg class="logo-mark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path d="M 24 4 L 42 12 L 42 24 Q 42 36 24 44 Q 6 36 6 24 L 6 12 Z" fill="#0A2540" stroke="#2ECC71" stroke-width="1.5"/>
+        <path d="M 15 30 L 21 22 L 26 27 L 34 17" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <polyline points="28 17 34 17 34 23" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="logo-wordmark">iBoost</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="#how" class="nav-link-secondary">How it works</a>
+      <a href="#pricing" class="nav-link-secondary">Pricing</a>
+      <a href="#signup" class="btn btn-primary">Get started</a>
+      <a href="#login" class="btn btn-ghost">Sign in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ============= HERO ============= -->
+<section class="hero-dark" aria-labelledby="hero-title">
+  <!-- Decorative upward-curve motif -->
+  <svg class="hero-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <g stroke="#fff" stroke-width="1" stroke-opacity="0.05" fill="none">
+      <line x1="0" y1="150" x2="1200" y2="150"/>
+      <line x1="0" y1="300" x2="1200" y2="300"/>
+      <line x1="0" y1="450" x2="1200" y2="450"/>
+    </g>
+    <path d="M -60 580 Q 250 500 520 360 T 1260 60" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-opacity="0.45" stroke-linecap="round"/>
+    <path d="M -30 600 Q 200 540 460 420 T 1220 160" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.2" stroke-linecap="round"/>
+    <circle cx="60" cy="540" r="4" fill="#2ECC71" fill-opacity="0.5"/>
+    <circle cx="220" cy="470" r="5" fill="#2ECC71" fill-opacity="0.6"/>
+    <circle cx="440" cy="370" r="6" fill="#2ECC71" fill-opacity="0.75"/>
+    <circle cx="720" cy="240" r="7" fill="#2ECC71" fill-opacity="0.85"/>
+    <circle cx="1020" cy="110" r="10" fill="#2ECC71" fill-opacity="1"/>
+    <circle cx="1020" cy="110" r="18" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.35"/>
+  </svg>
+
+  <div class="container">
+    <div class="hero-grid">
+
+      <!-- LEFT: copy + CTAs + social proof -->
+      <div class="hero-copy">
+        <span class="hero-eyebrow">
+          <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+          Credit building for Canada &amp; U.S.
+        </span>
+        <h1 id="hero-title">Build credit that actually changes your life.</h1>
+        <p class="lead">
+          On-time payments reported to all 3 major bureaus. Free budget
+          tools and AI guidance included.
+          <strong class="lead-price">$30 / month.</strong> Cancel anytime.
+        </p>
+        <p class="hero-microtrust">
+          No credit check &middot; No setup fees &middot; Start in 3 minutes
+        </p>
+        <div class="hero-cta-row">
+          <a href="#signup" class="btn btn-primary btn-lg btn-cta-glow hero-cta-primary">
+            Start for $30 / month
+            <svg class="hero-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </a>
+          <a href="#how" class="btn btn-ghost-dark btn-lg">See how it works &rarr;</a>
+        </div>
+
+        <div class="hero-social">
+          <div class="hero-avatars" aria-hidden="true">
+            <span class="avatar avatar-1">M</span>
+            <span class="avatar avatar-2">A</span>
+            <span class="avatar avatar-3">D</span>
+            <span class="avatar avatar-4">K</span>
+          </div>
+          <span class="hero-social-text">
+            Trusted by early members in Toronto, Montr&eacute;al, Phoenix &amp; Atlanta
+          </span>
+        </div>
+      </div>
+
+      <!-- RIGHT: interactive scorecard + mini-stats -->
+      <div class="hero-visual">
+        <div class="score-card" role="region" aria-label="Interactive 12-month credit score projection">
+
+          <div class="score-card-header">
+            <div>
+              <div class="sc-title">Your credit score</div>
+              <div id="sc-month-label" class="sc-month-label">Month 1 of 12</div>
+            </div>
+            <div class="score-change">
+              <span class="score-change-icon" aria-hidden="true">&uarr;</span>
+              <span>+<span id="sc-change">2</span></span>
+            </div>
+          </div>
+
+          <div class="score-dial">
+            <div class="score-number" id="sc-score">580</div>
+            <div class="score-label" id="sc-label">Fair</div>
+          </div>
+
+          <svg class="sc-trend" viewBox="0 0 300 90" aria-label="12-month credit score trajectory">
+            <line x1="18" y1="33" x2="300" y2="33" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="18" y1="15" x2="300" y2="15" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="298" y="30" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.5)" style="letter-spacing: 0.03em">GOOD 670</text>
+            <text x="298" y="12" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.65)" style="letter-spacing: 0.03em">VERY GOOD 740</text>
+            <path id="sc-trend-future" d="" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path id="sc-trend-traveled" d="" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <g id="sc-trend-milestones"></g>
+            <circle id="sc-trend-dot" cx="18" cy="85" r="5" fill="#2ECC71" stroke="#fff" stroke-width="2.5"/>
+            <circle id="sc-trend-pulse" cx="18" cy="85" r="5" fill="none" stroke="#2ECC71" stroke-width="2" opacity="0.5">
+              <animate attributeName="r" from="5" to="12" dur="1.8s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+
+          <div class="score-bar" aria-hidden="true">
+            <div class="score-bar-fill"></div>
+            <div class="score-bar-marker" id="sc-marker"></div>
+          </div>
+
+          <div class="mock-ai" id="sc-tip-wrap">
+            <span class="mock-ai-label">&#128161; Tips</span>
+            <span id="sc-tip">Set up autopay so you never miss an iBoost payment.</span>
+          </div>
+
+          <div class="sc-controls">
+            <div class="sc-controls-row">
+              <span class="sc-controls-label">Replay journey</span>
+              <button type="button" id="sc-play" class="sc-play-btn" aria-label="Play the 12-month journey">&#9654; Play</button>
+            </div>
+            <input
+              type="range"
+              id="sc-slider"
+              min="1" max="12" step="1" value="1"
+              aria-label="Month selector"
+              class="sc-slider"
+            />
+          </div>
+        </div>
+
+        <p class="sc-disclaimer">
+          Illustrative projection. Your results will vary.
+          See <a href="#disclosures">Disclosures</a>.
+        </p>
+
+        <!-- Mini-stats -->
+        <div class="hero-mini-stats" aria-label="Key product facts">
+          <div class="mini-stat">
+            <div class="mini-stat-head">
+              <span class="mini-stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </span>
+              <span class="mini-stat-title">$30 / month</span>
+            </div>
+            <div class="mini-stat-sub">Flat price. No surprises.</div>
+          </div>
+
+          <div class="mini-stat">
+            <div class="mini-stat-head">
+              <span class="mini-stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </span>
+              <span class="mini-stat-title">All 3 bureaus</span>
+            </div>
+            <div class="mini-stat-sub">Equifax, TransUnion, Experian</div>
+          </div>
+
+          <div class="mini-stat">
+            <div class="mini-stat-head">
+              <span class="mini-stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+              </span>
+              <span class="mini-stat-title">100% transparent</span>
+            </div>
+            <div class="mini-stat-sub">No setup or cancellation fees</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ============================================================================
+   SCORECARD — 12-month credit journey animation
+   ============================================================================
+   The MONTHS array is the only thing you need to change to tell a different
+   journey. Each entry: { score, change, label, tip }.
+   - score: the number displayed in the big dial
+   - change: the "+N" badge in the top-right of the card
+   - label: the tier text under the score ("Fair", "Good", ...)
+   - tip: the AI-style message that shows in the tip box that month
+   ============================================================================ */
+(function () {
+  'use strict';
+
+  const scoreEl   = document.getElementById('sc-score');
+  const labelEl   = document.getElementById('sc-label');
+  const monthEl   = document.getElementById('sc-month-label');
+  const changeEl  = document.getElementById('sc-change');
+  const markerEl  = document.getElementById('sc-marker');
+  const tipWrap   = document.getElementById('sc-tip-wrap');
+  const tipEl     = document.getElementById('sc-tip');
+  const slider    = document.getElementById('sc-slider');
+  const playBtn   = document.getElementById('sc-play');
+
+  if (!scoreEl || !slider || !playBtn) return;
+
+  // ---- Journey data ---------------------------------------------------------
+  const MONTHS = [
+    { score: 580, change: 0,  label: 'Fair', tip: 'Set up autopay so you never miss an iBoost payment.' },
+    { score: 586, change: 6,  label: 'Fair', tip: 'First payment reported to the bureaus. Small bump expected in 2\u20133 weeks.' },
+    { score: 594, change: 14, label: 'Fair', tip: 'Keep your utility card balance under 30% of the limit.' },
+    { score: 604, change: 24, label: 'Fair', tip: 'Three on-time payments logged. Payment history is strengthening.' },
+    { score: 614, change: 34, label: 'Fair', tip: "Don't close your oldest card \u2014 credit age matters more than you think." },
+    { score: 625, change: 45, label: 'Fair', tip: 'Ask your oldest card for a limit increase. It improves your utilization ratio.' },
+    { score: 636, change: 56, label: 'Fair', tip: "You're halfway. Dispute any inaccurate items \u2014 we'll help draft it." },
+    { score: 647, change: 67, label: 'Fair', tip: 'Two more on-time months and you cross into Good.' },
+    { score: 657, change: 77, label: 'Fair', tip: 'Almost there. Resist opening new credit in the last 3 months.' },
+    { score: 664, change: 84, label: 'Fair', tip: 'Autopay + low utilization + on-time = the 3 habits keeping you climbing.' },
+    { score: 668, change: 88, label: 'Fair', tip: 'One point away from Good. Stay the course.' },
+    { score: 672, change: 92, label: 'Good', tip: "You crossed into Good. Lenders see your profile differently now." }
+  ];
+
+  // ---- Chart geometry -------------------------------------------------------
+  const CHART_W = 300, CHART_H = 90;
+  const MARGIN_L = 18, MARGIN_R = 8, MARGIN_T = 8, MARGIN_B = 8;
+  const Y_MIN = 550, Y_MAX = 780;
+
+  function xForMonth(m) {
+    const plotW = CHART_W - MARGIN_L - MARGIN_R;
+    return MARGIN_L + ((m - 1) / 11) * plotW;
+  }
+  function yForScore(score) {
+    const plotH = CHART_H - MARGIN_T - MARGIN_B;
+    const frac = (score - Y_MIN) / (Y_MAX - Y_MIN);
+    return MARGIN_T + plotH - frac * plotH;
+  }
+  function buildPath(points) {
+    if (!points.length) return '';
+    return 'M ' + points.map(p => p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' L ');
+  }
+
+  const allPoints = MONTHS.map((d, i) => ({ x: xForMonth(i + 1), y: yForScore(d.score) }));
+
+  const futurePath   = document.getElementById('sc-trend-future');
+  const traveledPath = document.getElementById('sc-trend-traveled');
+  const dot          = document.getElementById('sc-trend-dot');
+  const pulse        = document.getElementById('sc-trend-pulse');
+  const milestoneG   = document.getElementById('sc-trend-milestones');
+
+  if (futurePath) futurePath.setAttribute('d', buildPath(allPoints));
+
+  // Mark the moment the score crosses 670 ("Good")
+  if (milestoneG) {
+    const threshIdx = MONTHS.findIndex(d => d.score >= 670);
+    if (threshIdx > -1) {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', String(allPoints[threshIdx].x));
+      c.setAttribute('cy', String(allPoints[threshIdx].y));
+      c.setAttribute('r', '3.5');
+      c.setAttribute('fill', '#0f2e4d');
+      c.setAttribute('stroke', '#2ECC71');
+      c.setAttribute('stroke-width', '2');
+      milestoneG.appendChild(c);
+    }
+  }
+
+  // ---- Playback state -------------------------------------------------------
+  let current = 1;
+  let autoTimer = null;
+  let isPlaying = false;
+
+  function render(monthNum, animateTip) {
+    const data = MONTHS[monthNum - 1];
+    if (!data) return;
+
+    scoreEl.textContent = data.score;
+    if (labelEl)  labelEl.textContent  = data.label;
+    if (monthEl)  monthEl.textContent  = 'Month ' + monthNum + ' of 12';
+    if (changeEl) changeEl.textContent = data.change;
+
+    // Marker position on the 300-850 gauge
+    if (markerEl) {
+      const pct = Math.max(0, Math.min(100, ((data.score - 300) / 550) * 100));
+      markerEl.style.left = pct.toFixed(1) + '%';
+    }
+
+    if (traveledPath) {
+      traveledPath.setAttribute('d', buildPath(allPoints.slice(0, monthNum)));
+    }
+    const pt = allPoints[monthNum - 1];
+    if (dot)   { dot.setAttribute('cx', String(pt.x));   dot.setAttribute('cy', String(pt.y)); }
+    if (pulse) { pulse.setAttribute('cx', String(pt.x)); pulse.setAttribute('cy', String(pt.y)); }
+
+    if (animateTip && tipWrap && tipEl) {
+      tipWrap.style.opacity = '0';
+      setTimeout(function () {
+        tipEl.textContent = data.tip;
+        tipWrap.style.opacity = '1';
+      }, 180);
+    } else if (tipEl) {
+      tipEl.textContent = data.tip;
+    }
+
+    current = monthNum;
+    slider.value = String(monthNum);
+  }
+
+  function stopAutoPlay() {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+    isPlaying = false;
+    playBtn.textContent = '\u25B6 Play';
+    playBtn.setAttribute('aria-label', 'Play the 12-month journey');
+  }
+
+  const STEP_MS = 2400;      // each month transition
+  const LOOP_REST_MS = 3500; // pause at month 12 before looping
+
+  function startAutoPlay() {
+    stopAutoPlay();
+    isPlaying = true;
+    playBtn.textContent = '\u25A0 Stop';
+    playBtn.setAttribute('aria-label', 'Stop playback');
+    let step = current >= 12 ? 1 : current;
+    render(step, true);
+
+    function tick() {
+      step++;
+      if (step > 12) {
+        clearInterval(autoTimer);
+        autoTimer = setTimeout(function () {
+          if (!isPlaying) return;
+          step = 1;
+          render(step, true);
+          autoTimer = setInterval(tick, STEP_MS);
+        }, LOOP_REST_MS);
+        return;
+      }
+      render(step, true);
+    }
+    autoTimer = setInterval(tick, STEP_MS);
+  }
+
+  slider.addEventListener('input', function () {
+    stopAutoPlay();
+    render(parseInt(slider.value, 10), true);
+  });
+
+  playBtn.addEventListener('click', function () {
+    if (isPlaying) { stopAutoPlay(); } else { startAutoPlay(); }
+  });
+
+  // Pause when tab hidden, auto-resume on return
+  let wasPlayingBeforeHide = false;
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      wasPlayingBeforeHide = isPlaying;
+      if (isPlaying) stopAutoPlay();
+    } else if (wasPlayingBeforeHide) {
+      startAutoPlay();
+    }
+  });
+
+  // Boot
+  render(1, false);
+  setTimeout(startAutoPlay, 500);
+})();
+</script>
+</body>
+</html>
