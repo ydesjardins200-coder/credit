@@ -110,35 +110,57 @@
     var targets = document.querySelectorAll('[data-count-up]');
     if (!targets.length) return;
 
+    // Track which elements we've animated so the safety timeout doesn't
+    // double-fire one that the observer already picked up.
+    var animated = new WeakSet();
+
+    function trigger(el) {
+      if (animated.has(el)) return;
+      animated.add(el);
+      animateElement(el);
+    }
+
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
-          animateElement(entry.target);
-          // Animate once per page view; stop observing once it starts.
+          trigger(entry.target);
           observer.unobserve(entry.target);
         }
       });
     }, {
-      // Trigger when at least 40% of the card is visible. If we used 0%
-      // the animation would fire as soon as the card enters the viewport
-      // by even one pixel, which can feel abrupt. 40% = the card is
-      // comfortably on screen before the count starts.
-      threshold: 0.4,
-      // Slight negative bottom margin so the card must actually be in
-      // the main visible area, not just touching the fold.
-      rootMargin: '0px 0px -10% 0px'
+      // threshold 0.15 — card only needs 15% visible to trigger. More
+      // forgiving than 0.4, especially on short viewports / mobile where
+      // the card might be partially below the fold at page load.
+      threshold: 0.15
     });
 
     targets.forEach(function (el) {
       // Store the fallback text in case we need to restore it on error.
       el.setAttribute('data-count-fallback', el.textContent);
       // Reset to 0 so the animation has somewhere to count from.
-      // (Only after we know IO is available and this will actually run.)
       var prefix = el.getAttribute('data-count-prefix') || '';
       var suffix = el.getAttribute('data-count-suffix') || '';
       el.textContent = prefix + '0' + suffix;
       observer.observe(el);
     });
+
+    // Safety fallback: if the observer hasn't fired within 800ms (e.g.
+    // weird viewport math, the card is offscreen at load, or the IO
+    // callback is delayed), force-start any remaining targets that are
+    // in viewport by manual rect check. Prevents users from ever seeing
+    // a stuck '+0 pts'.
+    setTimeout(function () {
+      targets.forEach(function (el) {
+        if (animated.has(el)) return;
+        var rect = el.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        // If the card is anywhere in or near the viewport, just trigger.
+        if (rect.top < vh && rect.bottom > 0) {
+          trigger(el);
+          observer.unobserve(el);
+        }
+      });
+    }, 800);
   }
 
   if (document.readyState === 'loading') {
