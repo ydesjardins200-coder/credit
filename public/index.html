@@ -791,13 +791,20 @@
     </section>
 
     <!-- ============= FAQ ============= -->
-    <section class="section section-surface">
+    <section class="section section-surface faq-section">
       <div class="container">
         <div class="section-header">
           <span class="eyebrow">FAQ</span>
           <h2>Common questions.</h2>
+          <p>
+            Answers grouped in two parts — first about iBoost specifically,
+            then a short credit-bureau primer for everyone building credit,
+            regardless of whether you're an iBoost member.
+          </p>
         </div>
 
+        <!-- ============= SUB-SECTION A: About iBoost ============= -->
+        <h3 class="faq-subtitle">About iBoost</h3>
         <div class="faq-list">
           <div class="faq-item">
             <button class="faq-question" aria-expanded="false">
@@ -807,10 +814,10 @@
               <p>
                 iBoost helps by doing the two things that matter most for your
                 credit score: reporting on-time payments to the major bureaus
-                (35% of your score) and helping you manage utilization (30% of
-                your score). Results vary based on your starting credit
-                profile, but consistent on-time payments over several months
-                almost always produce measurable improvement.
+                (35% of your FICO score) and helping you manage utilization
+                (30% of your score). Results vary based on your starting
+                credit profile, but consistent on-time payments over several
+                months almost always produce measurable improvement.
               </p>
             </div>
           </div>
@@ -822,7 +829,9 @@
             <div class="faq-answer">
               <p>
                 No. Signing up for iBoost doesn't require a credit check and
-                won't affect your score. We verify identity only.
+                won't affect your score. We verify identity only — a soft
+                verification that doesn't generate a hard inquiry on your
+                report.
               </p>
             </div>
           </div>
@@ -833,9 +842,11 @@
             </button>
             <div class="faq-answer">
               <p>
-                We use bank-level encryption for every connection and never
-                sell your personal information. You control what's shared and
-                can export or delete your data at any time.
+                We use bank-level encryption (TLS 1.3 in transit, AES-256 at
+                rest) on every connection and never sell your personal
+                information. You control what's shared and can export or
+                delete your data at any time. Full details in our
+                <a href="#trust">Trust &amp; compliance</a> section.
               </p>
             </div>
           </div>
@@ -903,6 +914,368 @@
               </p>
             </div>
           </div>
+        </div>
+
+        <!-- ============= SUB-SECTION B: Credit & credit bureaus 101 ============= -->
+        <h3 class="faq-subtitle faq-subtitle-spacer">Credit &amp; credit bureaus 101</h3>
+        <div class="faq-list">
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What is a credit bureau?
+            </button>
+            <div class="faq-answer">
+              <p>
+                A credit bureau (also called a credit reporting agency, or CRA)
+                is a company that collects information about your borrowing
+                behavior from lenders and sells that information back to other
+                lenders who are deciding whether to extend you credit. Bureaus
+                don't lend money themselves — they're the record-keepers. The
+                information they hold about you is called your credit report;
+                the numeric summary calculated from that report is your credit
+                score.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Who are the main credit bureaus in the United States?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Three nationwide consumer reporting agencies: Equifax,
+                Experian, and TransUnion. All three are regulated under the
+                Fair Credit Reporting Act (FCRA) and are the source of the
+                credit reports used by virtually all U.S. lenders. Smaller
+                specialty bureaus exist for niches like rental history
+                (LexisNexis) and medical debt (ChexSystems), but the "big
+                three" are what most lenders check.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Who are the main credit bureaus in Canada?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Canada has two main credit bureaus: Equifax Canada and
+                TransUnion Canada. Experian briefly operated in Canada but
+                exited the market in 2009. Canadian lenders typically pull
+                from one or both of the remaining bureaus. Both are regulated
+                under PIPEDA federally and provincial consumer-reporting
+                statutes (Quebec, Ontario, Alberta, BC each have their own).
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Are Equifax Canada and Equifax US the same company?
+            </button>
+            <div class="faq-answer">
+              <p>
+                They share a corporate parent (Equifax Inc., based in Atlanta)
+                but operate as separate legal entities with separate databases
+                and separate reports. Your Equifax Canada file and your
+                Equifax US file do not communicate. If you've lived or worked
+                in both countries, you have two distinct credit histories that
+                must be built and monitored independently.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What's the difference between a credit bureau and a credit score?
+            </button>
+            <div class="faq-answer">
+              <p>
+                The bureau maintains the raw data — the accounts you have, the
+                payments you've made, the balances you carry, the inquiries
+                made about you. The score is a number (300–850 in most U.S.
+                models; 300–900 in Canadian models) calculated by a separate
+                algorithm applied to that data. The two most common scoring
+                algorithms are FICO and VantageScore. Each bureau can calculate
+                a score from either, which is why your "Equifax score" and
+                your "Experian score" may differ even if the underlying data
+                is the same.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What's the difference between FICO and VantageScore?
+            </button>
+            <div class="faq-answer">
+              <p>
+                FICO (created by Fair Isaac Corporation in 1989) and
+                VantageScore (created in 2006 by the three U.S. bureaus
+                together) are two competing scoring algorithms. Both use a
+                300–850 range. FICO is still used in about 90% of U.S.
+                lending decisions. VantageScore is what most free
+                credit-monitoring apps show you. The two use similar inputs
+                (payment history, balances, age of accounts, mix of credit,
+                inquiries) but weight them differently, so the same profile
+                can produce scores 20–40 points apart between the two.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What are the factors that make up my credit score?
+            </button>
+            <div class="faq-answer">
+              <p>
+                For a classic FICO score: payment history 35%, amounts owed
+                (dominated by utilization) 30%, length of credit history 15%,
+                new credit and inquiries 10%, credit mix 10%. VantageScore
+                weights payment history slightly higher (around 40%) and puts
+                more emphasis on total balances than utilization ratio
+                specifically. In both models, paying on time and keeping
+                balances low on revolving accounts are the two biggest levers
+                you control.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What's considered a "good" credit score?
+            </button>
+            <div class="faq-answer">
+              <p>
+                FICO tiers (U.S.): Poor 300–579, Fair 580–669, Good 670–739,
+                Very Good 740–799, Exceptional 800–850. Canadian Equifax tiers
+                are similar but ranges differ slightly (Fair 574–660, Good
+                661–713, Very Good 714–760, Excellent 761+). "Good" is the
+                threshold where most lenders will approve you at standard
+                rates; "Very Good" is where you start accessing the best
+                cards and rates.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Why do I have different scores at different bureaus?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Two reasons. First, not every lender reports to all bureaus —
+                a credit card that reports only to TransUnion will appear on
+                your TransUnion file but not your Equifax file, producing
+                different data. Second, different scoring algorithms (FICO 8
+                vs FICO 9 vs VantageScore 3.0 vs VantageScore 4.0) treat the
+                same data slightly differently. Seeing scores within 20–40
+                points of each other across bureaus is normal.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              How is credit utilization calculated?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Utilization = total balances on revolving accounts ÷ total
+                credit limits on revolving accounts, expressed as a
+                percentage. Example: you have two credit cards with $2,000
+                and $3,000 limits (total $5,000), and your combined balance
+                is $1,000. Your utilization is 20%. Most scoring models
+                calculate utilization on the balance reported to the bureau
+                each month — which is often the balance at statement close,
+                not the balance after you pay the bill. Paying before the
+                statement date can lower the utilization the bureaus see.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              How often can I check my credit report for free?
+            </button>
+            <div class="faq-answer">
+              <p>
+                In the U.S.: since 2023, you're entitled to a free report from
+                each of the three bureaus every week through
+                AnnualCreditReport.com (this replaced the original "one per
+                year" FCRA right). In Canada: both Equifax Canada and
+                TransUnion Canada provide free access to your report on
+                request, typically by mail or via their consumer portal.
+                Checking your own report is a "soft" inquiry and does not
+                affect your score.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Does checking my own score lower it?
+            </button>
+            <div class="faq-answer">
+              <p>
+                No. Checking your own credit score is always a soft inquiry,
+                regardless of how you access it (through the bureau directly,
+                through your bank's app, through a service like iBoost, or
+                through Credit Karma). Soft inquiries are invisible to
+                lenders and have no effect on your score. Only hard inquiries
+                — generated when a lender pulls your report in response to
+                your application — can affect your score.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What's the difference between a soft pull and a hard pull?
+            </button>
+            <div class="faq-answer">
+              <p>
+                A soft pull happens when you (or anyone you've authorized, or
+                certain pre-qualification checks) view your credit report
+                without applying for credit. Soft pulls don't affect your
+                score. A hard pull (also called a hard inquiry) happens when
+                you apply for new credit and the lender pulls your report to
+                make a decision. Each hard pull typically lowers your score
+                by 3–5 points for up to 12 months and remains on your report
+                for 2 years.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What can I dispute on my credit report?
+            </button>
+            <div class="faq-answer">
+              <p>
+                You can dispute any information you believe is inaccurate or
+                incomplete: accounts that aren't yours, wrong balances, wrong
+                payment statuses, outdated negative information that should
+                have aged off, incorrectly duplicated accounts. Under FCRA
+                § 611 (U.S.) and equivalent Canadian provincial statutes, the
+                bureau has 30 days to investigate and respond. You cannot
+                dispute accurate negative information simply because you
+                don't like it — it remains on your report for the legally
+                defined period.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              How long does negative information stay on my report?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Most negative information stays on your U.S. credit report
+                for 7 years from the date of the first delinquency that led
+                to it: late payments, charge-offs, collection accounts,
+                foreclosures, civil judgments (where reportable), and most
+                tax liens. Chapter 7 bankruptcies stay 10 years. In Canada,
+                most negative items drop off after 6 years from the last
+                activity date. Paying off a negative account does not remove
+                it — it remains but with an updated "paid" status.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Does closing an old credit card help or hurt my score?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Usually hurts. Closing a card reduces your total available
+                credit (raising your utilization on remaining cards) and, if
+                it's one of your older accounts, eventually shortens your
+                average account age once it ages off your report. Exceptions:
+                closing a card with a high annual fee you're not getting
+                value from, or closing a card that poses a fraud or
+                overspending risk. The general rule is "keep old cards open
+                and make one small purchase a year to keep them active."
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Does paying a collection account remove it from my report?
+            </button>
+            <div class="faq-answer">
+              <p>
+                No. Paying a collection account changes its status from
+                "unpaid" to "paid" but does not remove it from your report.
+                Under the most common current FICO models (FICO 9 and
+                VantageScore 3.0+), paid collections are ignored entirely for
+                scoring purposes. Older FICO 8 still penalizes paid
+                collections. Some collectors will agree to a "pay for delete"
+                arrangement, but this is not legally guaranteed and has
+                become rarer.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              How long does it take for a new tradeline to affect my score?
+            </button>
+            <div class="faq-answer">
+              <p>
+                A new account typically appears on your report within 30–45
+                days of opening, following the lender's next monthly
+                reporting cycle. The first score impact is usually visible
+                on the bureau's next refresh cycle after that — so 45–60
+                days from account opening, end to end. The new account's
+                full benefit to your average-age and credit-mix factors
+                compounds over subsequent months.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Why did my score drop after I paid off a loan?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Counterintuitively common. Paying off an installment loan
+                (auto, personal, student) removes an active account from your
+                credit mix, which can temporarily lower your score —
+                especially if the loan was one of your few active accounts
+                or contributed to your average account age. The drop is
+                typically small (5–20 points) and temporary. Do not avoid
+                paying off debt to protect your score; the long-term picture
+                improves.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Do utility and rent payments appear on my credit report?
+            </button>
+            <div class="faq-answer">
+              <p>
+                By default, no. Most utility and rental payments are not
+                reported to the credit bureaus unless they go delinquent and
+                end up in collections. However, a growing number of services
+                (Experian Boost in the U.S., various rent-reporting services
+                in Canada) now let you opt in to having on-time utility,
+                phone, streaming, or rent payments added to your report.
+                These opt-in programs affect some but not all scoring models
+                — VantageScore 3.0+ considers them, older FICO models may
+                not.
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
