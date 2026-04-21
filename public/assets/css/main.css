@@ -856,23 +856,127 @@ a:hover { text-decoration: underline; }
 .hub-pos-flagus     { top: 240px;  right: 8%; }
 .hub-pos-experian   { top: 45%; left: 78%; transform: translateY(-50%); }
 
-/* -------- Social proof strip below the hub -------- */
+/* -------- Core-attributes ribbon below the hub --------
+   Single glassy-3D pill that contains 4 trust attributes
+   separated by thin vertical dividers. A subtle shine-sweep
+   traverses the ribbon every 6s for life.
 
-.hero-social-strip {
+   Pattern: unified segmented bar (think macOS status bar or
+   Linear's nav) — more premium than individual chips.
+
+   Centering: the .hero-ribbon is a width:max-content pill wrapped
+   in auto margins, which centers it within the container without
+   needing a flex wrapper. */
+
+.hero-ribbon {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 0.75rem;
-  padding-top: var(--space-3);
-  margin-top: var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
+  width: max-content;
+  max-width: 100%;
+  margin: var(--space-5) auto 0;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 100px;
+  padding: 4px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(46, 204, 113, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-.hero-social-strip .hero-social-text {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.4;
+/* Shine sweep — a white streak that crosses the whole ribbon every 6s */
+.hero-ribbon-shine {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%);
+  pointer-events: none;
+  animation: hero-ribbon-shine 6s ease-in-out infinite;
+  animation-duration: 6s !important;
+}
+
+@keyframes hero-ribbon-shine {
+  0%, 45%  { left: -60%; }
+  100%     { left: 160%; }
+}
+
+.hero-ribbon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* Thin vertical divider between items — skip after the last one */
+.hero-ribbon-item:not(:last-of-type)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 100%);
+}
+
+.hero-ribbon-ico {
+  width: 16px;
+  height: 16px;
+  color: #6ee7a8;
+  flex-shrink: 0;
+}
+
+/* Mobile: collapse to a simpler, stacked list.
+   The single-pill pattern doesn't wrap gracefully — on small
+   screens the 4 items become a centered vertical list without
+   the ribbon chrome (no backdrop, no shine) since the unified
+   look breaks when items stack. */
+@media (max-width: 899px) {
+  .hero-ribbon {
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto;
+    max-width: 280px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    padding: var(--space-3) 0 0;
+    margin: var(--space-3) auto 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: visible;
+  }
+
+  .hero-ribbon-shine { display: none; }
+
+  .hero-ribbon-item {
+    padding: 6px 0;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .hero-ribbon-item:not(:last-of-type)::after { display: none; }
 }
 
 /* -------- Background constellation twinkling -------- */
