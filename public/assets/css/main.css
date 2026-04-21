@@ -2396,6 +2396,10 @@ body.auth-page .site-footer .container {
   justify-content: space-between;
   gap: 0.6rem;
   padding: 0.7rem 0.85rem;
+  /* Fixed height for the closed state so every box is visually identical
+     across columns, regardless of title length. Taller titles (if any)
+     must be shortened or the metadata sub-line used instead. */
+  min-height: 48px;
   cursor: pointer;
   list-style: none;
   user-select: none;
@@ -2403,6 +2407,7 @@ body.auth-page .site-footer .container {
   font-weight: 600;
   color: var(--color-fg);
   transition: background-color 0.15s ease;
+  box-sizing: border-box;
 }
 
 .trust-accordion summary::-webkit-details-marker { display: none; }
