@@ -1223,23 +1223,40 @@ a:hover { text-decoration: underline; }
   margin-bottom: var(--space-4);
 }
 
+/* On signup pages, let the header span full width to match the signup layout.
+   Activated when <body> has .signup-page class OR when site-header is a direct
+   sibling of .signup-split (simpler selector option). We'll use a body class. */
+body.signup-page .site-header .container,
+body.signup-page .site-footer .container {
+  max-width: 100%;
+  padding: 0 var(--space-3);
+}
+
+@media (min-width: 900px) {
+  body.signup-page .site-header .container,
+  body.signup-page .site-footer .container {
+    padding: 0 var(--space-4);
+  }
+}
+
 /* ---------- Split signup layout (YMYL-focused) ---------- */
 .signup-split {
-  max-width: 1140px;
-  margin: var(--space-4) auto;
-  padding: 0 var(--space-3);
+  /* Full-width layout — no 1140px cap on the signup page */
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-3);
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
+  gap: var(--space-3);
   align-items: start;
 }
 
 @media (min-width: 900px) {
   .signup-split {
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    margin: var(--space-6) auto var(--space-8);
-    align-items: stretch;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    align-items: stretch;    /* children stretch to match tallest */
   }
 }
 
@@ -1254,6 +1271,8 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius-xl);
   position: relative;
   overflow: hidden;
+  /* Stretch to match the form column height */
+  height: 100%;
 }
 
 .signup-intro::before {
@@ -1269,10 +1288,19 @@ a:hover { text-decoration: underline; }
 
 .signup-intro > * { position: relative; z-index: 1; }
 
+/* Logo on dark background — small and compact */
+.signup-intro .logo {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;      /* don't stretch to full column width */
+  line-height: 0;
+}
+
 .signup-intro .logo img {
-  height: 40px;
+  height: 28px;
+  width: auto;
+  display: block;
   filter: brightness(0) invert(1);
-  /* Invert falls back to just the wordmark weight on dark bg — acceptable */
 }
 
 .signup-intro h1 {
@@ -1362,7 +1390,10 @@ a:hover { text-decoration: underline; }
 
 /* Right column: form card */
 .signup-form-col {
-  min-width: 0; /* allow grid item to shrink */
+  min-width: 0;          /* allow grid item to shrink */
+  height: 100%;          /* stretch to match intro column */
+  display: flex;         /* so inner card can fill full height */
+  flex-direction: column;
 }
 
 .signup-form-card {
@@ -1371,10 +1402,33 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius-xl);
   padding: var(--space-4);
   box-shadow: var(--shadow-sm);
+  flex: 1;               /* fill the column */
 }
 
 @media (min-width: 900px) {
-  .signup-form-card { padding: var(--space-5); }
+  .signup-form-card {
+    padding: var(--space-5);
+  }
+}
+
+/* On very wide screens, keep form content readable — centre it inside its card */
+@media (min-width: 1400px) {
+  .signup-form-card > * {
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Same for the intro column on ultra-wide — cap inner content width */
+@media (min-width: 1400px) {
+  .signup-intro > *:not(.logo) {
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  /* The logo uses align-self: flex-start and stays left-aligned */
 }
 
 .signup-form-header {
