@@ -475,12 +475,12 @@
         <div class="features-stack">
           <!-- Feature 1 -->
           <div class="feature-row">
-            <div class="feature-content">
+            <div class="feature-content feature-content-lg">
               <span class="badge">Credit reporting</span>
               <h3>On-time payments, reported every month.</h3>
               <p>
-                Every payment you make is reported to the major credit bureaus.
-                That's the foundation of 35% of your credit score.
+                Every payment you make is reported to the major credit
+                bureaus. That's the foundation of 35% of your credit score.
               </p>
               <ul>
                 <li>Reports to Equifax, TransUnion, and Experian (U.S.)</li>
@@ -490,30 +490,65 @@
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="mock-screen">
-                <div class="mock-screen-header">
-                  <div class="mock-screen-title">Payment history</div>
-                  <div class="tag" style="font-size:0.7rem;color:var(--color-accent-hover);font-weight:700">12/12 on-time</div>
+              <div class="payment-showcase" aria-label="Live example of 12-month payment history being reported">
+                <div class="payment-showcase-header">
+                  <div class="payment-showcase-title">Payment history</div>
+                  <div class="payment-counter">
+                    <svg class="payment-counter-arc" viewBox="0 0 36 36" aria-hidden="true">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+                      <circle class="payment-counter-arc-fill" cx="18" cy="18" r="15" fill="none" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2" transform="rotate(-90 18 18)"/>
+                    </svg>
+                    <span class="payment-counter-text">
+                      <span class="payment-counter-num" aria-hidden="true">
+                        <span data-val="1">1</span>
+                        <span data-val="2">2</span>
+                        <span data-val="3">3</span>
+                        <span data-val="4">4</span>
+                        <span data-val="5">5</span>
+                        <span data-val="6">6</span>
+                        <span data-val="7">7</span>
+                        <span data-val="8">8</span>
+                        <span data-val="9">9</span>
+                        <span data-val="10">10</span>
+                        <span data-val="11">11</span>
+                        <span data-val="12">12</span>
+                      </span>
+                      /12 on-time
+                      <span class="sr-only">12 of 12 payments reported on-time</span>
+                    </span>
+                  </div>
                 </div>
-                <div class="mock-row">
-                  <span class="mock-dot"></span>
-                  <span class="mock-row-text">May 2026</span>
-                  <span class="mock-row-value positive">Reported ✓</span>
+
+                <div class="payment-list-viewport">
+                  <div class="payment-list">
+                    <article class="payment-row" style="--payment-i: 1;">
+                      <span class="payment-row-dot"></span>
+                      <span class="payment-row-month">May 2026</span>
+                      <span class="payment-row-status">Reported <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    </article>
+                    <article class="payment-row" style="--payment-i: 2;">
+                      <span class="payment-row-dot"></span>
+                      <span class="payment-row-month">April 2026</span>
+                      <span class="payment-row-status">Reported <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    </article>
+                    <article class="payment-row" style="--payment-i: 3;">
+                      <span class="payment-row-dot"></span>
+                      <span class="payment-row-month">March 2026</span>
+                      <span class="payment-row-status">Reported <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    </article>
+                    <article class="payment-row" style="--payment-i: 4;">
+                      <span class="payment-row-dot"></span>
+                      <span class="payment-row-month">February 2026</span>
+                      <span class="payment-row-status">Reported <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    </article>
+                  </div>
                 </div>
-                <div class="mock-row">
-                  <span class="mock-dot"></span>
-                  <span class="mock-row-text">April 2026</span>
-                  <span class="mock-row-value positive">Reported ✓</span>
-                </div>
-                <div class="mock-row">
-                  <span class="mock-dot"></span>
-                  <span class="mock-row-text">March 2026</span>
-                  <span class="mock-row-value positive">Reported ✓</span>
-                </div>
-                <div class="mock-row">
-                  <span class="mock-dot muted"></span>
-                  <span class="mock-row-text">February 2026</span>
-                  <span class="mock-row-value positive">Reported ✓</span>
+
+                <div class="payment-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  Reported to every major bureau, same day
                 </div>
               </div>
             </div>

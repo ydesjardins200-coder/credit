@@ -1244,6 +1244,294 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
+   PAYMENT SHOWCASE (right column of the Credit Reporting feature row)
+   Progressive-reveal animation: 4 payment rows fade in one at a time,
+   a counter ticks from 1/12 to 12/12, a circular progress arc fills to
+   match. Different primitive from the rolling tickers — this tells a
+   'journey over 12 months' story, not a 'live feed' story.
+   ======================================================================= */
+
+.payment-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1rem 1.1rem 0.9rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.payment-showcase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.payment-showcase-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--color-fg);
+}
+
+/* ---------- Counter with circular progress arc ---------- */
+
+.payment-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.payment-counter-arc {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* stroke-dasharray is the full circumference (94.2 = 2πr where r=15).
+   stroke-dashoffset starts at 94.2 (empty) and animates to 0 (full).
+   Synced to the 22s cycle: fills over 18s, holds at 0 for 4s, resets.
+   !important on animation-duration defeats UA reduced-motion override. */
+.payment-counter-arc-fill {
+  animation: payment-arc-fill 22s linear infinite;
+  animation-duration: 22s !important;
+}
+
+@keyframes payment-arc-fill {
+  0%   { stroke-dashoffset: 94.2; }
+  6%   { stroke-dashoffset: 86.35; }  /* 1/12 */
+  12%  { stroke-dashoffset: 78.5; }   /* 2/12 */
+  18%  { stroke-dashoffset: 70.65; }  /* 3/12 */
+  24%  { stroke-dashoffset: 62.8; }   /* 4/12 */
+  30%  { stroke-dashoffset: 54.95; }  /* 5/12 */
+  36%  { stroke-dashoffset: 47.1; }   /* 6/12 */
+  42%  { stroke-dashoffset: 39.25; }  /* 7/12 */
+  48%  { stroke-dashoffset: 31.4; }   /* 8/12 */
+  54%  { stroke-dashoffset: 23.55; }  /* 9/12 */
+  60%  { stroke-dashoffset: 15.7; }   /* 10/12 */
+  66%  { stroke-dashoffset: 7.85; }   /* 11/12 */
+  72%, 95% { stroke-dashoffset: 0; }  /* 12/12, hold */
+  100% { stroke-dashoffset: 94.2; }   /* reset */
+}
+
+/* ---------- Counter text (number ticks 1 through 12) ---------- */
+
+.payment-counter-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.payment-counter-num {
+  position: relative;
+  display: inline-block;
+  width: 1.3em;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  vertical-align: baseline;
+  text-align: right;
+  color: var(--color-accent-hover);
+}
+
+/* Stacked digits: all occupy the same slot, visible one at a time via
+   opacity. Each digit is animated with a 22s cycle, showing for ~1.5s
+   then fading as the next digit appears. */
+.payment-counter-num > span {
+  position: absolute;
+  right: 0;
+  top: 0;
+  opacity: 0;
+  animation: payment-counter-step 22s linear infinite;
+  animation-duration: 22s !important;
+}
+
+/* Each digit's reveal is offset by its value. Using animation-delay
+   scaled so digit 1 appears at 0%, digit 12 appears at ~72%, hold
+   12/12 from 72%-95%, reset. */
+.payment-counter-num > span[data-val="1"]  { animation-delay: 0s; }
+.payment-counter-num > span[data-val="2"]  { animation-delay: 1.32s; }
+.payment-counter-num > span[data-val="3"]  { animation-delay: 2.64s; }
+.payment-counter-num > span[data-val="4"]  { animation-delay: 3.96s; }
+.payment-counter-num > span[data-val="5"]  { animation-delay: 5.28s; }
+.payment-counter-num > span[data-val="6"]  { animation-delay: 6.6s; }
+.payment-counter-num > span[data-val="7"]  { animation-delay: 7.92s; }
+.payment-counter-num > span[data-val="8"]  { animation-delay: 9.24s; }
+.payment-counter-num > span[data-val="9"]  { animation-delay: 10.56s; }
+.payment-counter-num > span[data-val="10"] { animation-delay: 11.88s; }
+.payment-counter-num > span[data-val="11"] { animation-delay: 13.2s; }
+.payment-counter-num > span[data-val="12"] { animation-delay: 14.52s; }
+
+@keyframes payment-counter-step {
+  /* Each digit is visible for ~6% of the cycle (1.32s / 22s). Digits
+     1-11 fade out as the next fades in. Digit 12 holds longer. */
+  0%   { opacity: 0; transform: translateY(6px); }
+  1.5% { opacity: 1; transform: translateY(0); }
+  7%   { opacity: 1; transform: translateY(0); }
+  8.5% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+/* Digit 12 is the final state — holds from its appearance (~66%) through
+   to the end of the cycle. Overriding its keyframes vs the generic ones
+   above. */
+.payment-counter-num > span[data-val="12"] {
+  animation-name: payment-counter-final;
+}
+
+@keyframes payment-counter-final {
+  0%   { opacity: 0; transform: translateY(6px); }
+  1.5% { opacity: 1; transform: translateY(0); }
+  33%  { opacity: 1; transform: translateY(0); }  /* holds until near end */
+  38%  { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+/* ---------- Payment list (4 rows, staggered reveals) ---------- */
+
+.payment-list-viewport {
+  height: 240px;
+  overflow: hidden;
+  position: relative;
+}
+
+.payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  min-height: 50px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation-duration: 22s !important;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  animation-iteration-count: infinite;
+}
+
+/* Each row has a custom keyframe so reveals stagger but fade-outs align
+   at 98% — all four rows disappear together just before the loop resets. */
+.payment-row:nth-child(1) { animation-name: payment-row-1; }
+.payment-row:nth-child(2) { animation-name: payment-row-2; }
+.payment-row:nth-child(3) { animation-name: payment-row-3; }
+.payment-row:nth-child(4) { animation-name: payment-row-4; }
+
+@keyframes payment-row-1 {
+  0%    { opacity: 0; transform: translateY(8px); }
+  3%    { opacity: 1; transform: translateY(0); }
+  96%   { opacity: 1; transform: translateY(0); }
+  100%  { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes payment-row-2 {
+  0%, 6%   { opacity: 0; transform: translateY(8px); }
+  9%       { opacity: 1; transform: translateY(0); }
+  96%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes payment-row-3 {
+  0%, 12%  { opacity: 0; transform: translateY(8px); }
+  15%      { opacity: 1; transform: translateY(0); }
+  96%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes payment-row-4 {
+  0%, 18%  { opacity: 0; transform: translateY(8px); }
+  21%      { opacity: 1; transform: translateY(0); }
+  96%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(-4px); }
+}
+
+.payment-row-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.payment-row-month {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.payment-row-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-accent-hover);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.payment-row-status svg {
+  width: 14px;
+  height: 14px;
+  padding: 2px;
+  background: var(--color-accent-soft);
+  border-radius: 50%;
+  color: var(--color-accent-hover);
+}
+
+.payment-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.payment-showcase-footer svg {
+  width: 13px;
+  height: 13px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Screen-reader helper */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =======================================================================
    BUDGET SHOWCASE (right column of the Budget feature row)
    Rolling transaction feed that mirrors the AI showcase pattern.
    8 unique transactions + 1 duplicate for seamless looping.
