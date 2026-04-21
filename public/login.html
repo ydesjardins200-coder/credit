@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sign in to iBoost." />
+  <title>Sign in — iBoost</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="logo">iBoost</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/signup.html" class="btn btn-ghost">Sign up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="muted">Sign in to your iBoost account.</p>
+
+      <div id="alert" hidden></div>
+
+      <button type="button" class="btn btn-oauth" data-oauth="google" aria-disabled="true" disabled>
+        Continue with Google
+      </button>
+      <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
+        Continue with Facebook
+      </button>
+
+      <div class="divider">or</div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+          Sign in
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Don't have an account? <a href="/signup.html">Sign up</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="/assets/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/login.js" defer></script>
+</body>
+</html>

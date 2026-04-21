@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account — iBoost</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="logo">iBoost</a>
+      <nav class="site-nav" aria-label="Primary">
+        <button type="button" id="signout-btn" class="btn btn-ghost">Sign out</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <h1>Your account</h1>
+      <p class="muted">Signed in as <strong id="user-email">…</strong>.</p>
+      <p>
+        This is a placeholder. The real dashboard — credit score tracking,
+        dispute tools, and monthly action items — goes here.
+      </p>
+    </div>
+  </main>
+
+  <script src="/assets/js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/account.js" defer></script>
+</body>
+</html>

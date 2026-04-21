@@ -9,4 +9,16 @@
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());
   }
+
+  // If the user is already signed in, swap the "Sign in" link for "Account"
+  (async function updateNav() {
+    if (!window.iboostAuth) return;
+    const { session } = await window.iboostAuth.getSession();
+    if (!session) return;
+
+    document.querySelectorAll('.site-nav a[href="/login.html"]').forEach((a) => {
+      a.textContent = 'Account';
+      a.setAttribute('href', '/account.html');
+    });
+  })();
 })();

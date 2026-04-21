@@ -11,6 +11,9 @@ node_modules/
 */.env
 */.env.local
 
+# Generated frontend config (built from Netlify env vars)
+public/assets/js/config.js
+
 # Build output
 dist/
 build/

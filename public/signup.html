@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create your iBoost account." />
+  <title>Sign up — iBoost</title>
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="logo">iBoost</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/login.html" class="btn btn-ghost">Sign in</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="muted">Start your credit journey with iBoost.</p>
+
+      <div id="alert" hidden></div>
+
+      <button type="button" class="btn btn-oauth" data-oauth="google" aria-disabled="true" disabled>
+        Continue with Google
+      </button>
+      <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
+        Continue with Facebook
+      </button>
+
+      <div class="divider">or</div>
+
+      <form id="signup-form" novalidate>
+        <div class="form-group">
+          <label for="full_name">Full name</label>
+          <input type="text" id="full_name" name="full_name" autocomplete="name" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+          Create account
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Config must load before auth.js -->
+  <script src="/assets/js/config.js"></script>
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/auth.js"></script>
+  <script src="/assets/js/signup.js" defer></script>
+</body>
+</html>

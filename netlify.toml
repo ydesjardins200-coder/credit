@@ -2,8 +2,12 @@
 
 [build]
   publish = "public"
-  # No build step needed for plain HTML/CSS/JS
-  command = ""
+  # Generate public/assets/js/config.js from Netlify environment variables.
+  # SUPABASE_URL, SUPABASE_ANON_KEY, and API_BASE_URL must be set in the
+  # Netlify dashboard under Site settings → Environment variables.
+  command = """
+    printf 'window.IBOOST_CONFIG = {\\n  SUPABASE_URL: "%s",\\n  SUPABASE_ANON_KEY: "%s",\\n  API_BASE_URL: "%s"\\n};\\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" "$API_BASE_URL" > public/assets/js/config.js
+  """
 
 # SPA-style fallback: if you later add client-side routing, uncomment:
 # [[redirects]]
