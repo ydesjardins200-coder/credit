@@ -1217,7 +1217,9 @@ body.signup-page .site-footer .container {
 
 @media (min-width: 900px) {
   .signup-split {
-    grid-template-columns: 2fr 3fr;  /* ~40/60 — form gets the weight */
+    grid-template-columns: 1fr 1fr;  /* Equal weight — left column gets
+                                        more real estate now that it has
+                                        richer decorative content. */
     gap: var(--space-4);
     padding: var(--space-4);
     align-items: stretch;            /* children stretch to match tallest */
@@ -1228,17 +1230,27 @@ body.signup-page .site-footer .container {
    security block get absurdly big. */
 @media (min-width: 1600px) {
   .signup-split {
-    grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
+    grid-template-columns: minmax(420px, 600px) minmax(0, 1fr);
   }
 }
 
-/* Left column: brand + benefits + trust */
+/* Left column: brand + benefits + trust. A mesh of three radial gradients
+   creates organic depth, and a low-opacity upward-curve SVG over the top
+   reinforces the "credit improving" metaphor without being literal. */
 .signup-intro {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  background: linear-gradient(165deg, var(--color-primary) 0%, #113358 100%);
+  background:
+    /* Emerald glow from bottom-left (where the growth arc starts) */
+    radial-gradient(circle at 10% 95%, rgba(46, 204, 113, 0.22) 0%, transparent 55%),
+    /* Cool cyan accent top-right */
+    radial-gradient(circle at 95% 5%, rgba(90, 200, 220, 0.12) 0%, transparent 50%),
+    /* Soft highlight mid-right */
+    radial-gradient(circle at 85% 50%, rgba(46, 204, 113, 0.08) 0%, transparent 55%),
+    /* Base: diagonal deep navy gradient */
+    linear-gradient(165deg, #0A2540 0%, #0d2c4a 50%, #041628 100%);
   color: #fff;
   border-radius: var(--radius-xl);
   position: relative;
@@ -1248,13 +1260,16 @@ body.signup-page .site-footer .container {
 }
 
 .signup-intro::before {
+  /* Decorative credit-improving motif: ascending curve + data-point dots.
+     Inlined as a data URI so there's no extra request. */
   content: '';
   position: absolute;
-  top: -40%;
-  right: -30%;
-  width: 80%;
-  height: 120%;
-  background: radial-gradient(circle, rgba(46, 204, 113, 0.18) 0%, transparent 65%);
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 800' preserveAspectRatio='xMidYMid slice'><g stroke='%23ffffff' stroke-width='1' stroke-opacity='0.04' fill='none'><line x1='0' y1='200' x2='600' y2='200'/><line x1='0' y1='400' x2='600' y2='400'/><line x1='0' y1='600' x2='600' y2='600'/></g><path d='M -50 720 Q 150 640 300 500 T 650 150' fill='none' stroke='%232ECC71' stroke-width='2' stroke-opacity='0.5'/><path d='M -30 760 Q 120 700 270 580 T 620 280' fill='none' stroke='%232ECC71' stroke-width='1.2' stroke-opacity='0.25'/><circle cx='50' cy='690' r='4' fill='%232ECC71' fill-opacity='0.5'/><circle cx='180' cy='610' r='5' fill='%232ECC71' fill-opacity='0.65'/><circle cx='310' cy='500' r='6' fill='%232ECC71' fill-opacity='0.8'/><circle cx='460' cy='340' r='7' fill='%232ECC71' fill-opacity='0.9'/><circle cx='600' cy='180' r='9' fill='%232ECC71' fill-opacity='1'/></svg>");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.55;
   pointer-events: none;
 }
 
