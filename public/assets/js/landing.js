@@ -244,8 +244,8 @@
     }
 
     // Timing (ms)
-    const STEP_MS = 1600;      // each month transition (was 700 — too rushed)
-    const LOOP_REST_MS = 2500; // pause at month 12 before looping back to month 1
+    const STEP_MS = 2400;      // each month transition (was 1600 — still felt rushed)
+    const LOOP_REST_MS = 3500; // pause at month 12 before looping back to month 1
 
     function startAutoPlay() {
       stopAutoPlay();
