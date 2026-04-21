@@ -521,13 +521,13 @@
 
           <!-- Feature 2 -->
           <div class="feature-row reverse">
-            <div class="feature-content">
+            <div class="feature-content feature-content-lg">
               <span class="badge">Free forever</span>
               <h3>Budget app that actually helps.</h3>
               <p>
                 Link your accounts (or enter manually), set goals, and get a
-                clear view of where your money goes. No ads, no paid tier for
-                basic features.
+                clear view of where your money goes. No ads, no paid tier
+                for basic features.
               </p>
               <ul>
                 <li>Automatic transaction categorization</li>
@@ -537,30 +537,107 @@
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="mock-screen">
-                <div class="mock-screen-header">
-                  <div class="mock-screen-title">This month</div>
-                  <div class="tag" style="font-size:0.7rem">$1,840 / $2,200</div>
+              <div class="budget-showcase" aria-label="Live example of the iBoost budget feed">
+                <div class="budget-showcase-header">
+                  <div class="budget-showcase-title">This month</div>
+                  <div class="budget-showcase-progress">
+                    <span class="budget-progress-amounts">$1,840 / $2,200</span>
+                    <span class="budget-progress-bar" aria-hidden="true">
+                      <span class="budget-progress-fill"></span>
+                    </span>
+                  </div>
                 </div>
-                <div class="mock-row">
-                  <span class="mock-dot"></span>
-                  <span class="mock-row-text">Groceries</span>
-                  <span class="mock-row-value">$420</span>
+
+                <div class="budget-tx-viewport" aria-live="off">
+                  <div class="budget-tx-stack">
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-food"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Starbucks <span class="budget-tx-cat">· Coffee</span></div>
+                        <div class="budget-tx-time">just now</div>
+                      </div>
+                      <span class="budget-tx-amount">−$5.40</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-grocery"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Whole Foods <span class="budget-tx-cat">· Groceries</span></div>
+                        <div class="budget-tx-time">12 min ago</div>
+                      </div>
+                      <span class="budget-tx-amount">−$87.32</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-transit"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Uber <span class="budget-tx-cat">· Transport</span></div>
+                        <div class="budget-tx-time">1h ago</div>
+                      </div>
+                      <span class="budget-tx-amount">−$14.20</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-sub"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Spotify <span class="budget-tx-cat">· Subscription</span></div>
+                        <div class="budget-tx-time">2h ago</div>
+                      </div>
+                      <span class="budget-tx-amount">−$11.99</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-income"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Payroll deposit <span class="budget-tx-cat">· Income</span></div>
+                        <div class="budget-tx-time">this morning</div>
+                      </div>
+                      <span class="budget-tx-amount budget-tx-amount-positive">+$2,400</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-transit"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Metro <span class="budget-tx-cat">· Transport</span></div>
+                        <div class="budget-tx-time">yesterday</div>
+                      </div>
+                      <span class="budget-tx-amount">−$3.25</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-sub"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Netflix <span class="budget-tx-cat">· Subscription</span></div>
+                        <div class="budget-tx-time">yesterday</div>
+                      </div>
+                      <span class="budget-tx-amount">−$15.99</span>
+                    </article>
+
+                    <article class="budget-tx">
+                      <span class="budget-tx-dot budget-tx-dot-shop"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Amazon <span class="budget-tx-cat">· Shopping</span></div>
+                        <div class="budget-tx-time">2 days ago</div>
+                      </div>
+                      <span class="budget-tx-amount">−$42.00</span>
+                    </article>
+
+                    <article class="budget-tx" aria-hidden="true">
+                      <span class="budget-tx-dot budget-tx-dot-food"></span>
+                      <div class="budget-tx-body">
+                        <div class="budget-tx-merchant">Starbucks <span class="budget-tx-cat">· Coffee</span></div>
+                        <div class="budget-tx-time">just now</div>
+                      </div>
+                      <span class="budget-tx-amount">−$5.40</span>
+                    </article>
+                  </div>
                 </div>
-                <div class="mock-row">
-                  <span class="mock-dot"></span>
-                  <span class="mock-row-text">Rent</span>
-                  <span class="mock-row-value">$1,100</span>
-                </div>
-                <div class="mock-row">
-                  <span class="mock-dot muted"></span>
-                  <span class="mock-row-text">Entertainment</span>
-                  <span class="mock-row-value">$95</span>
-                </div>
-                <div class="mock-row">
-                  <span class="mock-dot muted"></span>
-                  <span class="mock-row-text">Savings goal</span>
-                  <span class="mock-row-value positive">+$225</span>
+
+                <div class="budget-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5"/>
+                  </svg>
+                  Auto-categorized by iBoost
                 </div>
               </div>
             </div>

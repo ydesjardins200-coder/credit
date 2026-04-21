@@ -1244,6 +1244,204 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
+   BUDGET SHOWCASE (right column of the Budget feature row)
+   Rolling transaction feed that mirrors the AI showcase pattern.
+   8 unique transactions + 1 duplicate for seamless looping.
+   ======================================================================= */
+
+.budget-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1rem 1.1rem 0.9rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.budget-showcase-header {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.budget-showcase-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--color-fg);
+}
+
+.budget-showcase-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.budget-progress-amounts {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-progress-bar {
+  position: relative;
+  display: block;
+  height: 6px;
+  background: var(--color-surface-2);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.budget-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 84%;
+  background: linear-gradient(90deg, #2ECC71 0%, #22c55e 100%);
+  border-radius: 100px;
+  animation: budget-progress-fill 2s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate;
+  animation-duration: 2s !important;
+}
+
+@keyframes budget-progress-fill {
+  0%   { width: 82%; }
+  100% { width: 86%; }
+}
+
+.budget-tx-viewport {
+  height: 240px;
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+
+.budget-tx-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: budget-tx-roll 28s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation-duration: 28s !important;
+  will-change: transform;
+}
+
+@keyframes budget-tx-roll {
+  /* 8 unique transactions + 1 duplicate at the end for seamless looping.
+     Each slot = ~66px (tx row height 60px + flex gap 6px).
+     Each step holds ~3s, slides ~0.5s. */
+  0%,  10% { transform: translateY(0); }
+  12.5%, 22.5% { transform: translateY(-66px); }
+  25%, 35% { transform: translateY(-132px); }
+  37.5%, 47.5% { transform: translateY(-198px); }
+  50%, 60% { transform: translateY(-264px); }
+  62.5%, 72.5% { transform: translateY(-330px); }
+  75%, 85% { transform: translateY(-396px); }
+  87.5%, 97.5% { transform: translateY(-462px); }
+  100%    { transform: translateY(-528px); }
+}
+
+.budget-tx {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+.budget-tx-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-accent);
+}
+
+.budget-tx-dot-food     { background: #f59e0b; }
+.budget-tx-dot-grocery  { background: #10b981; }
+.budget-tx-dot-transit  { background: #3b82f6; }
+.budget-tx-dot-sub      { background: #8b5cf6; }
+.budget-tx-dot-income   { background: #2ECC71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
+.budget-tx-dot-shop     { background: #ec4899; }
+
+.budget-tx-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.budget-tx-merchant {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.budget-tx-cat {
+  font-weight: 400;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.budget-tx-time {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.budget-tx-amount {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.budget-tx-amount-positive {
+  color: #059669;
+}
+
+.budget-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.budget-showcase-footer svg {
+  width: 13px;
+  height: 13px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* =======================================================================
    FEATURE ROW — large size variant (used on the AI-powered row) +
    AI tip showcase with rolling-tip animation
    ======================================================================= */
