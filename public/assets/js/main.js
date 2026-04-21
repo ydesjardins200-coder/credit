@@ -16,7 +16,12 @@
     const { session } = await window.iboostAuth.getSession();
     if (!session) return;
 
-    document.querySelectorAll('.site-nav a[href="/login.html"]').forEach((a) => {
+    // Match both "/login" and "/login.html" because Netlify's Pretty URLs
+    // feature strips the .html extension from internal links at deploy time.
+    const loginLinks = document.querySelectorAll(
+      '.site-nav a[href="/login.html"], .site-nav a[href="/login"]'
+    );
+    loginLinks.forEach((a) => {
       a.textContent = 'Account';
       a.setAttribute('href', '/account.html');
     });
