@@ -822,47 +822,280 @@ a:hover { text-decoration: underline; }
   color: var(--color-primary);
 }
 
-/* ---------- Steps ---------- */
-.steps-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-  max-width: 960px;
-  margin: 0 auto;
+/* =======================================================================
+   HOW IT WORKS — dark-hero-matching section
+   Mirrors the hero's visual grammar: navy base + emerald mesh gradient +
+   upward-curve motif + translucent white cards. Tells the 3-step process
+   with a visual connector, time pills, and one-line 'fact' receipts.
+   ======================================================================= */
+
+.how-dark {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  /* Same mesh gradient as the hero: diagonal navy base + emerald bottom-left
+     + cool cyan top-right. */
+  background:
+    radial-gradient(ellipse 75% 55% at 5% 120%, rgba(46, 204, 113, 0.28), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 95% -10%, rgba(56, 189, 248, 0.18), transparent 55%),
+    linear-gradient(135deg, #0A2540 0%, #0f2e4d 50%, #0A2540 100%);
+  color: #fff;
+  padding: var(--space-8) 0;
 }
 
-@media (min-width: 760px) {
-  .steps-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+.how-motif {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.how-dark .container {
+  position: relative;
+  max-width: 1200px;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+/* ---------- Section header (dark variant) ---------- */
+
+.how-header {
+  max-width: 720px;
+  margin: 0 auto var(--space-6);
+  text-align: center;
+}
+
+.how-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  background: rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 100px;
+  color: #6ee7a8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.how-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2ECC71;
+  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  animation: how-eyebrow-pulse 2s ease-out infinite;
+}
+
+@keyframes how-eyebrow-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0.7); }
+  70%  { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0); }
+}
+
+.how-header h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: #fff;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.75rem;
+}
+
+.how-header p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* ---------- Steps grid ---------- */
+
+.steps-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1100px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  counter-reset: step;
+  position: relative;
+}
+
+@media (min-width: 900px) {
+  .steps-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+
+  /* Connecting emerald line between the 3 step numbers (desktop only).
+     Positioned horizontally across the card tops, dashed, behind the
+     number circles. The circles sit on top to anchor the visual flow. */
+  .steps-grid::before {
+    content: '';
+    position: absolute;
+    top: 36px;                       /* aligns with center of .step-number */
+    left: 16.66%;                    /* under center of 1st card */
+    right: 16.66%;                   /* under center of 3rd card */
+    height: 2px;
+    background-image: linear-gradient(to right,
+      rgba(46, 204, 113, 0.5) 50%, transparent 50%);
+    background-size: 10px 2px;
+    background-repeat: repeat-x;
+    z-index: 0;
+  }
 }
 
 .step {
   position: relative;
-  padding: var(--space-4);
-  background: #fff;
-  border: 1px solid var(--color-border);
+  padding: 1.3rem 1.3rem 1.1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.25s ease, background 0.25s ease,
+              transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 1;
+}
+
+.step:hover {
+  border-color: rgba(46, 204, 113, 0.5);
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
 }
 
 .step-number {
-  position: absolute;
-  top: -18px;
-  left: var(--space-3);
-  width: 40px;
-  height: 40px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 50%;
+  /* Solid emerald circle, anchored at top-center of the card. This sits on
+     top of the dashed connector line (desktop) to anchor each stage. */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1rem;
-  box-shadow: var(--shadow-sm);
+  width: 44px;
+  height: 44px;
+  background: #2ECC71;
+  color: #0A2540;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 0 0 6px rgba(10, 37, 64, 1),
+              0 0 0 8px rgba(46, 204, 113, 0.25);
+  /* The 6px navy ring cuts the dashed connector line cleanly behind the
+     number; the outer emerald ring is a subtle halo. */
+  margin: 0 auto -0.5rem;
+  /* Pull up slightly so the circle visually crosses the card's top edge */
+  margin-top: -0.3rem;
+  position: relative;
+  z-index: 2;
 }
 
-.step h3 { margin-top: var(--space-1); font-size: 1.15rem; }
-.step p { color: var(--color-fg-soft); font-size: 0.95rem; margin: 0; }
-.step strong { color: var(--color-fg); }
+.step-body {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+}
+
+.step-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.step h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.step-time {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  background: rgba(46, 204, 113, 0.18);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 100px;
+  color: #6ee7a8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.step-body > p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
+}
+
+.step-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.25);
+  border-radius: var(--radius);
+  font-size: 0.78rem !important;
+  line-height: 1.45;
+  color: #a7f3d0 !important;
+  text-align: left;
+  margin-top: auto !important;
+}
+
+.step-fact svg {
+  width: 14px;
+  height: 14px;
+  color: #2ECC71;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ---------- Footer CTA row ---------- */
+
+.how-footer-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: var(--space-5);
+}
+
+/* Glow button — emerald primary with a soft outer glow to punch on
+   the dark background. */
+.btn-cta-glow {
+  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6),
+              0 6px 20px rgba(46, 204, 113, 0.35);
+  animation: cta-glow-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes cta-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6),
+                        0 6px 20px rgba(46, 204, 113, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(46, 204, 113, 0),
+                        0 10px 28px rgba(46, 204, 113, 0.5); }
+}
+
+.how-footer-microtrust {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.01em;
+}
 
 /* ---------- Feature rows ---------- */
 .features-stack {

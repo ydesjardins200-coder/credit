@@ -356,30 +356,109 @@
     </section>
 
     <!-- ============= HOW IT WORKS ============= -->
-    <section id="how" class="section section-surface">
+    <section id="how" class="section how-dark" aria-labelledby="how-title">
+      <svg class="how-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g stroke="#fff" stroke-width="1" stroke-opacity="0.05" fill="none">
+          <line x1="0" y1="150" x2="1200" y2="150"/>
+          <line x1="0" y1="300" x2="1200" y2="300"/>
+          <line x1="0" y1="450" x2="1200" y2="450"/>
+        </g>
+        <path d="M -60 580 Q 250 500 520 360 T 1260 60" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-opacity="0.35" stroke-linecap="round"/>
+        <path d="M -30 600 Q 200 540 460 420 T 1220 160" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.18" stroke-linecap="round"/>
+        <circle cx="60" cy="540" r="4" fill="#2ECC71" fill-opacity="0.5"/>
+        <circle cx="220" cy="470" r="5" fill="#2ECC71" fill-opacity="0.6"/>
+        <circle cx="440" cy="370" r="6" fill="#2ECC71" fill-opacity="0.7"/>
+        <circle cx="720" cy="240" r="7" fill="#2ECC71" fill-opacity="0.8"/>
+        <circle cx="1020" cy="110" r="9" fill="#2ECC71" fill-opacity="0.95"/>
+      </svg>
+
       <div class="container">
-        <div class="section-header">
-          <span class="eyebrow">How it works</span>
-          <h2>Three simple steps.</h2>
-          <p>Get started in minutes. No credit check, no hidden fees, no interest.</p>
+        <div class="section-header how-header">
+          <span class="eyebrow how-eyebrow">
+            <span class="how-eyebrow-dot" aria-hidden="true"></span>
+            How it works
+          </span>
+          <h2 id="how-title">Three steps. One month to see results.</h2>
+          <p>
+            No credit check to start. No hidden fees. No interest. The same
+            process, whether you're in Toronto or Tampa.
+          </p>
         </div>
 
-        <div class="steps-grid">
-          <article class="step">
-            <div class="step-number">1</div>
-            <h3>Sign up</h3>
-            <p>Create your account in under 3 minutes — <strong>no credit check</strong> and no commitment.</p>
-          </article>
-          <article class="step">
-            <div class="step-number">2</div>
-            <h3>Start building</h3>
-            <p>Make your first on-time payment. We report to all three major bureaus every month.</p>
-          </article>
-          <article class="step">
-            <div class="step-number">3</div>
-            <h3>Track your progress</h3>
-            <p>Watch your score climb with weekly updates, AI tips, and personalized next steps.</p>
-          </article>
+        <ol class="steps-grid" aria-label="The iBoost signup to score-growth process">
+
+          <li class="step">
+            <div class="step-number" aria-hidden="true">1</div>
+            <div class="step-body">
+              <div class="step-head">
+                <h3>Sign up — no credit check.</h3>
+                <span class="step-time">~ 3 minutes</span>
+              </div>
+              <p>
+                Account in under 3 minutes. We ask for the information we
+                need to report to bureaus, and nothing we don't. Your
+                signup doesn't trigger a hard inquiry on your credit report.
+              </p>
+              <p class="step-fact">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                Soft verification only. Your score is untouched.
+              </p>
+            </div>
+          </li>
+
+          <li class="step">
+            <div class="step-number" aria-hidden="true">2</div>
+            <div class="step-body">
+              <div class="step-head">
+                <h3>First payment, first report.</h3>
+                <span class="step-time">Within 30 days</span>
+              </div>
+              <p>
+                Your first on-time iBoost payment is reported to all three
+                U.S. bureaus (Equifax, TransUnion, Experian) and both
+                Canadian bureaus within the standard monthly reporting
+                cycle. You'll see it on your report within 30 days.
+              </p>
+              <p class="step-fact">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                Full reporting to every major bureau in both countries.
+              </p>
+            </div>
+          </li>
+
+          <li class="step">
+            <div class="step-number" aria-hidden="true">3</div>
+            <div class="step-body">
+              <div class="step-head">
+                <h3>Watch the curve.</h3>
+                <span class="step-time">Every week</span>
+              </div>
+              <p>
+                Weekly score updates, month-by-month AI guidance referencing
+                your actual bureau data, and a live projection of where
+                you're headed — the same journey you saw at the top of this
+                page, except it's yours.
+              </p>
+              <p class="step-fact">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                New tips every month as your profile changes.
+              </p>
+            </div>
+          </li>
+
+        </ol>
+
+        <div class="how-footer-cta">
+          <a href="/signup.html" class="btn btn-primary btn-lg btn-cta-glow">Start step 1 now</a>
+          <span class="how-footer-microtrust">
+            ~3 minutes · No credit check · Cancel anytime
+          </span>
         </div>
       </div>
     </section>
