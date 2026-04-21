@@ -1620,6 +1620,12 @@ a:hover { text-decoration: underline; }
 
 /* ---------- FAQ ---------- */
 
+.faq-section {
+  /* Tighter section-level padding than .section default, since the FAQ is
+     already content-dense. */
+  padding: var(--space-7) 0;
+}
+
 .faq-section .container {
   max-width: 1320px;
   padding-left: var(--space-4);
@@ -1628,6 +1634,7 @@ a:hover { text-decoration: underline; }
 
 .faq-section .section-header {
   max-width: 760px;
+  margin-bottom: var(--space-4);
 }
 
 .faq-section .section-header p {
@@ -1643,14 +1650,14 @@ a:hover { text-decoration: underline; }
   color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 0 auto var(--space-2);
-  padding-bottom: 0.6rem;
+  margin: 0 auto var(--space-1);
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--color-accent);
   max-width: 1200px;
 }
 
 .faq-subtitle-spacer {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
 }
 
 /* FAQ list container — single column on mobile, 2-column grid on desktop.
@@ -1679,10 +1686,10 @@ a:hover { text-decoration: underline; }
 .faq-question {
   width: 100%;
   text-align: left;
-  padding: var(--space-3) 0;
+  padding: 0.8rem 0;
   background: transparent;
   border: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-fg);
   font-family: inherit;
@@ -1696,7 +1703,7 @@ a:hover { text-decoration: underline; }
 
 .faq-question::after {
   content: '+';
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 400;
   color: var(--color-muted);
   flex-shrink: 0;
@@ -1711,17 +1718,15 @@ a:hover { text-decoration: underline; }
   transition: max-height 0.3s ease, padding 0.3s ease;
 }
 
-/* Longer answers in the credit-bureau 101 section can exceed 600px.
-   Bumping to 1200px gives ample room without animation jank. */
 .faq-answer[data-open="true"] {
   max-height: 1200px;
-  padding-bottom: var(--space-3);
+  padding-bottom: 0.9rem;
 }
 
 .faq-answer p {
   color: var(--color-fg-soft);
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.6;
 }
 
