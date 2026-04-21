@@ -3,15 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sign in to iBoost." />
+  <meta name="description" content="Sign in to your iBoost account. Bank-level 256-bit encryption. Your data is never sold." />
   <title>Sign in — iBoost</title>
+
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
   <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+
+  <link rel="canonical" href="https://iboostcredit.netlify.app/login.html" />
+  <link rel="alternate" hreflang="en" href="https://iboostcredit.netlify.app/login.html" />
+  <link rel="alternate" hreflang="x-default" href="https://iboostcredit.netlify.app/login.html" />
+
+  <meta name="robots" content="noindex, follow" />
+
   <link rel="stylesheet" href="/assets/css/main.css" />
 </head>
-<body>
+<body class="auth-page">
+  <!-- Minimal header — logo only -->
   <header class="site-header">
     <div class="container">
       <a href="/" class="logo" aria-label="iBoost home">
@@ -29,53 +39,227 @@
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <h1>Welcome back</h1>
-      <p class="muted">Sign in to your iBoost account.</p>
-
-      <div class="signup-reassurance" role="note" style="margin-top:var(--space-2)">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-        <span><strong>Secure connection.</strong> Bank-level 256-bit TLS encryption.</span>
+  <main class="signup-split">
+    <!-- ===== LEFT: brand + security + support ===== -->
+    <aside class="signup-intro" aria-labelledby="login-intro-title">
+      <div class="logo" aria-hidden="true">
+        <img
+          src="/assets/img/brand/logo-horizontal-80.png"
+          srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+          alt=""
+          width="232"
+          height="80"
+        />
       </div>
 
-      <div id="alert" hidden></div>
-
-      <button type="button" class="btn btn-oauth" data-oauth="google">
-        Continue with Google
-      </button>
-      <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
-        Continue with Facebook
-      </button>
-
-      <div class="divider">or</div>
-
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" autocomplete="current-password" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
-          Sign in
-        </button>
-      </form>
-
-      <p class="auth-footer">
-        Don't have an account? <a href="/signup.html">Sign up</a>
+      <h1 id="login-intro-title">Welcome back.</h1>
+      <p class="intro-lead">
+        Sign in to check your latest credit report, review your score
+        gains, update your payment method, or chat with support.
       </p>
-    </div>
+
+      <ul class="benefit-list">
+        <li><span><strong>Secure sign-in</strong> — bank-level encryption on every session.</span></li>
+        <li><span>Your <strong>account, disputes, and reports</strong> are ready when you are.</span></li>
+        <li><span>Need help? Our support team replies in <strong>under 24 hours</strong>.</span></li>
+      </ul>
+
+      <!-- Security deep-dive — identical to signup for visual continuity -->
+      <div class="security-block" aria-labelledby="sec-title">
+        <h3 id="sec-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Your data, protected.
+        </h3>
+        <ul>
+          <li><span><strong>256-bit TLS</strong> encryption on every connection between you and our servers.</span></li>
+          <li><span><strong>AES-256 encryption at rest</strong> on our database layer — your information is encrypted even when stored.</span></li>
+          <li><span><strong>We never sell your data</strong>, ever. You can export or delete it anytime.</span></li>
+        </ul>
+      </div>
+
+      <!-- Trust row — same component as signup -->
+      <div class="trust-row" aria-label="Security and compliance">
+        <span class="trust-badge" title="TLS-encrypted connection">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          256-bit TLS
+        </span>
+        <span class="trust-badge" title="Identity verification required">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          ID-verified
+        </span>
+        <span class="trust-badge" title="Available in Canada and the United States">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/>
+          </svg>
+          Canada & U.S.
+        </span>
+      </div>
+
+      <!-- Mini-FAQ — scoped to sign-in issues -->
+      <div class="faq-mini" aria-labelledby="faqmini-title">
+        <p class="faq-mini-title" id="faqmini-title">Having trouble signing in?</p>
+        <div class="faq-mini-item">
+          <button class="faq-mini-question" aria-expanded="false">
+            I forgot my password.
+          </button>
+          <div class="faq-mini-answer">
+            <p>
+              Password reset is coming soon. Until then, email
+              <a href="mailto:support@iboost.com" style="color:rgba(255,255,255,0.85);text-decoration:underline">support@iboost.com</a>
+              from the address on your account and we'll help you reset
+              within a business day.
+            </p>
+          </div>
+        </div>
+        <div class="faq-mini-item">
+          <button class="faq-mini-question" aria-expanded="false">
+            I didn't get the verification email.
+          </button>
+          <div class="faq-mini-answer">
+            <p>
+              Check your spam and promotions folders first. If it's not
+              there after 10 minutes, email
+              <a href="mailto:support@iboost.com" style="color:rgba(255,255,255,0.85);text-decoration:underline">support@iboost.com</a>
+              and we'll resend it.
+            </p>
+          </div>
+        </div>
+        <div class="faq-mini-item">
+          <button class="faq-mini-question" aria-expanded="false">
+            My account seems locked.
+          </button>
+          <div class="faq-mini-answer">
+            <p>
+              For your security, we temporarily lock accounts after
+              several failed attempts. Wait 15 minutes and try again. If
+              the issue persists, contact support.
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== RIGHT: login form ===== -->
+    <section class="signup-form-col">
+      <div class="signup-form-card">
+        <div class="signup-form-header">
+          <h2>Sign in</h2>
+        </div>
+
+        <!-- Reassurance strip (same pattern as signup) -->
+        <div class="signup-reassurance" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span><strong>Secure connection.</strong> Bank-level 256-bit TLS encryption.</span>
+        </div>
+
+        <div id="alert" hidden></div>
+
+        <button type="button" class="btn btn-oauth" data-oauth="google">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.8 32.5 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
+            <path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3v-2.3c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-1.9.9-1.9 1.8V12h3.3l-.5 3.5h-2.8v8.4A12 12 0 0 0 24 12z"/>
+          </svg>
+          Continue with Facebook (coming soon)
+        </button>
+
+        <div class="divider">OR with email</div>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" autocomplete="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input type="password" id="password" name="password" autocomplete="current-password" required />
+              <button type="button" class="password-toggle" id="password-toggle"
+                      aria-label="Show password" aria-pressed="false"
+                      data-label-show="Show password" data-label-hide="Hide password">
+                <svg class="icon-eye" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">
+            Sign in
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          Don't have an account? <a href="/signup.html">Sign up</a>
+        </p>
+
+        <!-- Small print — reassurance + contact path -->
+        <div class="legal-fineprint">
+          <p>
+            Signing in uses bank-level TLS encryption. We never share or sell
+            your credentials.
+          </p>
+          <p>
+            Questions or account issues? Email
+            <a href="mailto:support@iboost.com">support@iboost.com</a>.
+          </p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="site-footer" style="margin-top:0">
+    <div class="container">
+      <div class="footer-bottom" style="border:0;padding-top:0">
+        <div>
+          © <span id="year">2026</span> iBoost ·
+          <a href="/privacy.html">Privacy</a> ·
+          <a href="/terms.html">Terms</a> ·
+          <a href="/disclosures.html">Disclosures</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
   <script src="/assets/js/config.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/login.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var y = document.getElementById('year');
+      if (y) y.textContent = String(new Date().getFullYear());
+    });
+  </script>
 </body>
 </html>

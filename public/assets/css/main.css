@@ -1187,18 +1187,17 @@ a:hover { text-decoration: underline; }
   margin-bottom: var(--space-4);
 }
 
-/* On signup pages, let the header span full width to match the signup layout.
-   Activated when <body> has .signup-page class OR when site-header is a direct
-   sibling of .signup-split (simpler selector option). We'll use a body class. */
-body.signup-page .site-header .container,
-body.signup-page .site-footer .container {
+/* On auth pages (signup/login/etc.), let the header + footer span full width
+   to match the auth-split layout. Activated when <body> has .auth-page class. */
+body.auth-page .site-header .container,
+body.auth-page .site-footer .container {
   max-width: 100%;
   padding: 0 var(--space-3);
 }
 
 @media (min-width: 900px) {
-  body.signup-page .site-header .container,
-  body.signup-page .site-footer .container {
+  body.auth-page .site-header .container,
+  body.auth-page .site-footer .container {
     padding: 0 var(--space-4);
   }
 }

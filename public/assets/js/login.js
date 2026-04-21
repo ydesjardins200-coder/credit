@@ -33,6 +33,41 @@
     if (session) window.location.replace(t.accountPath);
   })();
 
+  // ----- FAQ mini accordion (in intro column) -----
+  // Self-contained; matches the behavior in signup.js so both auth pages
+  // feel identical when users toggle the help panels.
+  document.querySelectorAll('.faq-mini-question').forEach(function (btn) {
+    btn.setAttribute('aria-expanded', 'false');
+    const answer = btn.nextElementSibling;
+    if (answer) answer.setAttribute('data-open', 'false');
+
+    btn.addEventListener('click', function () {
+      const open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      if (answer) answer.setAttribute('data-open', open ? 'false' : 'true');
+    });
+  });
+
+  // ----- Password show/hide toggle -----
+  const pwInput = document.getElementById('password');
+  const pwToggle = document.getElementById('password-toggle');
+  if (pwToggle && pwInput) {
+    pwToggle.addEventListener('click', function () {
+      const isHidden = pwInput.type === 'password';
+      pwInput.type = isHidden ? 'text' : 'password';
+      pwToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+      const label = isHidden
+        ? (pwToggle.dataset.labelHide || 'Hide password')
+        : (pwToggle.dataset.labelShow || 'Show password');
+      pwToggle.setAttribute('aria-label', label);
+      // Keep focus on the input and place caret at end.
+      pwInput.focus();
+      const val = pwInput.value;
+      pwInput.value = '';
+      pwInput.value = val;
+    });
+  }
+
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
     clearAlert();
