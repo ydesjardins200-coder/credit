@@ -176,7 +176,7 @@
         c.setAttribute('cx', String(allPoints[threshIdx].x));
         c.setAttribute('cy', String(allPoints[threshIdx].y));
         c.setAttribute('r', '3.5');
-        c.setAttribute('fill', '#fff');
+        c.setAttribute('fill', '#0f2e4d');
         c.setAttribute('stroke', '#2ECC71');
         c.setAttribute('stroke-width', '2');
         milestoneG.appendChild(c);
