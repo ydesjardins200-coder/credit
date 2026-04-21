@@ -82,7 +82,9 @@
   }
 
   // ----- Header auth-aware CTA swap -----
-  // When logged in, swap the "Sign in" link for "Account".
+  // When logged in:
+  //   - swap [data-auth-swap] elements (e.g. "Sign in" -> "Account")
+  //   - hide [data-auth-hide] elements (e.g. the "Get started" CTA)
   async function updateHeaderForAuth() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
@@ -92,6 +94,9 @@
       const label = el.getAttribute('data-auth-label');
       if (to) el.setAttribute('href', to);
       if (label) el.textContent = label;
+    });
+    document.querySelectorAll('[data-auth-hide]').forEach(function (el) {
+      el.hidden = true;
     });
   }
 
