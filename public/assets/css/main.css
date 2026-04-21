@@ -1892,13 +1892,19 @@ a:hover { text-decoration: underline; }
   color: #86efac;
 }
 
-/* ---------- Footer ---------- */
+/* =======================================================================
+   FOOTER — brand column + 3 link columns + two-line bottom bar
+   ======================================================================= */
+
 .site-footer {
+  position: relative;
   padding: var(--space-6) 0 var(--space-4);
   background: var(--color-surface);
   color: var(--color-fg-soft);
   font-size: 0.9rem;
-  border-top: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-accent);
+  /* The emerald top border is the visual tie to the rest of the design
+     system — same emerald as pills, CTAs, receipts throughout the page. */
 }
 
 .footer-grid {
@@ -1906,43 +1912,214 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 1fr;
   gap: var(--space-4);
   margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
 }
 
 @media (min-width: 680px) {
-  .footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
+  .footer-grid {
+    grid-template-columns: 2.2fr 1fr 1fr 1fr;
+    gap: var(--space-5);
+  }
 }
 
-.footer-brand img { height: 32px; margin-bottom: var(--space-2); }
-.footer-brand p { font-size: 0.9rem; max-width: 280px; color: var(--color-muted); }
+/* ---------- Brand column ---------- */
+
+.footer-brand {
+  min-width: 0;
+}
+
+.footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+  transition: opacity 0.15s ease;
+}
+
+.footer-logo:hover { opacity: 0.85; }
+
+.footer-logo-mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(10, 37, 64, 0.08));
+}
+
+.footer-logo-wordmark {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.footer-tagline {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+  max-width: 320px;
+  margin: 0 0 0.75rem;
+}
+
+/* ---------- Market chips row ---------- */
+
+.footer-market-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.footer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-fg-soft);
+  letter-spacing: 0.02em;
+}
+
+.footer-chip-flag {
+  width: 14px;
+  height: 10px;
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.footer-chip-active {
+  background: var(--color-accent-soft);
+  border-color: #86efac;
+  color: #065f46;
+  padding-left: 7px;
+}
+
+.footer-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+  animation: footer-chip-pulse 2.2s ease-out infinite;
+}
+
+@keyframes footer-chip-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6); }
+  70%  { box-shadow: 0 0 0 5px rgba(46, 204, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+/* ---------- Link columns ---------- */
+
+.footer-col {
+  min-width: 0;
+}
 
 .footer-col h4 {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-fg);
-  margin-bottom: var(--space-2);
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
 }
 
-.footer-col ul { list-style: none; padding: 0; margin: 0; }
-.footer-col li { margin-bottom: 0.5rem; }
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-col li {
+  margin-bottom: 0.55rem;
+  font-size: 0.88rem;
+}
 
 .footer-col a {
   color: var(--color-fg-soft);
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-.footer-col a:hover { color: var(--color-primary); }
+.footer-col a:hover {
+  color: var(--color-primary);
+}
+
+/* Accent variant — used on the 'Trust & compliance ↗' link to draw the
+   eye, since this is the most-linked page for regulators/attorneys. */
+.footer-col-link-accent {
+  color: var(--color-accent-hover) !important;
+  font-weight: 600;
+}
+
+.footer-col-link-accent:hover {
+  color: var(--color-primary) !important;
+}
+
+/* ---------- Bottom bar ---------- */
 
 .footer-bottom {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 0.85rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: 0.78rem;
   color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.footer-copyright {
+  flex-shrink: 0;
+}
+
+.footer-copyright-sep {
+  margin: 0 0.4rem;
+  color: var(--color-border-strong);
+}
+
+.footer-copyright-tag {
+  color: var(--color-accent-hover);
+  font-weight: 600;
+}
+
+.footer-footnotes {
+  flex: 1;
+  text-align: right;
+  max-width: 720px;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  opacity: 0.9;
+}
+
+.footer-footnotes sup {
+  font-weight: 700;
+  color: var(--color-fg-soft);
+  margin-right: 1px;
+}
+
+.footer-footnote-sep {
+  margin: 0 0.3rem;
+  color: var(--color-border-strong);
+}
+
+/* On narrow screens stack the bottom bar and left-align the footnotes */
+@media (max-width: 820px) {
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer-footnotes {
+    text-align: left;
+  }
 }
 
 /* ---------- Auth pages ---------- */
