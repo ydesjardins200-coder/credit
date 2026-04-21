@@ -1223,6 +1223,362 @@ a:hover { text-decoration: underline; }
   margin-bottom: var(--space-4);
 }
 
+/* ---------- Split signup layout (YMYL-focused) ---------- */
+.signup-split {
+  max-width: 1140px;
+  margin: var(--space-4) auto;
+  padding: 0 var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .signup-split {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin: var(--space-6) auto var(--space-8);
+    align-items: stretch;
+  }
+}
+
+/* Left column: brand + benefits + trust */
+.signup-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: linear-gradient(165deg, var(--color-primary) 0%, #113358 100%);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.signup-intro::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 80%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(46, 204, 113, 0.18) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.signup-intro > * { position: relative; z-index: 1; }
+
+.signup-intro .logo img {
+  height: 40px;
+  filter: brightness(0) invert(1);
+  /* Invert falls back to just the wordmark weight on dark bg — acceptable */
+}
+
+.signup-intro h1 {
+  color: #fff;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin: var(--space-1) 0 var(--space-1);
+}
+
+.signup-intro .intro-lead {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1rem;
+  margin-bottom: var(--space-2);
+}
+
+.benefit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.benefit-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.benefit-list li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+}
+
+/* Trust row on dark intro — regulator / security badges */
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.trust-badge svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Right column: form card */
+.signup-form-col {
+  min-width: 0; /* allow grid item to shrink */
+}
+
+.signup-form-card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 900px) {
+  .signup-form-card { padding: var(--space-5); }
+}
+
+.signup-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.signup-form-header h2 {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.signup-lang-inline {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--color-surface-2);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.signup-lang-inline a {
+  padding: 0.25rem 0.7rem;
+  border-radius: 100px;
+  color: var(--color-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-lang-inline a.active {
+  background: #fff;
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Reassurance strip above the form */
+.signup-reassurance {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: var(--space-3);
+  background: var(--color-accent-soft);
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius);
+  color: #065f46;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.signup-reassurance svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+/* ---------- Password strength criteria ---------- */
+.password-criteria {
+  margin: 0.5rem 0 var(--space-2);
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+}
+
+.password-criteria-title {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--color-fg);
+  font-size: 0.82rem;
+}
+
+.password-criteria ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem;
+}
+
+@media (min-width: 480px) {
+  .password-criteria ul { grid-template-columns: 1fr 1fr; gap: 0.2rem 1rem; }
+}
+
+.password-criteria li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-muted);
+  transition: color 0.15s ease;
+  line-height: 1.3;
+}
+
+.password-criteria li::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 10px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.password-criteria li[data-met="true"] {
+  color: var(--color-accent-hover);
+  font-weight: 500;
+}
+
+.password-criteria li[data-met="true"]::before {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+}
+
+/* ---------- Consent checkbox ---------- */
+.consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: var(--space-2) 0;
+  font-size: 0.88rem;
+  color: var(--color-fg-soft);
+  line-height: 1.45;
+}
+
+.consent-row input[type='checkbox'] {
+  flex-shrink: 0;
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.consent-row label {
+  cursor: pointer;
+  user-select: none;
+}
+
+.consent-row a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+/* ---------- Fine-print / YMYL disclosure block ---------- */
+.legal-fineprint {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.legal-fineprint strong { color: var(--color-fg-soft); }
+
+.legal-fineprint p { margin: 0 0 0.4rem; }
+.legal-fineprint p:last-child { margin-bottom: 0; }
+
+.legal-fineprint a {
+  color: var(--color-muted);
+  text-decoration: underline;
+}
+
+/* ---------- Authored / reviewed block ---------- */
+.reviewed-by {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.reviewed-by-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border-strong);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Submit disabled state */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn:disabled:hover {
+  background: var(--color-accent);
+  transform: none;
+}
+
 /* ---------- Motion preferences ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

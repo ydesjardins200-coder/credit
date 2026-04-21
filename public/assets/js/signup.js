@@ -1,24 +1,38 @@
 // Signup page controller.
-// UI strings come from data attributes on the <body> so EN and FR pages
-// share a single script.
+//
+// Responsibilities:
+//   - Read UI strings from data-* attributes on <body> so one script
+//     serves both EN and FR pages.
+//   - Live password-strength check against 5 criteria.
+//   - Keep the submit button disabled until password passes all criteria
+//     AND the consent checkbox is checked.
+//   - Handle Supabase signup + surface confirmation message.
 
 (function () {
   'use strict';
 
   const form = document.getElementById('signup-form');
+  if (!form) return;
+
   const submitBtn = document.getElementById('submit-btn');
   const alertEl = document.getElementById('alert');
+  const pwInput = document.getElementById('password');
+  const consentBox = document.getElementById('consent');
+  const firstNameInput = document.getElementById('first_name');
+  const lastNameInput = document.getElementById('last_name');
+  const emailInput = document.getElementById('email');
 
   const t = {
-    fillFields: document.body.dataset.msgFillFields || 'Please fill in all fields. Password must be at least 8 characters.',
+    fillFields: document.body.dataset.msgFillFields || 'Please fill in all fields and meet the password requirements.',
     authUnavailable: document.body.dataset.msgAuthUnavailable || 'Auth is not configured. Please try again in a moment.',
     creating: document.body.dataset.msgCreating || 'Creating account…',
-    defaultSubmit: document.body.dataset.msgSubmit || 'Create account',
+    defaultSubmit: document.body.dataset.msgSubmit || 'Create my account',
     genericError: document.body.dataset.msgGenericError || 'Sign-up failed. Please try again.',
     checkEmail: document.body.dataset.msgCheckEmail || 'Check your email to confirm your account, then sign in.',
     accountPath: document.body.dataset.accountPath || '/account.html',
   };
 
+  // ----- Alerts -----
   function showAlert(message, kind) {
     alertEl.className = 'alert ' + (kind === 'success' ? 'alert-success' : 'alert-error');
     alertEl.textContent = message;
@@ -30,13 +44,65 @@
     alertEl.textContent = '';
   }
 
-  // If already signed in, bounce to account page.
+  // ----- Password criteria -----
+  // Each rule maps to a <li data-rule="..."> in the DOM.
+  const rules = {
+    length: (pw) => pw.length >= 8,
+    uppercase: (pw) => /[A-Z]/.test(pw),
+    lowercase: (pw) => /[a-z]/.test(pw),
+    number: (pw) => /[0-9]/.test(pw),
+    special: (pw) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw),
+  };
+
+  function evaluatePassword(pw) {
+    const results = {};
+    let metCount = 0;
+    for (const key in rules) {
+      const met = rules[key](pw);
+      results[key] = met;
+      if (met) metCount++;
+    }
+    return { results, allMet: metCount === Object.keys(rules).length };
+  }
+
+  function renderCriteria(pw) {
+    const { results, allMet } = evaluatePassword(pw);
+    document.querySelectorAll('.password-criteria li[data-rule]').forEach((li) => {
+      const key = li.getAttribute('data-rule');
+      li.setAttribute('data-met', results[key] ? 'true' : 'false');
+    });
+    return allMet;
+  }
+
+  // ----- Overall form-can-submit gate -----
+  function updateSubmitState() {
+    const pwOk = pwInput.value ? renderCriteria(pwInput.value) : false;
+    const consentOk = consentBox ? consentBox.checked : true;
+    const firstOk = firstNameInput ? firstNameInput.value.trim().length > 0 : true;
+    const lastOk = lastNameInput ? lastNameInput.value.trim().length > 0 : true;
+    const emailOk = emailInput ? /\S+@\S+\.\S+/.test(emailInput.value.trim()) : true;
+
+    submitBtn.disabled = !(pwOk && consentOk && firstOk && lastOk && emailOk);
+  }
+
+  // Bind listeners
+  if (pwInput) pwInput.addEventListener('input', updateSubmitState);
+  if (consentBox) consentBox.addEventListener('change', updateSubmitState);
+  [firstNameInput, lastNameInput, emailInput].forEach((el) => {
+    if (el) el.addEventListener('input', updateSubmitState);
+  });
+
+  // Set initial state
+  updateSubmitState();
+
+  // ----- If already signed in, bounce to account page -----
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
     if (session) window.location.replace(t.accountPath);
   })();
 
+  // ----- Submit -----
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
     clearAlert();
@@ -46,16 +112,22 @@
       return;
     }
 
-    const fullName = document.getElementById('full_name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const firstName = firstNameInput ? firstNameInput.value.trim() : '';
+    const lastName = lastNameInput ? lastNameInput.value.trim() : '';
+    const fullName = (firstName + ' ' + lastName).trim();
+    const email = emailInput.value.trim();
+    const password = pwInput.value;
 
-    if (!fullName || !email || password.length < 8) {
+    // Double-check everything server-side-ish before calling Supabase
+    const { allMet } = evaluatePassword(password);
+    const consentOk = consentBox ? consentBox.checked : true;
+    if (!firstName || !lastName || !email || !allMet || !consentOk) {
       showAlert(t.fillFields, 'error');
       return;
     }
 
     submitBtn.disabled = true;
+    const originalSubmitText = submitBtn.textContent;
     submitBtn.textContent = t.creating;
 
     const { data, error } = await window.iboostAuth.signUpWithPassword({
@@ -64,8 +136,8 @@
       fullName,
     });
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = t.defaultSubmit;
+    submitBtn.textContent = originalSubmitText || t.defaultSubmit;
+    updateSubmitState(); // will re-enable if still valid
 
     if (error) {
       showAlert(error.message || t.genericError, 'error');
@@ -79,5 +151,7 @@
 
     showAlert(t.checkEmail, 'success');
     form.reset();
+    renderCriteria(''); // reset criteria visuals
+    updateSubmitState();
   });
 })();

@@ -3,15 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Create your iBoost account." />
-  <title>Sign up — iBoost</title>
+  <meta name="description" content="Create your iBoost account. No credit check to sign up. Bank-level 256-bit encryption. Available in Canada and the USA." />
+  <title>Create your account — iBoost</title>
+
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
   <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+
+  <!-- SEO: canonical + hreflang -->
+  <link rel="canonical" href="https://iboostcredit.netlify.app/signup.html" />
+  <link rel="alternate" hreflang="en" href="https://iboostcredit.netlify.app/signup.html" />
+  <link rel="alternate" hreflang="fr" href="https://iboostcredit.netlify.app/fr/inscription.html" />
+  <link rel="alternate" hreflang="x-default" href="https://iboostcredit.netlify.app/signup.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Create your iBoost account" />
+  <meta property="og:description" content="No credit check to sign up. Bank-level encryption. Available in Canada and the USA." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://iboostcredit.netlify.app/signup.html" />
+  <meta property="og:image" content="https://iboostcredit.netlify.app/assets/img/brand/shield-512.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="fr_CA" />
+
+  <!-- YMYL: structured data identifying the organization & service -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FinancialService",
+    "name": "iBoost",
+    "description": "Credit-building service with monthly reporting to major credit bureaus, financial education, and budgeting tools. Not a lender, credit repair organization, or financial advisor.",
+    "url": "https://iboostcredit.netlify.app/",
+    "logo": "https://iboostcredit.netlify.app/assets/img/brand/shield-512.png",
+    "areaServed": [
+      { "@type": "Country", "name": "Canada" },
+      { "@type": "Country", "name": "United States" }
+    ],
+    "availableLanguage": ["en", "fr"],
+    "sameAs": []
+  }
+  </script>
+
   <link rel="stylesheet" href="/assets/css/main.css" />
 </head>
 <body>
+  <!-- Minimal header: logo only, no nav (focused signup flow) -->
   <header class="site-header">
     <div class="container">
       <a href="/" class="logo" aria-label="iBoost home">
@@ -30,51 +67,210 @@
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <div class="auth-card">
-      <h1>Create your account</h1>
-      <p class="muted">Start your credit journey with iBoost.</p>
+  <main class="signup-split">
+    <!-- ===== LEFT: brand + benefits + trust (YMYL) ===== -->
+    <aside class="signup-intro" aria-labelledby="signup-intro-title">
+      <div class="logo" aria-hidden="true">
+        <img
+          src="/assets/img/brand/logo-horizontal-80.png"
+          srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+          alt=""
+          width="232"
+          height="80"
+        />
+      </div>
 
-      <div id="alert" hidden></div>
-
-      <button type="button" class="btn btn-oauth" data-oauth="google">
-        Continue with Google
-      </button>
-      <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
-        Continue with Facebook
-      </button>
-
-      <div class="divider">or</div>
-
-      <form id="signup-form" novalidate>
-        <div class="form-group">
-          <label for="full_name">Full name</label>
-          <input type="text" id="full_name" name="full_name" autocomplete="name" required />
-        </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
-          Create account
-        </button>
-      </form>
-
-      <p class="auth-footer">
-        Already have an account? <a href="/login.html">Sign in</a>
+      <h1 id="signup-intro-title">Start rebuilding your credit today.</h1>
+      <p class="intro-lead">
+        Join iBoost and get the tools, reporting, and guidance to build credit
+        the right way — with transparency at every step.
       </p>
-    </div>
+
+      <ul class="benefit-list">
+        <li><strong>No credit check</strong> to sign up — your score isn't touched.</li>
+        <li>Monthly reporting to <strong>Equifax, TransUnion & Experian</strong> (U.S.) or <strong>Equifax & TransUnion</strong> (Canada).</li>
+        <li><strong>Bank-level 256-bit encryption</strong> on every connection.</li>
+        <li>We <strong>never sell</strong> your personal information.</li>
+        <li><strong>Cancel anytime</strong> — no contract, no cancellation fees.</li>
+      </ul>
+
+      <!-- Trust row: honest regulatory / security claims only -->
+      <div class="trust-row" aria-label="Security and compliance">
+        <span class="trust-badge" title="TLS-encrypted connection">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          256-bit TLS
+        </span>
+        <span class="trust-badge" title="Identity verification required">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          ID-verified
+        </span>
+        <span class="trust-badge" title="Canada & USA">
+          🇨🇦 🇺🇸 CA / US
+        </span>
+      </div>
+    </aside>
+
+    <!-- ===== RIGHT: form ===== -->
+    <section class="signup-form-col">
+      <div class="signup-form-card">
+        <div class="signup-form-header">
+          <h2>Create an account</h2>
+          <div class="signup-lang-inline" role="group" aria-label="Language">
+            <a href="/signup.html" class="active" aria-current="page">EN</a>
+            <a href="/fr/inscription.html">FR</a>
+          </div>
+        </div>
+
+        <!-- YMYL above-fold reassurance -->
+        <div class="signup-reassurance" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>
+            <strong>No hard credit check</strong> at sign-up. Signing up won't
+            affect your score.
+          </span>
+        </div>
+
+        <div id="alert" hidden></div>
+
+        <button type="button" class="btn btn-oauth" data-oauth="google">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.8 32.5 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41 35.2 44 30 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          Sign up with Google
+        </button>
+        <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true">
+            <path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3v-2.3c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.2 2.7.2v2.9h-1.5c-1.5 0-1.9.9-1.9 1.8V12h3.3l-.5 3.5h-2.8v8.4A12 12 0 0 0 24 12z"/>
+          </svg>
+          Sign up with Facebook (coming soon)
+        </button>
+
+        <div class="divider">OR with email</div>
+
+        <form id="signup-form" novalidate>
+          <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)">
+            <div>
+              <label for="first_name">First name</label>
+              <input type="text" id="first_name" name="first_name" autocomplete="given-name" required />
+            </div>
+            <div>
+              <label for="last_name">Last name</label>
+              <input type="text" id="last_name" name="last_name" autocomplete="family-name" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" name="email" autocomplete="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required aria-describedby="pw-criteria" />
+
+            <div id="pw-criteria" class="password-criteria" aria-live="polite">
+              <div class="password-criteria-title">Password requirements</div>
+              <ul>
+                <li data-rule="length" data-met="false">At least 8 characters</li>
+                <li data-rule="uppercase" data-met="false">One uppercase letter (A-Z)</li>
+                <li data-rule="lowercase" data-met="false">One lowercase letter (a-z)</li>
+                <li data-rule="number" data-met="false">One number (0-9)</li>
+                <li data-rule="special" data-met="false">One special character (!@#$…)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="consent-row">
+            <input type="checkbox" id="consent" name="consent" required />
+            <label for="consent">
+              I accept the <a href="/terms.html">Terms of Service</a>,
+              <a href="/privacy.html">Privacy Policy</a>, and
+              <a href="/disclosures.html">Disclosures</a>.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn" disabled>
+            Create my account
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          Already have an account? <a href="/login.html">Sign in</a>
+        </p>
+
+        <!-- YMYL fine-print: regulatory + risk disclosures -->
+        <div class="legal-fineprint">
+          <p>
+            <strong>What iBoost is — and isn't.</strong> iBoost is a
+            credit-building reporting service. We are <strong>not</strong> a
+            lender, credit counsellor, credit repair organization, or
+            registered financial advisor. We do not provide legal, tax, or
+            investment advice.
+          </p>
+          <p>
+            <strong>Results vary.</strong> Credit score improvement depends on
+            your individual credit profile and behaviour. Late payments and
+            other negative items may negatively impact your score.
+          </p>
+          <p>
+            Full details in our
+            <a href="/disclosures.html">Consumer Disclosures</a>,
+            <a href="/terms.html">Terms</a>, and
+            <a href="/privacy.html">Privacy Policy</a>. Questions? Email
+            <a href="mailto:legal@iboost.com">legal@iboost.com</a>.
+          </p>
+        </div>
+
+        <!-- Expert review slot (placeholder for future E-E-A-T authorship) -->
+        <div class="reviewed-by">
+          <div class="reviewed-by-avatar" aria-hidden="true">👤</div>
+          <div>
+            <strong>Reviewed by our financial content team.</strong><br />
+            Credentialed reviewer byline coming before public launch.
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Config must load before auth.js -->
+  <!-- Minimal footer on auth pages -->
+  <footer class="site-footer" style="margin-top:0">
+    <div class="container">
+      <div class="footer-bottom" style="border:0;padding-top:0">
+        <div>
+          © <span id="year">2026</span> iBoost ·
+          <a href="/privacy.html">Privacy</a> ·
+          <a href="/terms.html">Terms</a> ·
+          <a href="/disclosures.html">Disclosures</a>
+        </div>
+        <div class="footer-lang">
+          <a href="/signup.html" class="active">EN</a>
+          <a href="/fr/inscription.html">FR</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
   <script src="/assets/js/config.js" defer></script>
-  <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/signup.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var y = document.getElementById('year');
+      if (y) y.textContent = String(new Date().getFullYear());
+    });
+  </script>
 </body>
 </html>
