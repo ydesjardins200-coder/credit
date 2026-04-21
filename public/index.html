@@ -611,8 +611,8 @@
       <div class="container">
         <div class="section-header">
           <span class="eyebrow">Simple pricing</span>
-          <h2>One plan. Everything included.</h2>
-          <p>No upsells, no hidden tiers. Cancel anytime.</p>
+          <h2>Three plans. Real credit work at any budget.</h2>
+          <p>Start free, upgrade when you're ready, cancel anytime.</p>
         </div>
 
         <div class="pricing-wrap">
@@ -621,33 +621,86 @@
             <button type="button" data-currency-toggle="cad" aria-pressed="false">🇨🇦 CAD</button>
           </div>
 
-          <div class="pricing-card">
-            <span class="pricing-card-badge">All-in-one</span>
-            <h3>iBoost Complete</h3>
-            <div class="price-line">
-              <span class="price-amount" data-currency="usd">$30</span>
-              <span class="price-amount" data-currency="cad" hidden>$40</span>
-              <span class="price-currency" data-currency="usd">USD</span>
-              <span class="price-currency" data-currency="cad" hidden>CAD</span>
-              <span class="price-period">/ month</span>
+          <div class="pricing-grid">
+
+            <!-- ============= TIER 1: FREE ============= -->
+            <div class="pricing-card pricing-card-free">
+              <h3>Free</h3>
+              <div class="price-line">
+                <span class="price-amount">$0</span>
+                <span class="price-period">forever</span>
+              </div>
+              <p class="pricing-tagline">Learn the system. Build the habits. Upgrade when you're ready.</p>
+              <ul>
+                <li>Full budget app (manual entry)</li>
+                <li>Complete education library</li>
+                <li>Manual score dashboard</li>
+                <li>Monthly credit tips newsletter</li>
+                <li class="pricing-item-muted">No bureau reporting</li>
+                <li class="pricing-item-muted">No AI guidance</li>
+                <li class="pricing-item-muted">Community support only</li>
+              </ul>
+              <a href="/signup.html?plan=free" class="btn btn-outline btn-block btn-lg">Start free</a>
             </div>
-            <p class="muted" style="margin-bottom:var(--space-2)">Everything you need to rebuild your credit.</p>
-            <ul>
-              <li>Monthly reporting to major credit bureaus</li>
-              <li>Unlimited AI-powered credit advice</li>
-              <li>Full budget app with auto-categorization</li>
-              <li>Weekly credit score updates</li>
-              <li>Free financial education library</li>
-              <li>Dispute assistance for credit report errors</li>
-              <li>Priority support, 7 days a week</li>
-            </ul>
-            <a href="/signup.html" class="btn btn-primary btn-block btn-lg">Get started</a>
+
+            <!-- ============= TIER 2: ESSENTIAL (RECOMMENDED) ============= -->
+            <div class="pricing-card pricing-card-essential pricing-card-featured">
+              <span class="pricing-card-badge">Most popular</span>
+              <h3>iBoost Essential</h3>
+              <div class="price-line">
+                <span class="price-amount" data-currency="usd">$15</span>
+                <span class="price-amount" data-currency="cad" hidden>$20</span>
+                <span class="price-currency" data-currency="usd">USD</span>
+                <span class="price-currency" data-currency="cad" hidden>CAD</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <p class="pricing-tagline">Real credit work without the premium add-ons.</p>
+              <ul>
+                <li>$750 reported credit line<sup>4</sup></li>
+                <li>Monthly reporting to all major bureaus</li>
+                <li>Monthly score refresh</li>
+                <li>Budget app with goals &amp; smart transaction screening</li>
+                <li>Monthly AI credit tip</li>
+                <li>Complete education library</li>
+                <li>Email support (48-hour response)</li>
+              </ul>
+              <a href="/signup.html?plan=essential" class="btn btn-primary btn-block btn-lg">Start Essential</a>
+            </div>
+
+            <!-- ============= TIER 3: COMPLETE ============= -->
+            <div class="pricing-card pricing-card-complete">
+              <h3>iBoost Complete</h3>
+              <div class="price-line">
+                <span class="price-amount" data-currency="usd">$30</span>
+                <span class="price-amount" data-currency="cad" hidden>$40</span>
+                <span class="price-currency" data-currency="usd">USD</span>
+                <span class="price-currency" data-currency="cad" hidden>CAD</span>
+                <span class="price-period">/ month</span>
+              </div>
+              <p class="pricing-tagline">Everything we offer. Maximum score-building velocity.</p>
+              <ul>
+                <li><strong>$2,000 reported credit line</strong><sup>4</sup></li>
+                <li>Monthly reporting to all major bureaus</li>
+                <li><strong>Weekly</strong> score refresh</li>
+                <li>Budget app with goals &amp; smart transaction screening</li>
+                <li><strong>Unlimited on-demand AI advice</strong></li>
+                <li>Complete education library</li>
+                <li><strong>Dispute assistance for report errors</strong></li>
+                <li><strong>Priority support, 7 days a week</strong></li>
+              </ul>
+              <a href="/signup.html?plan=complete" class="btn btn-primary btn-block btn-lg">Go Complete</a>
+            </div>
+
           </div>
 
           <p class="pricing-disclaimer">
             <sup>3</sup> Billed monthly. No credit check to sign up. Cancel
-            anytime — you only pay for months you use. Credit score results
-            depend on your individual credit profile; late payments may have a
+            anytime — you only pay for months you use.
+            <sup>4</sup> Reported credit line sizes the tradeline iBoost adds
+            to your report. A larger line increases your total available
+            credit, which can improve utilization-driven score factors faster.
+            Actual score impact depends on your individual credit profile,
+            payment history, and other tradelines. Late payments may have a
             negative impact.
           </p>
         </div>
@@ -809,9 +862,12 @@
                 Credit Karma is a credit monitoring service — it shows you your
                 score but doesn't help you actively build credit. Kikoff
                 reports a "tradeline" but charges extra for tools like dispute
-                help, budget tracking, and debt negotiation. iBoost includes
-                all of those in a single plan, and our AI advice is
-                personalized to your actual accounts — not generic tips.
+                help, budget tracking, and debt negotiation. iBoost offers a
+                free tier with the education library and budget app, a $15
+                tier (Essential) with real bureau reporting, and a $30 tier
+                (Complete) that includes every feature we offer — dispute
+                assistance, unlimited AI advice, and a $2,000 reported
+                credit line for maximum score velocity.
               </p>
             </div>
           </div>
@@ -825,7 +881,9 @@
                 Yes. We serve both markets with the appropriate credit bureau
                 partnerships: Equifax and TransUnion in Canada; Equifax,
                 Experian, and TransUnion in the USA. Pricing adjusts to your
-                region — $30 USD per month in the U.S. or $40 CAD in Canada.
+                region. Essential: $15 USD / $20 CAD monthly. Complete:
+                $30 USD / $40 CAD monthly. The Free tier is free in both
+                countries.
               </p>
             </div>
           </div>
