@@ -1226,11 +1226,13 @@ body.signup-page .site-footer .container {
   }
 }
 
-/* On very wide screens cap the left column — otherwise the score card and
-   security block get absurdly big. */
+/* On ultra-wide screens, cap both columns at the same width so the
+   split stays visually 50/50 at any viewport size. Without this, the
+   content gets absurdly stretched on 2560px+ monitors. */
 @media (min-width: 1600px) {
   .signup-split {
-    grid-template-columns: minmax(420px, 600px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 720px) minmax(0, 720px);
+    justify-content: center;  /* centers the pair when viewport > 1440px total */
   }
 }
 
