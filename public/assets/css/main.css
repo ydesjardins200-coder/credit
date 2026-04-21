@@ -1360,29 +1360,28 @@ a:hover { text-decoration: underline; }
 /* Stack: the scrolling column of tips. 5 unique tips + 1 duplicate at the
    end (the first tip repeated) to make the loop seamless — when the
    animation wraps from bottom to top, the user sees the same tip land
-   twice in a row, which reads as continuous motion rather than a jump. */
+   twice in a row, which reads as continuous motion rather than a jump.
+
+   Slot height math: each .ai-tip is min-height 96px + flex gap ~9px = 105px
+   per slot. Keyframe values are concrete pixels (not calc() + var()) because
+   some engines interpolate calc-inside-keyframes unpredictably. */
 .ai-tip-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  /* With 6 children and a gap, computed total height is predictable.
-     Each .ai-tip is ~104px tall (padding + head + one-line paragraph) + gap.
-     The 5-tip cycle needs to translateY through 5 slot-widths, each
-     slot = tip height (104) + gap (8.8) = 112.8px.
-     We use calc() for robust maintenance. */
-  --ai-tip-slot: 105px;  /* tip height (96px min) + flex gap (~9px) */
-  animation: ai-tip-roll 25s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  gap: 9px;
+  animation: ai-tip-roll 20s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  will-change: transform;
 }
 
 @keyframes ai-tip-roll {
-  /* 5 tips × ~5s each. Each tip holds at the top of the viewport
-     for ~4s, then slides to the next over ~1s. */
+  /* 5 tips × 4s each. Each tip holds at the top of the viewport
+     for ~3.2s, then slides to the next over ~0.8s. */
   0%,  16% { transform: translateY(0); }
-  20%, 36% { transform: translateY(calc(var(--ai-tip-slot) * -1)); }
-  40%, 56% { transform: translateY(calc(var(--ai-tip-slot) * -2)); }
-  60%, 76% { transform: translateY(calc(var(--ai-tip-slot) * -3)); }
-  80%, 96% { transform: translateY(calc(var(--ai-tip-slot) * -4)); }
-  100%     { transform: translateY(calc(var(--ai-tip-slot) * -5)); }
+  20%, 36% { transform: translateY(-105px); }
+  40%, 56% { transform: translateY(-210px); }
+  60%, 76% { transform: translateY(-315px); }
+  80%, 96% { transform: translateY(-420px); }
+  100%     { transform: translateY(-525px); }
 }
 
 /* Individual tip */
@@ -1492,12 +1491,10 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-/* Freeze the rolling animation for users who prefer reduced motion */
+/* Reduced motion: keep the rolling animation (it's slow, editorial, and
+   doesn't create vestibular issues) but freeze the pulsing dot, which
+   is the kind of rapid flash reduced-motion users typically want off. */
 @media (prefers-reduced-motion: reduce) {
-  .ai-tip-stack {
-    animation: none;
-    transform: translateY(0);
-  }
   .ai-tip-showcase-dot {
     animation: none;
   }
