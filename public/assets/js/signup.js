@@ -74,6 +74,13 @@
     return allMet;
   }
 
+  // Country is captured via a radio group named "country" with values "CA"
+  // or "US". Returns null if no radio is selected yet.
+  function getSelectedCountry() {
+    const checked = form.querySelector('input[name="country"]:checked');
+    return checked ? checked.value : null;
+  }
+
   // ----- Overall form-can-submit gate -----
   function updateSubmitState() {
     const pwOk = pwInput.value ? renderCriteria(pwInput.value) : false;
@@ -81,8 +88,10 @@
     const firstOk = firstNameInput ? firstNameInput.value.trim().length > 0 : true;
     const lastOk = lastNameInput ? lastNameInput.value.trim().length > 0 : true;
     const emailOk = emailInput ? /\S+@\S+\.\S+/.test(emailInput.value.trim()) : true;
+    // Country radios are optional in the DOM: gate only fires when they exist.
+    const countryOk = !form.querySelector('input[name="country"]') || !!getSelectedCountry();
 
-    submitBtn.disabled = !(pwOk && consentOk && firstOk && lastOk && emailOk);
+    submitBtn.disabled = !(pwOk && consentOk && firstOk && lastOk && emailOk && countryOk);
   }
 
   // Bind listeners
@@ -90,6 +99,9 @@
   if (consentBox) consentBox.addEventListener('change', updateSubmitState);
   [firstNameInput, lastNameInput, emailInput].forEach((el) => {
     if (el) el.addEventListener('input', updateSubmitState);
+  });
+  form.querySelectorAll('input[name="country"]').forEach((el) => {
+    el.addEventListener('change', updateSubmitState);
   });
 
   // Set initial state
@@ -132,11 +144,14 @@
     const fullName = (firstName + ' ' + lastName).trim();
     const email = emailInput.value.trim();
     const password = pwInput.value;
+    const country = getSelectedCountry();
+    const countryRequired = !!form.querySelector('input[name="country"]');
 
     // Double-check everything server-side-ish before calling Supabase
     const { allMet } = evaluatePassword(password);
     const consentOk = consentBox ? consentBox.checked : true;
-    if (!firstName || !lastName || !email || !allMet || !consentOk) {
+    if (!firstName || !lastName || !email || !allMet || !consentOk ||
+        (countryRequired && !country)) {
       showAlert(t.fillFields, 'error');
       return;
     }
@@ -149,6 +164,7 @@
       email,
       password,
       fullName,
+      country,  // null if the field is absent (FR page today)
     });
 
     submitBtn.textContent = originalSubmitText || t.defaultSubmit;

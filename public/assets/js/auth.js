@@ -40,12 +40,17 @@
 
   // ----- Public API -----
 
-  async function signUpWithPassword({ email, password, fullName }) {
+  async function signUpWithPassword({ email, password, fullName, country }) {
     const { data, error } = await client.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName || null },
+        // These land in auth.users.raw_user_meta_data. The handle_new_user
+        // trigger (migration 0002) reads them into public.profiles.
+        data: {
+          full_name: fullName || null,
+          country: country || null,
+        },
         emailRedirectTo: window.location.origin + '/account.html',
       },
     });
