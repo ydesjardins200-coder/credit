@@ -51,66 +51,144 @@
 
   <main>
     <!-- ============= HERO ============= -->
-    <section class="hero">
+    <section class="hero hero-dark" aria-labelledby="hero-title">
+      <!-- Decorative upward-curve motif behind everything -->
+      <svg class="hero-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g stroke="#fff" stroke-width="1" stroke-opacity="0.05" fill="none">
+          <line x1="0" y1="150" x2="1200" y2="150"/>
+          <line x1="0" y1="300" x2="1200" y2="300"/>
+          <line x1="0" y1="450" x2="1200" y2="450"/>
+        </g>
+        <path d="M -60 580 Q 250 500 520 360 T 1260 60" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-opacity="0.45" stroke-linecap="round"/>
+        <path d="M -30 600 Q 200 540 460 420 T 1220 160" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.2" stroke-linecap="round"/>
+        <circle cx="60" cy="540" r="4" fill="#2ECC71" fill-opacity="0.5"/>
+        <circle cx="220" cy="470" r="5" fill="#2ECC71" fill-opacity="0.6"/>
+        <circle cx="440" cy="370" r="6" fill="#2ECC71" fill-opacity="0.75"/>
+        <circle cx="720" cy="240" r="7" fill="#2ECC71" fill-opacity="0.85"/>
+        <circle cx="1020" cy="110" r="10" fill="#2ECC71" fill-opacity="1"/>
+        <circle cx="1020" cy="110" r="18" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.35"/>
+      </svg>
+
       <div class="container">
         <div class="hero-grid">
+          <!-- Left: copy + CTAs + proof -->
           <div class="hero-copy">
-            <span class="hero-eyebrow">✨ For the U.S. and Canada</span>
-            <h1>Credit made simple.</h1>
+            <span class="hero-eyebrow">
+              <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+              Credit building for Canada &amp; U.S.
+            </span>
+            <h1 id="hero-title">Build credit that actually changes your life.</h1>
             <p class="lead">
-              Rebuild your credit with transparent monthly reporting, free
-              financial tools, and personalized AI-powered advice — all in one
-              place.
+              On-time payments reported to all 3 major bureaus. Free budget
+              tools and AI guidance included.
+              <strong class="lead-price">$30 / month.</strong> Cancel anytime.
+            </p>
+            <p class="hero-microtrust">
+              No credit check · No setup fees · Start in 3 minutes
             </p>
             <div class="hero-cta-row">
-              <a href="/signup.html" class="btn btn-primary btn-lg">Get started</a>
-              <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+              <a href="/signup.html" class="btn btn-primary btn-lg btn-cta-glow">
+                Start for $30 / month
+              </a>
+              <a href="#how" class="btn btn-ghost-dark btn-lg">
+                See how it works →
+              </a>
             </div>
-            <p class="hero-reassurance">
-              <strong>No credit check.</strong> Cancel anytime. Free tools
-              included.
-            </p>
 
-            <div class="hero-stats">
-              <div>
-                <div class="hero-stat-value">+86<span style="font-size:0.7em">pts</span></div>
-                <div class="hero-stat-label">Avg. score gain in 12&nbsp;months<sup>1</sup></div>
+            <!-- Social proof: early-members strip -->
+            <div class="hero-social">
+              <div class="hero-avatars" aria-hidden="true">
+                <span class="avatar avatar-1">M</span>
+                <span class="avatar avatar-2">A</span>
+                <span class="avatar avatar-3">D</span>
+                <span class="avatar avatar-4">K</span>
               </div>
-              <div>
-                <div class="hero-stat-value">3</div>
-                <div class="hero-stat-label">Major bureaus we report to</div>
-              </div>
-              <div>
-                <div class="hero-stat-value">4.8★</div>
-                <div class="hero-stat-label">Expected member rating<sup>2</sup></div>
-              </div>
+              <span class="hero-social-text">
+                Trusted by early members in Toronto, Montréal, Phoenix &amp; Atlanta
+              </span>
             </div>
           </div>
 
+          <!-- Right: interactive score card + stats -->
           <div class="hero-visual">
-            <div class="score-card" role="img" aria-label="Credit score dashboard preview">
+            <div class="score-card" role="region" aria-label="Interactive 12-month credit score projection">
+
               <div class="score-card-header">
                 <div>
                   <div class="mock-screen-title">Your credit score</div>
-                  <div class="tag">Updated today</div>
+                  <div id="sc-month-label" class="sc-month-label">Month 1 of 12</div>
                 </div>
                 <div class="score-change">
-                  <span class="score-change-icon">↑</span>
-                  <span>+24</span>
+                  <span class="score-change-icon" aria-hidden="true">↑</span>
+                  <span>+<span id="sc-change">2</span></span>
                 </div>
               </div>
+
               <div class="score-dial">
-                <div class="score-number">712</div>
-                <div class="score-label">Good</div>
+                <div class="score-number" id="sc-score">580</div>
+                <div class="score-label" id="sc-label">Fair</div>
               </div>
+
+              <!-- Mini trend chart with tier milestones -->
+              <svg class="sc-trend" viewBox="0 0 300 90" aria-label="12-month credit score trajectory with tier milestones">
+                <line x1="18" y1="33" x2="300" y2="33" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+                <line x1="18" y1="15" x2="300" y2="15" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
+                <text x="298" y="30" text-anchor="end" font-size="9" font-weight="600" fill="#94a3b8" style="letter-spacing: 0.03em">GOOD 670</text>
+                <text x="298" y="12" text-anchor="end" font-size="9" font-weight="600" fill="#cbd5e1" style="letter-spacing: 0.03em">VERY GOOD 740</text>
+
+                <path id="sc-trend-future" d="" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path id="sc-trend-traveled" d="" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <g id="sc-trend-milestones"></g>
+                <circle id="sc-trend-dot" cx="18" cy="85" r="5" fill="#2ECC71" stroke="#fff" stroke-width="2.5"/>
+                <circle id="sc-trend-pulse" cx="18" cy="85" r="5" fill="none" stroke="#2ECC71" stroke-width="2" opacity="0.5">
+                  <animate attributeName="r" from="5" to="12" dur="1.8s" repeatCount="indefinite"/>
+                  <animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+
               <div class="score-bar" aria-hidden="true">
                 <div class="score-bar-fill"></div>
-                <div class="score-bar-marker"></div>
+                <div class="score-bar-marker" id="sc-marker"></div>
               </div>
-              <div class="mock-ai">
+
+              <div class="mock-ai" id="sc-tip-wrap">
                 <span class="mock-ai-label">💡 AI tip</span>
-                Pay down your utility card by $80 before the 23rd to keep
-                utilization under 30%.
+                <span id="sc-tip">First step: set your iBoost payment to autopay so you never miss a month.</span>
+              </div>
+
+              <div class="sc-controls">
+                <div class="sc-controls-row">
+                  <span class="sc-controls-label">Replay journey</span>
+                  <button type="button" id="sc-play" class="sc-play-btn" aria-label="Play the 12-month journey">▶ Play</button>
+                </div>
+                <input
+                  type="range"
+                  id="sc-slider"
+                  min="1" max="12" step="1" value="1"
+                  aria-label="Month selector"
+                  class="sc-slider"
+                />
+              </div>
+            </div>
+
+            <p class="sc-disclaimer">
+              Illustrative projection. Your results will vary.
+              See <a href="/disclosures.html">Disclosures</a>.
+            </p>
+
+            <!-- Supporting mini-stats -->
+            <div class="hero-mini-stats" aria-hidden="false">
+              <div>
+                <div class="hero-mini-stat-value">+86</div>
+                <div class="hero-mini-stat-label">Avg. 12-mo gain<sup>1</sup></div>
+              </div>
+              <div>
+                <div class="hero-mini-stat-value">3</div>
+                <div class="hero-mini-stat-label">Bureaus reported to</div>
+              </div>
+              <div>
+                <div class="hero-mini-stat-value">$0</div>
+                <div class="hero-mini-stat-label">Hidden fees</div>
               </div>
             </div>
           </div>

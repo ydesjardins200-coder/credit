@@ -100,10 +100,179 @@
     });
   }
 
+  // ----- Interactive hero score card -----
+  // 12-month illustrative journey from 580 (Fair) to 666 (just crossing into Good).
+  // Auto-plays once on load; slider lets users scrub through any month.
+  // Respects prefers-reduced-motion by landing on month 12 with no animation.
+  function initScoreCard() {
+    const scoreEl   = document.getElementById('sc-score');
+    const labelEl   = document.getElementById('sc-label');
+    const monthEl   = document.getElementById('sc-month-label');
+    const changeEl  = document.getElementById('sc-change');
+    const markerEl  = document.getElementById('sc-marker');
+    const tipWrap   = document.getElementById('sc-tip-wrap');
+    const tipEl     = document.getElementById('sc-tip');
+    const slider    = document.getElementById('sc-slider');
+    const playBtn   = document.getElementById('sc-play');
+
+    // If any critical element is missing, the hero was changed — bail quietly.
+    if (!scoreEl || !slider || !playBtn) return;
+
+    const MONTHS = [
+      { score: 580, change: 0,  label: 'Fair', markerPct: 25, tip: 'First step: set your iBoost payment to autopay so you never miss a month.' },
+      { score: 584, change: 4,  label: 'Fair', markerPct: 27, tip: 'First iBoost payment reported to the bureaus. Expect a small bump in 2–3 weeks.' },
+      { score: 591, change: 11, label: 'Fair', markerPct: 30, tip: 'Keep your utility card balance under 30% — it makes the biggest difference right now.' },
+      { score: 599, change: 19, label: 'Fair', markerPct: 34, tip: 'Three on-time payments logged. Your payment history factor is strengthening.' },
+      { score: 608, change: 28, label: 'Fair', markerPct: 39, tip: "Don't close your oldest card — age of credit matters more than you think." },
+      { score: 619, change: 39, label: 'Fair', markerPct: 44, tip: 'Consider requesting a limit increase on your oldest card — improves your utilization ratio.' },
+      { score: 629, change: 49, label: 'Fair', markerPct: 49, tip: "You're halfway. Dispute any inaccurate items on your report — we'll help you draft it." },
+      { score: 638, change: 58, label: 'Good', markerPct: 53, tip: 'You crossed into Good. Lenders see your profile differently now.' },
+      { score: 647, change: 67, label: 'Good', markerPct: 58, tip: 'You qualify for better card offers. Limit new applications to 1 every 6 months.' },
+      { score: 655, change: 75, label: 'Good', markerPct: 62, tip: 'Autopay + low utilization + on-time = the 3 habits that keep scores climbing.' },
+      { score: 661, change: 81, label: 'Good', markerPct: 65, tip: 'Your debt-to-income ratio matters for loans. Start tracking it in your budget app.' },
+      { score: 666, change: 86, label: 'Good', markerPct: 68, tip: "You've built 12 months of consistency. Apply what you learned to every new account." }
+    ];
+
+    // Trend chart constants (must match the SVG viewBox in index.html)
+    const CHART_W = 300, CHART_H = 90;
+    const MARGIN_L = 18, MARGIN_R = 8, MARGIN_T = 8, MARGIN_B = 8;
+    const Y_MIN = 550, Y_MAX = 780;
+
+    function xForMonth(m) {
+      const plotW = CHART_W - MARGIN_L - MARGIN_R;
+      return MARGIN_L + ((m - 1) / 11) * plotW;
+    }
+    function yForScore(score) {
+      const plotH = CHART_H - MARGIN_T - MARGIN_B;
+      const frac = (score - Y_MIN) / (Y_MAX - Y_MIN);
+      return MARGIN_T + plotH - frac * plotH;
+    }
+    function buildPath(points) {
+      if (!points.length) return '';
+      return 'M ' + points.map(p => p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' L ');
+    }
+
+    const allPoints = MONTHS.map((d, i) => ({
+      x: xForMonth(i + 1),
+      y: yForScore(d.score)
+    }));
+
+    const futurePath   = document.getElementById('sc-trend-future');
+    const traveledPath = document.getElementById('sc-trend-traveled');
+    const dot          = document.getElementById('sc-trend-dot');
+    const pulse        = document.getElementById('sc-trend-pulse');
+    const milestoneG   = document.getElementById('sc-trend-milestones');
+
+    // Precompute the complete (future) path and the Fair->Good crossover marker.
+    if (futurePath) futurePath.setAttribute('d', buildPath(allPoints));
+
+    if (milestoneG) {
+      // Marker where the trajectory crosses Good (670) — approx between month 7 & 8.
+      // We place it at the month 8 point (first reading >= 670 is at index 7 = month 8).
+      const threshIdx = MONTHS.findIndex(d => d.score >= 670);
+      if (threshIdx > -1) {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', String(allPoints[threshIdx].x));
+        c.setAttribute('cy', String(allPoints[threshIdx].y));
+        c.setAttribute('r', '3.5');
+        c.setAttribute('fill', '#fff');
+        c.setAttribute('stroke', '#2ECC71');
+        c.setAttribute('stroke-width', '2');
+        milestoneG.appendChild(c);
+      }
+    }
+
+    let current = 1;
+    let autoTimer = null;
+    let isPlaying = false;
+
+    function render(monthNum, animateTip) {
+      const data = MONTHS[monthNum - 1];
+      if (!data) return;
+
+      scoreEl.textContent  = data.score;
+      if (labelEl)  labelEl.textContent  = data.label;
+      if (monthEl)  monthEl.textContent  = 'Month ' + monthNum + ' of 12';
+      if (changeEl) changeEl.textContent = data.change;
+      if (markerEl) markerEl.style.left  = data.markerPct + '%';
+
+      // Trend chart: update traveled stroke + current dot position
+      if (traveledPath) {
+        traveledPath.setAttribute('d', buildPath(allPoints.slice(0, monthNum)));
+      }
+      const pt = allPoints[monthNum - 1];
+      if (dot) {
+        dot.setAttribute('cx', String(pt.x));
+        dot.setAttribute('cy', String(pt.y));
+      }
+      if (pulse) {
+        pulse.setAttribute('cx', String(pt.x));
+        pulse.setAttribute('cy', String(pt.y));
+      }
+
+      if (animateTip && tipWrap && tipEl) {
+        tipWrap.style.opacity = '0';
+        setTimeout(function () {
+          tipEl.textContent = data.tip;
+          tipWrap.style.opacity = '1';
+        }, 180);
+      } else if (tipEl) {
+        tipEl.textContent = data.tip;
+      }
+
+      current = monthNum;
+      slider.value = String(monthNum);
+    }
+
+    function stopAutoPlay() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      isPlaying = false;
+      playBtn.textContent = '▶ Play';
+      playBtn.setAttribute('aria-label', 'Play the 12-month journey');
+    }
+
+    function startAutoPlay() {
+      stopAutoPlay();
+      isPlaying = true;
+      playBtn.textContent = '■ Stop';
+      playBtn.setAttribute('aria-label', 'Stop playback');
+      let step = current >= 12 ? 1 : current;
+      render(step, true);
+      autoTimer = setInterval(function () {
+        step++;
+        if (step > 12) { stopAutoPlay(); return; }
+        render(step, true);
+      }, 700);
+    }
+
+    slider.addEventListener('input', function () {
+      stopAutoPlay();
+      render(parseInt(slider.value, 10), true);
+    });
+
+    playBtn.addEventListener('click', function () {
+      if (isPlaying) { stopAutoPlay(); } else { startAutoPlay(); }
+    });
+
+    let prefersReduced = false;
+    try {
+      prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) { /* no-op */ }
+
+    if (prefersReduced) {
+      render(12, false);
+    } else {
+      render(1, false);
+      // Slight delay so the page settles before animation begins.
+      setTimeout(startAutoPlay, 500);
+    }
+  }
+
   // ----- Boot -----
   document.addEventListener('DOMContentLoaded', function () {
     initCurrency();
     initFaq();
+    initScoreCard();
   });
 
   // If Supabase is loaded via defer, iboostAuth may not exist yet at DOMContentLoaded.
