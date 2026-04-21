@@ -2294,27 +2294,6 @@ body.auth-page .site-footer .container {
   padding-right: var(--space-4);
 }
 
-/* Slim draft-review strip at the very top of the section. Remove when
-   content is cleared to go live. */
-.trust-draft-strip {
-  max-width: 920px;
-  margin: 0 auto var(--space-4);
-  padding: 0.55rem 0.9rem;
-  background: #fffbeb;
-  border: 1px solid #fbbf24;
-  border-left: 3px solid #d97706;
-  border-radius: var(--radius);
-  color: #78350f;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.trust-draft-strip strong {
-  color: #78350f;
-  margin-right: 0.2rem;
-}
-
 .trust-slim-header {
   max-width: 760px;
   margin: 0 auto var(--space-5);
@@ -2370,8 +2349,7 @@ body.auth-page .site-footer .container {
     row-gap: var(--space-4);
   }
 
-  /* Section-level header elements span all 3 columns */
-  .trust-draft-strip,
+  /* Section-level header spans all 3 columns */
   .trust-slim-header {
     grid-column: 1 / -1;
   }
