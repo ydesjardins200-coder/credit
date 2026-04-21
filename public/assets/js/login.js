@@ -1,4 +1,4 @@
-// Login page controller.
+// Login page controller. Strings come from data attributes on <body>.
 
 (function () {
   'use strict';
@@ -6,6 +6,15 @@
   const form = document.getElementById('login-form');
   const submitBtn = document.getElementById('submit-btn');
   const alertEl = document.getElementById('alert');
+
+  const t = {
+    enterCreds: document.body.dataset.msgEnterCreds || 'Please enter your email and password.',
+    authUnavailable: document.body.dataset.msgAuthUnavailable || 'Auth is not configured. Please try again in a moment.',
+    signingIn: document.body.dataset.msgSigningIn || 'Signing in…',
+    defaultSubmit: document.body.dataset.msgSubmit || 'Sign in',
+    genericError: document.body.dataset.msgGenericError || 'Sign-in failed. Please try again.',
+    accountPath: document.body.dataset.accountPath || '/account.html',
+  };
 
   function showAlert(message, kind) {
     alertEl.className = 'alert ' + (kind === 'success' ? 'alert-success' : 'alert-error');
@@ -21,7 +30,7 @@
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
-    if (session) window.location.replace('/account.html');
+    if (session) window.location.replace(t.accountPath);
   })();
 
   form.addEventListener('submit', async function (event) {
@@ -29,7 +38,7 @@
     clearAlert();
 
     if (!window.iboostAuth) {
-      showAlert('Auth is not configured. Please try again in a moment.', 'error');
+      showAlert(t.authUnavailable, 'error');
       return;
     }
 
@@ -37,23 +46,23 @@
     const password = document.getElementById('password').value;
 
     if (!email || !password) {
-      showAlert('Please enter your email and password.', 'error');
+      showAlert(t.enterCreds, 'error');
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in…';
+    submitBtn.textContent = t.signingIn;
 
     const { error } = await window.iboostAuth.signInWithPassword({ email, password });
 
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Sign in';
+    submitBtn.textContent = t.defaultSubmit;
 
     if (error) {
-      showAlert(error.message || 'Sign-in failed. Please try again.', 'error');
+      showAlert(error.message || t.genericError, 'error');
       return;
     }
 
-    window.location.replace('/account.html');
+    window.location.replace(t.accountPath);
   });
 })();

@@ -1,20 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Create your iBoost account." />
-  <title>Sign up — iBoost</title>
+  <meta name="description" content="Créez votre compte iBoost." />
+  <title>Inscription — iBoost</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
   <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+  <link rel="canonical" href="https://iboostcredit.netlify.app/fr/inscription.html" />
+  <link rel="alternate" hreflang="en" href="https://iboostcredit.netlify.app/signup.html" />
+  <link rel="alternate" hreflang="fr" href="https://iboostcredit.netlify.app/fr/inscription.html" />
   <link rel="stylesheet" href="/assets/css/main.css" />
 </head>
-<body>
+<body
+  data-msg-fill-fields="Veuillez remplir tous les champs. Le mot de passe doit contenir au moins 8 caractères."
+  data-msg-auth-unavailable="L'authentification n'est pas configurée. Réessayez dans un instant."
+  data-msg-creating="Création du compte…"
+  data-msg-submit="Créer mon compte"
+  data-msg-generic-error="L'inscription a échoué. Veuillez réessayer."
+  data-msg-check-email="Vérifiez votre courriel pour confirmer votre compte, puis connectez-vous."
+  data-account-path="/account.html">
   <header class="site-header">
     <div class="container">
-      <a href="/" class="logo" aria-label="iBoost home">
+      <a href="/fr/" class="logo" aria-label="Accueil iBoost">
         <img
           src="/assets/img/brand/logo-horizontal-80.png"
           srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
@@ -23,56 +33,54 @@
           height="80"
         />
       </a>
-      <nav class="site-nav" aria-label="Primary">
-        <a href="/fr/inscription.html" class="lang-switch" aria-label="Passer en français">🌐 FR</a>
-        <a href="/login.html" class="btn btn-ghost">Sign in</a>
+      <nav class="site-nav" aria-label="Navigation principale">
+        <a href="/signup.html" class="lang-switch" aria-label="Switch to English">🌐 EN</a>
+        <a href="/fr/connexion.html" class="btn btn-ghost">Connexion</a>
       </nav>
     </div>
   </header>
 
   <main class="auth-wrap">
     <div class="auth-card">
-      <h1>Create your account</h1>
-      <p class="muted">Start your credit journey with iBoost.</p>
+      <h1>Créez votre compte</h1>
+      <p class="muted">Commencez votre parcours crédit avec iBoost.</p>
 
       <div id="alert" hidden></div>
 
       <button type="button" class="btn btn-oauth" data-oauth="google">
-        Continue with Google
+        Continuer avec Google
       </button>
       <button type="button" class="btn btn-oauth" data-oauth="facebook" aria-disabled="true" disabled>
-        Continue with Facebook
+        Continuer avec Facebook
       </button>
 
-      <div class="divider">or</div>
+      <div class="divider">ou</div>
 
       <form id="signup-form" novalidate>
         <div class="form-group">
-          <label for="full_name">Full name</label>
+          <label for="full_name">Nom complet</label>
           <input type="text" id="full_name" name="full_name" autocomplete="name" required />
         </div>
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="email">Courriel</label>
           <input type="email" id="email" name="email" autocomplete="email" required />
         </div>
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password">Mot de passe</label>
           <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required />
         </div>
         <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
-          Create account
+          Créer mon compte
         </button>
       </form>
 
       <p class="auth-footer">
-        Already have an account? <a href="/login.html">Sign in</a>
+        Vous avez déjà un compte ? <a href="/fr/connexion.html">Connexion</a>
       </p>
     </div>
   </main>
 
-  <!-- Config must load before auth.js -->
   <script src="/assets/js/config.js" defer></script>
-  <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/signup.js" defer></script>

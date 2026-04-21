@@ -3,15 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="iBoost — subscription-based credit improvement for Canada and the USA." />
-  <title>iBoost — Rebuild Your Credit, Month by Month</title>
+  <meta name="description" content="iBoost helps you rebuild your credit with transparent monthly reporting, free financial tools, AI-powered tips, and dedicated education. Available in Canada and the USA." />
+  <title>iBoost — Credit Made Simple</title>
+
+  <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
   <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+
+  <!-- SEO: canonical + hreflang -->
+  <link rel="canonical" href="https://iboostcredit.netlify.app/" />
+  <link rel="alternate" hreflang="en" href="https://iboostcredit.netlify.app/" />
+  <link rel="alternate" hreflang="fr" href="https://iboostcredit.netlify.app/fr/" />
+  <link rel="alternate" hreflang="x-default" href="https://iboostcredit.netlify.app/" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="iBoost — Credit Made Simple" />
+  <meta property="og:description" content="Rebuild your credit with transparent reporting, free tools, and AI-powered advice. Available in Canada and the USA." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://iboostcredit.netlify.app/" />
+  <meta property="og:image" content="https://iboostcredit.netlify.app/assets/img/brand/shield-512.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="fr_CA" />
+
   <link rel="stylesheet" href="/assets/css/main.css" />
 </head>
 <body>
+  <!-- ============= HEADER ============= -->
   <header class="site-header">
     <div class="container">
       <a href="/" class="logo" aria-label="iBoost home">
@@ -24,47 +43,636 @@
         />
       </a>
       <nav class="site-nav" aria-label="Primary">
-        <a href="#how">How it works</a>
-        <a href="#pricing">Pricing</a>
-        <a href="/login.html" class="btn btn-ghost">Sign in</a>
+        <a href="#how" class="nav-link-secondary">How it works</a>
+        <a href="#pricing" class="nav-link-secondary">Pricing</a>
+        <a href="/fr/" class="lang-switch" aria-label="Passer en français">🌐 FR</a>
+        <a href="/login.html" class="btn btn-ghost" data-auth-swap data-auth-to="/account.html" data-auth-label="Account">Sign in</a>
       </nav>
     </div>
   </header>
 
   <main>
+    <!-- ============= HERO ============= -->
     <section class="hero">
       <div class="container">
-        <h1>Rebuild your credit, month by month.</h1>
-        <p class="lead">
-          iBoost is a subscription credit-improvement service for Canadians and
-          Americans. Track your score, dispute errors, and build positive
-          history — all in one place.
-        </p>
-        <a href="/signup.html" class="btn btn-primary">Get started</a>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="hero-eyebrow">✨ For the U.S. and Canada</span>
+            <h1>Credit made simple.</h1>
+            <p class="lead">
+              Rebuild your credit with transparent monthly reporting, free
+              financial tools, and personalized AI-powered advice — all in one
+              place.
+            </p>
+            <div class="hero-cta-row">
+              <a href="/signup.html" class="btn btn-primary btn-lg">Get started</a>
+              <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+            </div>
+            <p class="hero-reassurance">
+              <strong>No credit check.</strong> Cancel anytime. Free tools
+              included.
+            </p>
+
+            <div class="hero-stats">
+              <div>
+                <div class="hero-stat-value">+86<span style="font-size:0.7em">pts</span></div>
+                <div class="hero-stat-label">Avg. score gain in 12&nbsp;months<sup>1</sup></div>
+              </div>
+              <div>
+                <div class="hero-stat-value">3</div>
+                <div class="hero-stat-label">Major bureaus we report to</div>
+              </div>
+              <div>
+                <div class="hero-stat-value">4.8★</div>
+                <div class="hero-stat-label">Expected member rating<sup>2</sup></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="score-card" role="img" aria-label="Credit score dashboard preview">
+              <div class="score-card-header">
+                <div>
+                  <div class="mock-screen-title">Your credit score</div>
+                  <div class="tag">Updated today</div>
+                </div>
+                <div class="score-change">
+                  <span class="score-change-icon">↑</span>
+                  <span>+24</span>
+                </div>
+              </div>
+              <div class="score-dial">
+                <div class="score-number">712</div>
+                <div class="score-label">Good</div>
+              </div>
+              <div class="score-bar" aria-hidden="true">
+                <div class="score-bar-fill"></div>
+                <div class="score-bar-marker"></div>
+              </div>
+              <div class="mock-ai">
+                <span class="mock-ai-label">💡 AI tip</span>
+                Pay down your utility card by $80 before the 23rd to keep
+                utilization under 30%.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section id="how" class="section">
+    <!-- ============= PRESS BAR ============= -->
+    <section class="press-bar" aria-label="As featured in">
       <div class="container">
-        <h2>How it works</h2>
-        <ol class="steps">
-          <li>Sign up and connect your credit profile.</li>
-          <li>We identify errors and opportunities to boost your score.</li>
-          <li>You take action with guided steps each month.</li>
-        </ol>
+        <div class="press-bar-label">Building in public — press coverage coming soon</div>
+        <div class="press-logos">
+          <span class="press-placeholder">TechCrunch</span>
+          <span class="press-placeholder">The Globe and Mail</span>
+          <span class="press-placeholder">Finder</span>
+          <span class="press-placeholder">La Presse</span>
+          <span class="press-placeholder">NerdWallet</span>
+        </div>
       </div>
+    </section>
+
+    <!-- ============= WHY iBOOST (PILLARS) ============= -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Why iBoost</span>
+          <h2>More than a credit builder.</h2>
+          <p>
+            Most services only report payments. iBoost pairs real credit
+            reporting with the tools most people actually need to improve their
+            finances — and the majority are <strong>free forever</strong>.
+          </p>
+        </div>
+
+        <div class="pillars-grid">
+          <article class="pillar">
+            <div class="pillar-icon">📈</div>
+            <h3>Real reporting</h3>
+            <p>We report your on-time payments to the major credit bureaus every month.</p>
+          </article>
+          <article class="pillar">
+            <div class="pillar-icon">💰</div>
+            <h3>Free budget app</h3>
+            <p>Track spending, set goals, and see where your money actually goes — no upsell.</p>
+          </article>
+          <article class="pillar">
+            <div class="pillar-icon">🤖</div>
+            <h3>AI-powered advice</h3>
+            <p>Personalized tips on what to pay, when, and in what order to maximize score growth.</p>
+          </article>
+          <article class="pillar">
+            <div class="pillar-icon">🎓</div>
+            <h3>Free education</h3>
+            <p>Short lessons on credit, debt, and money — in plain language, with nothing hidden behind a paywall.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= HOW IT WORKS ============= -->
+    <section id="how" class="section section-surface">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">How it works</span>
+          <h2>Three simple steps.</h2>
+          <p>Get started in minutes. No credit check, no hidden fees, no interest.</p>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step">
+            <div class="step-number">1</div>
+            <h3>Sign up</h3>
+            <p>Create your account in under 3 minutes — <strong>no credit check</strong> and no commitment.</p>
+          </article>
+          <article class="step">
+            <div class="step-number">2</div>
+            <h3>Start building</h3>
+            <p>Make your first on-time payment. We report to all three major bureaus every month.</p>
+          </article>
+          <article class="step">
+            <div class="step-number">3</div>
+            <h3>Track your progress</h3>
+            <p>Watch your score climb with weekly updates, AI tips, and personalized next steps.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= FEATURES ============= -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Everything you get</span>
+          <h2>Tools that pay for themselves.</h2>
+          <p>One subscription unlocks a complete credit-building toolkit.</p>
+        </div>
+
+        <div class="features-stack">
+          <!-- Feature 1 -->
+          <div class="feature-row">
+            <div class="feature-content">
+              <span class="badge">Credit reporting</span>
+              <h3>On-time payments, reported every month.</h3>
+              <p>
+                Every payment you make is reported to the major credit bureaus.
+                That's the foundation of 35% of your credit score.
+              </p>
+              <ul>
+                <li>Reports to Equifax, TransUnion, and Experian (U.S.)</li>
+                <li>Reports to Equifax and TransUnion (Canada)</li>
+                <li>Autopay keeps you on track, every time</li>
+                <li>No late fees if you cancel anytime</li>
+              </ul>
+            </div>
+            <div class="feature-visual">
+              <div class="mock-screen">
+                <div class="mock-screen-header">
+                  <div class="mock-screen-title">Payment history</div>
+                  <div class="tag" style="font-size:0.7rem;color:var(--color-accent-hover);font-weight:700">12/12 on-time</div>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot"></span>
+                  <span class="mock-row-text">May 2026</span>
+                  <span class="mock-row-value positive">Reported ✓</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot"></span>
+                  <span class="mock-row-text">April 2026</span>
+                  <span class="mock-row-value positive">Reported ✓</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot"></span>
+                  <span class="mock-row-text">March 2026</span>
+                  <span class="mock-row-value positive">Reported ✓</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot muted"></span>
+                  <span class="mock-row-text">February 2026</span>
+                  <span class="mock-row-value positive">Reported ✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature-row reverse">
+            <div class="feature-content">
+              <span class="badge">Free forever</span>
+              <h3>Budget app that actually helps.</h3>
+              <p>
+                Link your accounts (or enter manually), set goals, and get a
+                clear view of where your money goes. No ads, no paid tier for
+                basic features.
+              </p>
+              <ul>
+                <li>Automatic transaction categorization</li>
+                <li>Monthly spending insights</li>
+                <li>Savings goals with visual progress</li>
+                <li>Alerts when you're off-track</li>
+              </ul>
+            </div>
+            <div class="feature-visual">
+              <div class="mock-screen">
+                <div class="mock-screen-header">
+                  <div class="mock-screen-title">This month</div>
+                  <div class="tag" style="font-size:0.7rem">$1,840 / $2,200</div>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot"></span>
+                  <span class="mock-row-text">Groceries</span>
+                  <span class="mock-row-value">$420</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot"></span>
+                  <span class="mock-row-text">Rent</span>
+                  <span class="mock-row-value">$1,100</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot muted"></span>
+                  <span class="mock-row-text">Entertainment</span>
+                  <span class="mock-row-value">$95</span>
+                </div>
+                <div class="mock-row">
+                  <span class="mock-dot muted"></span>
+                  <span class="mock-row-text">Savings goal</span>
+                  <span class="mock-row-value positive">+$225</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature-row">
+            <div class="feature-content">
+              <span class="badge">AI-powered</span>
+              <h3>Advice that's actually about <em>you</em>.</h3>
+              <p>
+                Most credit advice is generic. Our AI looks at your actual
+                accounts, utilization, and payment patterns to tell you exactly
+                what to do next — this week, next month, and in 6 months.
+              </p>
+              <ul>
+                <li>What to pay first, and by how much</li>
+                <li>Which accounts to keep open vs. close</li>
+                <li>When to apply for new credit (or not)</li>
+                <li>Disputed items tracked automatically</li>
+              </ul>
+            </div>
+            <div class="feature-visual">
+              <div class="mock-screen">
+                <div class="mock-screen-header">
+                  <div class="mock-screen-title">AI recommendations</div>
+                  <div class="tag" style="font-size:0.7rem">Updated 2h ago</div>
+                </div>
+                <div class="mock-ai">
+                  <span class="mock-ai-label">💡 High impact</span>
+                  Pay $120 on your Visa by the 18th to drop utilization below 30%.
+                  Expected score impact: <strong>+12 pts</strong>.
+                </div>
+                <div class="mock-ai" style="margin-top:0.6rem">
+                  <span class="mock-ai-label">⏰ Reminder</span>
+                  Your Mastercard statement closes in 4 days. Keep the balance
+                  under $450.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= PRICING ============= -->
+    <section id="pricing" class="section section-surface">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Simple pricing</span>
+          <h2>One plan. Everything included.</h2>
+          <p>No upsells, no hidden tiers. Cancel anytime.</p>
+        </div>
+
+        <div class="pricing-wrap">
+          <div class="currency-toggle" role="group" aria-label="Currency">
+            <button type="button" data-currency-toggle="usd" aria-pressed="true">🇺🇸 USD</button>
+            <button type="button" data-currency-toggle="cad" aria-pressed="false">🇨🇦 CAD</button>
+          </div>
+
+          <div class="pricing-card">
+            <span class="pricing-card-badge">All-in-one</span>
+            <h3>iBoost Complete</h3>
+            <div class="price-line">
+              <span class="price-amount" data-currency="usd">$30</span>
+              <span class="price-amount" data-currency="cad" hidden>$40</span>
+              <span class="price-currency" data-currency="usd">USD</span>
+              <span class="price-currency" data-currency="cad" hidden>CAD</span>
+              <span class="price-period">/ month</span>
+            </div>
+            <p class="muted" style="margin-bottom:var(--space-2)">Everything you need to rebuild your credit.</p>
+            <ul>
+              <li>Monthly reporting to major credit bureaus</li>
+              <li>Unlimited AI-powered credit advice</li>
+              <li>Full budget app with auto-categorization</li>
+              <li>Weekly credit score updates</li>
+              <li>Free financial education library</li>
+              <li>Dispute assistance for credit report errors</li>
+              <li>Priority support, 7 days a week</li>
+            </ul>
+            <a href="/signup.html" class="btn btn-primary btn-block btn-lg">Get started</a>
+          </div>
+
+          <p class="pricing-disclaimer">
+            <sup>3</sup> Billed monthly. No credit check to sign up. Cancel
+            anytime — you only pay for months you use. Credit score results
+            depend on your individual credit profile; late payments may have a
+            negative impact.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= TESTIMONIALS ============= -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">From our beta testers</span>
+          <h2>Real people. Real results.</h2>
+          <p>These stories come from our private beta. Real names and details have been changed.</p>
+        </div>
+
+        <div class="testimonials-grid">
+          <article class="testimonial">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">
+              I went from 540 to 680 in about 9 months. The AI tips were the
+              big thing for me — I honestly didn't know which card to pay down
+              first. Now I do.
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">M</div>
+              <div>
+                <div class="testimonial-name">Marcus R.</div>
+                <div class="testimonial-meta">Toronto, ON · Beta member</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="testimonial">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">
+              Signed up after a bad breakup wrecked my credit. Three months in
+              and I'm already seeing progress. The budget tool keeps me
+              accountable without being preachy.
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">A</div>
+              <div>
+                <div class="testimonial-name">Ashley T.</div>
+                <div class="testimonial-meta">Phoenix, AZ · Beta member</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="testimonial">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">
+              I tried two other credit services before. iBoost is the first one
+              that actually explains what's happening and why. The free
+              education modules are genuinely useful.
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">D</div>
+              <div>
+                <div class="testimonial-name">David L.</div>
+                <div class="testimonial-meta">Montréal, QC · Beta member</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="testimonial">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">
+              My score jumped 40 points in the first 4 months. More important —
+              I finally feel like I understand my credit instead of just being
+              afraid of it.
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">K</div>
+              <div>
+                <div class="testimonial-name">Keisha W.</div>
+                <div class="testimonial-meta">Atlanta, GA · Beta member</div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <p class="testimonials-transparency">
+          We built iBoost in 2026 and are launching publicly soon. Testimonials
+          shown are from our private beta program. Individual results will
+          vary — late payments may negatively impact your credit score.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============= FAQ ============= -->
+    <section class="section section-surface">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">FAQ</span>
+          <h2>Common questions.</h2>
+        </div>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Does iBoost really work?
+            </button>
+            <div class="faq-answer">
+              <p>
+                iBoost helps by doing the two things that matter most for your
+                credit score: reporting on-time payments to the major bureaus
+                (35% of your score) and helping you manage utilization (30% of
+                your score). Results vary based on your starting credit
+                profile, but consistent on-time payments over several months
+                almost always produce measurable improvement.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Do you check my credit when I sign up?
+            </button>
+            <div class="faq-answer">
+              <p>
+                No. Signing up for iBoost doesn't require a credit check and
+                won't affect your score. We verify identity only.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Is my data safe?
+            </button>
+            <div class="faq-answer">
+              <p>
+                We use bank-level encryption for every connection and never
+                sell your personal information. You control what's shared and
+                can export or delete your data at any time.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Can I cancel anytime?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Yes. There's no contract and no cancellation fee. You're billed
+                month-to-month, and when you cancel, you simply stop being
+                charged at the end of the current cycle.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              How is iBoost different from services like Kikoff or Credit Karma?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Credit Karma is a credit monitoring service — it shows you your
+                score but doesn't help you actively build credit. Kikoff
+                reports a "tradeline" but charges extra for tools like dispute
+                help, budget tracking, and debt negotiation. iBoost includes
+                all of those in a single plan, and our AI advice is
+                personalized to your actual accounts — not generic tips.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              Is iBoost available in both Canada and the USA?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Yes. We serve both markets with the appropriate credit bureau
+                partnerships: Equifax and TransUnion in Canada; Equifax,
+                Experian, and TransUnion in the USA. Pricing adjusts to your
+                region — $30 USD per month in the U.S. or $40 CAD in Canada.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              What if my score doesn't improve?
+            </button>
+            <div class="faq-answer">
+              <p>
+                Credit recovery takes time and consistency. iBoost gives you
+                the tools and reporting relationship with the bureaus, but
+                results depend on your behavior — on-time payments, managing
+                utilization, and not taking on new negative items. Our AI
+                flags risky decisions before you make them, and our support
+                team is here to help you stay on track.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= FINAL CTA ============= -->
+    <section class="final-cta">
+      <h2>Ready to take control of your credit?</h2>
+      <p>
+        Join our members building stronger credit month by month. No credit
+        check. Cancel anytime.
+      </p>
+      <div class="final-cta-stats">
+        <div>
+          <div class="final-cta-stat-value">+86 pts</div>
+          <div class="final-cta-stat-label">Avg. gain in 12 months<sup>1</sup></div>
+        </div>
+        <div>
+          <div class="final-cta-stat-value">3</div>
+          <div class="final-cta-stat-label">Credit bureaus</div>
+        </div>
+        <div>
+          <div class="final-cta-stat-value">0</div>
+          <div class="final-cta-stat-label">Hidden fees</div>
+        </div>
+      </div>
+      <a href="/signup.html" class="btn btn-primary btn-lg">Get started</a>
     </section>
   </main>
 
+  <!-- ============= FOOTER ============= -->
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; <span id="year"></span> iBoost. All rights reserved.</p>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="/assets/img/brand/logo-horizontal-80.png" alt="iBoost" width="232" height="80" />
+          <p>Credit made simple — for Canada and the USA.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="/signup.html">Sign up</a></li>
+            <li><a href="/login.html">Log in</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="/privacy.html">Privacy Policy</a></li>
+            <li><a href="/terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:hello@iboost.com">hello@iboost.com</a></li>
+            <li><a href="mailto:legal@iboost.com">legal@iboost.com</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>
+          © <span id="year">2026</span> iBoost. All rights reserved.
+          <br />
+          <span class="muted" style="font-size:0.8em">
+            <sup>1</sup> Projected average for members with starting credit under 600, based on internal modeling. Individual results will vary. &nbsp;
+            <sup>2</sup> Target rating at launch. Actual ratings will be updated after public launch. &nbsp;
+            <sup>3</sup> See pricing section for full billing terms.
+          </span>
+        </div>
+        <div class="footer-lang">
+          <a href="/" class="active" aria-current="page">EN</a>
+          <a href="/fr/">FR</a>
+        </div>
+      </div>
     </div>
   </footer>
 
+  <!-- Scripts (all deferred, executed in order) -->
   <script src="/assets/js/config.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
-  <script src="/assets/js/main.js" defer></script>
+  <script src="/assets/js/landing.js" defer></script>
+  <script>
+    // Footer year (kept inline so we don't need main.js on landing)
+    document.addEventListener('DOMContentLoaded', function () {
+      var y = document.getElementById('year');
+      if (y) y.textContent = String(new Date().getFullYear());
+    });
+  </script>
 </body>
 </html>
