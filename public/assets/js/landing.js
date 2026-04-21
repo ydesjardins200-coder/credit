@@ -119,18 +119,18 @@
     if (!scoreEl || !slider || !playBtn) return;
 
     const MONTHS = [
-      { score: 580, change: 0,  label: 'Fair', markerPct: 25, tip: 'First step: set your iBoost payment to autopay so you never miss a month.' },
-      { score: 584, change: 4,  label: 'Fair', markerPct: 27, tip: 'First iBoost payment reported to the bureaus. Expect a small bump in 2–3 weeks.' },
-      { score: 591, change: 11, label: 'Fair', markerPct: 30, tip: 'Keep your utility card balance under 30% — it makes the biggest difference right now.' },
-      { score: 599, change: 19, label: 'Fair', markerPct: 34, tip: 'Three on-time payments logged. Your payment history factor is strengthening.' },
-      { score: 608, change: 28, label: 'Fair', markerPct: 39, tip: "Don't close your oldest card — age of credit matters more than you think." },
-      { score: 619, change: 39, label: 'Fair', markerPct: 44, tip: 'Consider requesting a limit increase on your oldest card — improves your utilization ratio.' },
-      { score: 629, change: 49, label: 'Fair', markerPct: 49, tip: "You're halfway. Dispute any inaccurate items on your report — we'll help you draft it." },
-      { score: 638, change: 58, label: 'Good', markerPct: 53, tip: 'You crossed into Good. Lenders see your profile differently now.' },
-      { score: 647, change: 67, label: 'Good', markerPct: 58, tip: 'You qualify for better card offers. Limit new applications to 1 every 6 months.' },
-      { score: 655, change: 75, label: 'Good', markerPct: 62, tip: 'Autopay + low utilization + on-time = the 3 habits that keep scores climbing.' },
-      { score: 661, change: 81, label: 'Good', markerPct: 65, tip: 'Your debt-to-income ratio matters for loans. Start tracking it in your budget app.' },
-      { score: 666, change: 86, label: 'Good', markerPct: 68, tip: "You've built 12 months of consistency. Apply what you learned to every new account." }
+      { score: 580, change: 0,  label: 'Fair', tip: 'Set up autopay so you never miss an iBoost payment.' },
+      { score: 586, change: 6,  label: 'Fair', tip: 'First payment reported to the bureaus. Small bump expected in 2–3 weeks.' },
+      { score: 594, change: 14, label: 'Fair', tip: 'Keep your utility card balance under 30% of the limit.' },
+      { score: 604, change: 24, label: 'Fair', tip: 'Three on-time payments logged. Payment history is strengthening.' },
+      { score: 614, change: 34, label: 'Fair', tip: "Don't close your oldest card — credit age matters more than you think." },
+      { score: 625, change: 45, label: 'Fair', tip: 'Ask your oldest card for a limit increase. It improves your utilization ratio.' },
+      { score: 636, change: 56, label: 'Fair', tip: "You're halfway. Dispute any inaccurate items — we'll help draft it." },
+      { score: 647, change: 67, label: 'Fair', tip: 'Two more on-time months and you cross into Good.' },
+      { score: 657, change: 77, label: 'Fair', tip: 'Almost there. Resist opening new credit in the last 3 months.' },
+      { score: 664, change: 84, label: 'Fair', tip: 'Autopay + low utilization + on-time = the 3 habits keeping you climbing.' },
+      { score: 668, change: 88, label: 'Fair', tip: 'One point away from Good. Stay the course.' },
+      { score: 672, change: 92, label: 'Good', tip: "You crossed into Good. Lenders see your profile differently now." }
     ];
 
     // Trend chart constants (must match the SVG viewBox in index.html)
@@ -167,8 +167,9 @@
     if (futurePath) futurePath.setAttribute('d', buildPath(allPoints));
 
     if (milestoneG) {
-      // Marker where the trajectory crosses Good (670) — approx between month 7 & 8.
-      // We place it at the month 8 point (first reading >= 670 is at index 7 = month 8).
+      // Marker where the trajectory crosses Good (670). With the current
+      // journey data the crossover happens at month 12 (score jumps from
+      // 668 to 672), so the dot lands at the top-right of the chart.
       const threshIdx = MONTHS.findIndex(d => d.score >= 670);
       if (threshIdx > -1) {
         const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -194,7 +195,11 @@
       if (labelEl)  labelEl.textContent  = data.label;
       if (monthEl)  monthEl.textContent  = 'Month ' + monthNum + ' of 12';
       if (changeEl) changeEl.textContent = data.change;
-      if (markerEl) markerEl.style.left  = data.markerPct + '%';
+      // Marker position on the 300-850 gauge, computed from score.
+      if (markerEl) {
+        const pct = Math.max(0, Math.min(100, ((data.score - 300) / 550) * 100));
+        markerEl.style.left = pct.toFixed(1) + '%';
+      }
 
       // Trend chart: update traveled stroke + current dot position
       if (traveledPath) {
@@ -279,11 +284,6 @@
       if (isPlaying) { stopAutoPlay(); } else { startAutoPlay(); }
     });
 
-    let prefersReduced = false;
-    try {
-      prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    } catch (e) { /* no-op */ }
-
     // Pause the loop when the tab isn't visible — saves CPU and avoids the
     // animation jumping in mid-cycle when users return. Resume automatically
     // on tab re-focus so the hero feels alive again without requiring a click.
@@ -292,18 +292,14 @@
       if (document.hidden) {
         wasPlayingBeforeHide = isPlaying;
         if (isPlaying) stopAutoPlay();
-      } else if (wasPlayingBeforeHide && !prefersReduced) {
+      } else if (wasPlayingBeforeHide) {
         startAutoPlay();
       }
     });
 
-    if (prefersReduced) {
-      render(12, false);
-    } else {
-      render(1, false);
-      // Slight delay so the page settles before animation begins.
-      setTimeout(startAutoPlay, 500);
-    }
+    // Start: render month 1 immediately, then kick off the looping autoplay.
+    render(1, false);
+    setTimeout(startAutoPlay, 500);
   }
 
   // ----- Boot -----

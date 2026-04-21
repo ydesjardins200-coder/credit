@@ -479,7 +479,7 @@ a:hover { text-decoration: underline; }
 
 .score-bar-fill {
   position: absolute;
-  inset: 0 20% 0 0;
+  inset: 0;
   background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #2ECC71 80%, #059669 100%);
   border-radius: 100px;
 }
@@ -508,7 +508,11 @@ a:hover { text-decoration: underline; }
   font-size: 0.82rem;
   line-height: 1.4;
   color: var(--color-fg);
-  min-height: 62px;
+  /* Fixed height sized for the longest tip in the journey (3 lines of text
+     plus the label). Prevents the box from jittering vertically as tips
+     rotate through different lengths. */
+  height: 84px;
+  overflow: hidden;
   transition: opacity 0.25s ease;
 }
 
