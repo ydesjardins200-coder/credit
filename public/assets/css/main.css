@@ -1,10 +1,12 @@
 /* ---------- Design tokens ---------- */
 :root {
   --color-bg: #ffffff;
-  --color-fg: #0f172a;
+  --color-fg: #0A2540;           /* iBoost Navy — primary text / headers */
   --color-muted: #475569;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
+  --color-primary: #0A2540;      /* iBoost Navy — primary brand */
+  --color-primary-hover: #061A30;
+  --color-accent: #2ECC71;       /* iBoost Emerald — accent / CTAs */
+  --color-accent-hover: #27B862;
   --color-border: #e2e8f0;
   --color-surface: #f8fafc;
 
@@ -76,9 +78,22 @@ a:hover { text-decoration: underline; }
 }
 
 .logo {
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--color-fg);
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;          /* removes the phantom descender below inline-block images */
+}
+
+.logo img {
+  display: block;
+  height: 36px;
+  width: auto;
+}
+
+/* Slightly smaller on narrow viewports so the nav doesn't crowd on mobile */
+@media (max-width: 480px) {
+  .logo img {
+    height: 28px;
+  }
 }
 
 .site-nav {
