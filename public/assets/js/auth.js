@@ -113,4 +113,39 @@
     onAuthChange,
     requireSession,
   };
+
+  // Global handler: any button with data-oauth="<provider>" that is NOT
+  // disabled triggers the OAuth flow for that provider. This lets signup
+  // and login pages share the exact same button markup with no per-page JS.
+  document.addEventListener('click', async function (event) {
+    const btn = event.target.closest('button[data-oauth]');
+    if (!btn) return;
+    if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
+
+    const provider = btn.getAttribute('data-oauth');
+    if (!provider) return;
+
+    event.preventDefault();
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Redirecting…';
+
+    const { error } = await signInWithOAuth(provider);
+
+    // On success, the browser leaves this page for the provider's consent
+    // screen, so we won't reach this code. On error (network, config, etc.)
+    // we re-enable the button and show a console error — the user can retry.
+    if (error) {
+      console.error('[iboost-auth] OAuth error:', error);
+      btn.disabled = false;
+      btn.textContent = originalText;
+      // If an alert box exists on the page, surface the error there.
+      const alertEl = document.getElementById('alert');
+      if (alertEl) {
+        alertEl.className = 'alert alert-error';
+        alertEl.textContent = error.message || 'Sign-in failed. Please try again.';
+        alertEl.hidden = false;
+      }
+    }
+  });
 })();
