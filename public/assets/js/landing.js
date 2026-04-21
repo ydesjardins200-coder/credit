@@ -225,24 +225,49 @@
     }
 
     function stopAutoPlay() {
-      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      if (autoTimer) {
+        // autoTimer holds either an interval id (during step-advancing) or a
+        // timeout id (during the end-of-cycle pause). Clearing both is safe:
+        // browsers no-op the mismatched one.
+        clearInterval(autoTimer);
+        clearTimeout(autoTimer);
+        autoTimer = null;
+      }
       isPlaying = false;
       playBtn.textContent = '▶ Play';
       playBtn.setAttribute('aria-label', 'Play the 12-month journey');
     }
+
+    // Timing (ms)
+    const STEP_MS = 1600;      // each month transition (was 700 — too rushed)
+    const LOOP_REST_MS = 2500; // pause at month 12 before looping back to month 1
 
     function startAutoPlay() {
       stopAutoPlay();
       isPlaying = true;
       playBtn.textContent = '■ Stop';
       playBtn.setAttribute('aria-label', 'Stop playback');
+      // Fresh start when called from month 12 (end of previous run) or the first time.
       let step = current >= 12 ? 1 : current;
       render(step, true);
-      autoTimer = setInterval(function () {
+
+      function tick() {
         step++;
-        if (step > 12) { stopAutoPlay(); return; }
+        if (step > 12) {
+          // Reached the end: sit on month 12 for a breath, then loop back.
+          clearInterval(autoTimer);
+          autoTimer = setTimeout(function () {
+            if (!isPlaying) return;  // user stopped us during the rest
+            step = 1;
+            render(step, true);
+            autoTimer = setInterval(tick, STEP_MS);
+          }, LOOP_REST_MS);
+          return;
+        }
         render(step, true);
-      }, 700);
+      }
+
+      autoTimer = setInterval(tick, STEP_MS);
     }
 
     slider.addEventListener('input', function () {
@@ -258,6 +283,19 @@
     try {
       prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     } catch (e) { /* no-op */ }
+
+    // Pause the loop when the tab isn't visible — saves CPU and avoids the
+    // animation jumping in mid-cycle when users return. Resume automatically
+    // on tab re-focus so the hero feels alive again without requiring a click.
+    let wasPlayingBeforeHide = false;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        wasPlayingBeforeHide = isPlaying;
+        if (isPlaying) stopAutoPlay();
+      } else if (wasPlayingBeforeHide && !prefersReduced) {
+        startAutoPlay();
+      }
+    });
 
     if (prefersReduced) {
       render(12, false);
