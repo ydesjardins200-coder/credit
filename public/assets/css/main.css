@@ -2369,9 +2369,13 @@ a:hover { text-decoration: underline; }
 /* ---------- FAQ ---------- */
 
 .faq-section {
-  /* Tighter section-level padding than .section default, since the FAQ is
-     already content-dense. */
-  padding: var(--space-7) 0;
+  /* Matches the default .section padding (var(--space-10) 0) so the
+     gap between the FAQ and the next section reads as consistent with
+     the rest of the page. Internal FAQ compaction (tighter question
+     rows, smaller question font, tighter subtitle spacing) is applied
+     lower in this block and stays — it saves vertical space inside the
+     list without disrupting the page's section rhythm. */
+  padding: var(--space-10) 0;
 }
 
 .faq-section .container {
