@@ -205,11 +205,18 @@ a:hover { text-decoration: underline; }
   position: relative;
   padding: var(--space-8) 0 var(--space-8);
   background:
-    /* emerald glow bottom-left where the "journey" visually starts */
-    radial-gradient(ellipse 80% 60% at 5% 100%, rgba(46, 204, 113, 0.22) 0%, transparent 55%),
-    /* cool accent top-right for chromatic balance */
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(90, 200, 220, 0.1) 0%, transparent 55%),
-    /* deep diagonal navy base */
+    /* Primary emerald glow — bottom-left, where the journey visually
+       starts. Bumped intensity 0.22 -> 0.38 for more drama. */
+    radial-gradient(ellipse 80% 60% at 5% 100%, rgba(46, 204, 113, 0.38) 0%, transparent 55%),
+    /* Secondary emerald pulse — mid-right near the scorecard, ties
+       the card's own emerald border into the background. */
+    radial-gradient(ellipse 50% 45% at 85% 55%, rgba(46, 204, 113, 0.15) 0%, transparent 60%),
+    /* Electric blue top-right — gives the night a cinematic second
+       color without drifting from the navy brand. */
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(56, 189, 248, 0.18) 0%, transparent 55%),
+    /* Bottom vignette — darker corners pull the eye to the center. */
+    radial-gradient(ellipse 100% 80% at 50% 100%, transparent 50%, rgba(4, 20, 38, 0.6) 100%),
+    /* Deep diagonal navy base. */
     linear-gradient(165deg, #0A2540 0%, #0e2d4d 50%, #041426 100%);
   color: #fff;
   overflow: hidden;
