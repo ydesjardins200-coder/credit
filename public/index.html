@@ -198,10 +198,14 @@
             <div class="hub-node-s">Monthly reports</div>
           </div>
 
-          <!-- +92 pts — large emerald-filled hero stat card -->
+          <!-- +92 pts — large emerald-filled hero stat card.
+               The number animates from 0 to 92 via hero-counter.js when
+               the card scrolls into view. The plain '+92 pts' in the
+               markup is the no-JS fallback — if JS fails, the user
+               still sees the complete value. -->
           <div class="hub-node hub-node-stat-hero hub-pos-stat92">
             <div class="hub-node-k-light">Average gain<sup>1</sup></div>
-            <div class="hub-node-m-big">+92 pts</div>
+            <div class="hub-node-m-big" data-count-up="92" data-count-prefix="+" data-count-suffix=" pts">+92 pts</div>
             <div class="hub-node-s-light">in 12 months</div>
           </div>
 
@@ -1747,6 +1751,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/landing.js" defer></script>
+  <script src="/assets/js/hero-counter.js" defer></script>
   <script>
     // Footer year (kept inline so we don't need main.js on landing)
     document.addEventListener('DOMContentLoaded', function () {
