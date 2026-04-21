@@ -1370,6 +1370,11 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
   gap: 9px;
   animation: ai-tip-roll 20s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  /* !important defeats browser UA rules that override animation-duration
+     when prefers-reduced-motion: reduce is set (some engines rewrite it
+     to 1e-05s, effectively killing the motion). This animation is slow,
+     editorial, and vestibular-safe — we run it for all users. */
+  animation-duration: 20s !important;
   will-change: transform;
 }
 
