@@ -1327,8 +1327,10 @@ a:hover { text-decoration: underline; }
 }
 
 /* stroke-dasharray is the full circumference (94.2 = 2πr where r=15).
-   stroke-dashoffset starts at 94.2 (empty) and animates to 0 (full).
-   Synced to the 22s cycle: fills over 18s, holds at 0 for 4s, resets.
+   Starts at 62.8 (8/12 empty = 4/12 full) because 4 months are already
+   visible at t=0; animates down to 0 (full) over the first 65% of the
+   cycle, then holds at full during the money shot (65%-97%), then
+   snaps back to 62.8 for the next loop.
    !important on animation-duration defeats UA reduced-motion override. */
 .payment-counter-arc-fill {
   animation: payment-arc-fill 22s linear infinite;
@@ -1336,23 +1338,21 @@ a:hover { text-decoration: underline; }
 }
 
 @keyframes payment-arc-fill {
-  0%   { stroke-dashoffset: 94.2; }
-  6%   { stroke-dashoffset: 86.35; }  /* 1/12 */
-  12%  { stroke-dashoffset: 78.5; }   /* 2/12 */
-  18%  { stroke-dashoffset: 70.65; }  /* 3/12 */
-  24%  { stroke-dashoffset: 62.8; }   /* 4/12 */
-  30%  { stroke-dashoffset: 54.95; }  /* 5/12 */
-  36%  { stroke-dashoffset: 47.1; }   /* 6/12 */
-  42%  { stroke-dashoffset: 39.25; }  /* 7/12 */
-  48%  { stroke-dashoffset: 31.4; }   /* 8/12 */
-  54%  { stroke-dashoffset: 23.55; }  /* 9/12 */
-  60%  { stroke-dashoffset: 15.7; }   /* 10/12 */
-  66%  { stroke-dashoffset: 7.85; }   /* 11/12 */
-  72%, 95% { stroke-dashoffset: 0; }  /* 12/12, hold */
-  100% { stroke-dashoffset: 94.2; }   /* reset */
+  /* 9 steps (4/12 through 12/12), each ~7.2% of cycle.
+     stroke-dashoffset values: full circumference 94.2, each /12 step = 7.85. */
+  0%,   5%  { stroke-dashoffset: 62.8;  }  /* 4/12 */
+  12.5%, 17.5% { stroke-dashoffset: 54.95; }  /* 5/12 */
+  20%, 25% { stroke-dashoffset: 47.1;  }  /* 6/12 */
+  27.5%, 32.5% { stroke-dashoffset: 39.25; }  /* 7/12 */
+  35%, 40% { stroke-dashoffset: 31.4;  }  /* 8/12 */
+  42.5%, 47.5% { stroke-dashoffset: 23.55; }  /* 9/12 */
+  50%, 55% { stroke-dashoffset: 15.7;  }  /* 10/12 */
+  57.5%, 62.5% { stroke-dashoffset: 7.85;  }  /* 11/12 */
+  65%,  97%  { stroke-dashoffset: 0;    }  /* 12/12, money-shot hold */
+  100% { stroke-dashoffset: 62.8; }  /* reset to 4/12 for next loop */
 }
 
-/* ---------- Counter text (number ticks 1 through 12) ---------- */
+/* ---------- Counter text (number ticks 4 through 12) ---------- */
 
 .payment-counter-text {
   display: inline-flex;
@@ -1373,8 +1373,7 @@ a:hover { text-decoration: underline; }
 }
 
 /* Stacked digits: all occupy the same slot, visible one at a time via
-   opacity. Each digit is animated with a 22s cycle, showing for ~1.5s
-   then fading as the next digit appears. */
+   opacity. Each digit syncs with a step in the list's pan animation. */
 .payment-counter-num > span {
   position: absolute;
   right: 0;
@@ -1384,59 +1383,92 @@ a:hover { text-decoration: underline; }
   animation-duration: 22s !important;
 }
 
-/* Each digit's reveal is offset by its value. Using animation-delay
-   scaled so digit 1 appears at 0%, digit 12 appears at ~72%, hold
-   12/12 from 72%-95%, reset. */
-.payment-counter-num > span[data-val="1"]  { animation-delay: 0s; }
-.payment-counter-num > span[data-val="2"]  { animation-delay: 1.32s; }
-.payment-counter-num > span[data-val="3"]  { animation-delay: 2.64s; }
-.payment-counter-num > span[data-val="4"]  { animation-delay: 3.96s; }
-.payment-counter-num > span[data-val="5"]  { animation-delay: 5.28s; }
-.payment-counter-num > span[data-val="6"]  { animation-delay: 6.6s; }
-.payment-counter-num > span[data-val="7"]  { animation-delay: 7.92s; }
-.payment-counter-num > span[data-val="8"]  { animation-delay: 9.24s; }
-.payment-counter-num > span[data-val="9"]  { animation-delay: 10.56s; }
-.payment-counter-num > span[data-val="10"] { animation-delay: 11.88s; }
-.payment-counter-num > span[data-val="11"] { animation-delay: 13.2s; }
-.payment-counter-num > span[data-val="12"] { animation-delay: 14.52s; }
+/* Each digit shows at the same moment the corresponding month arrives
+   at the top of the viewport. Digit 4 is the initial state (at 0%),
+   digit 12 is the final state which gets its own keyframe to hold
+   during the money shot. Each step is 7.5% of the cycle = ~1.65s. */
+.payment-counter-num > span[data-val="4"]  { animation-delay: 0s;     }
+.payment-counter-num > span[data-val="5"]  { animation-delay: 1.65s;  }
+.payment-counter-num > span[data-val="6"]  { animation-delay: 3.3s;   }
+.payment-counter-num > span[data-val="7"]  { animation-delay: 4.95s;  }
+.payment-counter-num > span[data-val="8"]  { animation-delay: 6.6s;   }
+.payment-counter-num > span[data-val="9"]  { animation-delay: 8.25s;  }
+.payment-counter-num > span[data-val="10"] { animation-delay: 9.9s;   }
+.payment-counter-num > span[data-val="11"] { animation-delay: 11.55s; }
+.payment-counter-num > span[data-val="12"] { animation-delay: 13.2s;  }
 
+/* Generic step keyframe: each digit appears, holds briefly, then fades
+   as the next digit takes over. Digit visible for ~6% of cycle. */
 @keyframes payment-counter-step {
-  /* Each digit is visible for ~6% of the cycle (1.32s / 22s). Digits
-     1-11 fade out as the next fades in. Digit 12 holds longer. */
   0%   { opacity: 0; transform: translateY(6px); }
-  1.5% { opacity: 1; transform: translateY(0); }
-  7%   { opacity: 1; transform: translateY(0); }
-  8.5% { opacity: 0; transform: translateY(-6px); }
+  1.5% { opacity: 1; transform: translateY(0);   }
+  6%   { opacity: 1; transform: translateY(0);   }
+  7.5% { opacity: 0; transform: translateY(-6px); }
   100% { opacity: 0; transform: translateY(-6px); }
 }
 
-/* Digit 12 is the final state — holds from its appearance (~66%) through
-   to the end of the cycle. Overriding its keyframes vs the generic ones
-   above. */
+/* Digit 12 is the money shot — appears at ~60% of cycle (14.52s from
+   start, where 13.2s delay + 1.32s fade-in = 14.52s = 66% of 22s) and
+   holds through 95% of the cycle before the final reset. */
 .payment-counter-num > span[data-val="12"] {
   animation-name: payment-counter-final;
 }
 
 @keyframes payment-counter-final {
-  0%   { opacity: 0; transform: translateY(6px); }
-  1.5% { opacity: 1; transform: translateY(0); }
-  33%  { opacity: 1; transform: translateY(0); }  /* holds until near end */
-  38%  { opacity: 0; transform: translateY(-6px); }
-  100% { opacity: 0; transform: translateY(-6px); }
+  0%    { opacity: 0; transform: translateY(6px); }
+  1.5%  { opacity: 1; transform: translateY(0);   }
+  37%   { opacity: 1; transform: translateY(0);   }
+  38.5% { opacity: 0; transform: translateY(-6px); }
+  100%  { opacity: 0; transform: translateY(-6px); }
 }
 
-/* ---------- Payment list (4 rows, staggered reveals) ---------- */
+/* ---------- Payment list — sliding-stack pan ---------- */
 
 .payment-list-viewport {
   height: 240px;
   overflow: hidden;
   position: relative;
+  /* Fade at top and bottom edges so newly-arriving months enter through
+     a soft mist rather than appearing at a hard clip line. */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 8%, #000 92%, transparent 100%);
 }
 
+/* The stack is always fully populated (12 rows newest-first). The
+   animation pans the stack UP through the viewport: starts at -464px
+   (showing indices 8-11: the 4 OLDEST months — Jun/May/Apr/Mar 2025),
+   ends at 0 (showing indices 0-3: the 4 NEWEST — Feb/Jan 2026, Dec/Nov
+   2025). Between those states, each new month arrives at the top of
+   the viewport one at a time. The stack is NEVER empty — the viewport
+   always contains 4 fully-rendered payment rows. No blank state ever.
+
+   Row height 50px + gap 8px = 58px per slot. 12 rows × 58px = 696px
+   total stack height, of which 4 × 58 = 232px is visible at a time. */
 .payment-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  animation: payment-list-pan 22s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation-duration: 22s !important;
+  will-change: transform;
+}
+
+@keyframes payment-list-pan {
+  /* Each step is a 7.5% of cycle window: hold for ~6%, slide over ~1.5%.
+     Steps sync with the counter keyframe deltas so month arrival and
+     counter increment happen together. */
+  0%,    5%  { transform: translateY(-464px); }  /* 4/12: Jun/May/Apr/Mar 2025 */
+  12.5%, 17.5% { transform: translateY(-406px); }  /* 5/12: add Jul 2025 */
+  20%,   25% { transform: translateY(-348px); }  /* 6/12: add Aug 2025 */
+  27.5%, 32.5% { transform: translateY(-290px); }  /* 7/12: add Sep 2025 */
+  35%,   40% { transform: translateY(-232px); }  /* 8/12: add Oct 2025 */
+  42.5%, 47.5% { transform: translateY(-174px); }  /* 9/12: add Nov 2025 */
+  50%,   55% { transform: translateY(-116px); }  /* 10/12: add Dec 2025 */
+  57.5%, 62.5% { transform: translateY(-58px);  }  /* 11/12: add Jan 2026 */
+  65%,   97% { transform: translateY(0);       }  /* 12/12: Feb 2026 at top, HOLD */
+  100%  { transform: translateY(-464px); }  /* reset to start, no fade */
 }
 
 .payment-row {
@@ -1448,46 +1480,10 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--color-border);
   border-radius: 8px;
   min-height: 50px;
-  opacity: 0;
-  transform: translateY(8px);
-  animation-duration: 22s !important;
-  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
-  animation-iteration-count: infinite;
-}
-
-/* Each row has a custom keyframe so reveals stagger but fade-outs align
-   at 98% — all four rows disappear together just before the loop resets. */
-.payment-row:nth-child(1) { animation-name: payment-row-1; }
-.payment-row:nth-child(2) { animation-name: payment-row-2; }
-.payment-row:nth-child(3) { animation-name: payment-row-3; }
-.payment-row:nth-child(4) { animation-name: payment-row-4; }
-
-@keyframes payment-row-1 {
-  0%    { opacity: 0; transform: translateY(8px); }
-  3%    { opacity: 1; transform: translateY(0); }
-  96%   { opacity: 1; transform: translateY(0); }
-  100%  { opacity: 0; transform: translateY(-4px); }
-}
-
-@keyframes payment-row-2 {
-  0%, 6%   { opacity: 0; transform: translateY(8px); }
-  9%       { opacity: 1; transform: translateY(0); }
-  96%      { opacity: 1; transform: translateY(0); }
-  100%     { opacity: 0; transform: translateY(-4px); }
-}
-
-@keyframes payment-row-3 {
-  0%, 12%  { opacity: 0; transform: translateY(8px); }
-  15%      { opacity: 1; transform: translateY(0); }
-  96%      { opacity: 1; transform: translateY(0); }
-  100%     { opacity: 0; transform: translateY(-4px); }
-}
-
-@keyframes payment-row-4 {
-  0%, 18%  { opacity: 0; transform: translateY(8px); }
-  21%      { opacity: 1; transform: translateY(0); }
-  96%      { opacity: 1; transform: translateY(0); }
-  100%     { opacity: 0; transform: translateY(-4px); }
+  flex-shrink: 0;
+  /* No per-row opacity/transform — rows are always visible; only their
+     POSITION within the viewport changes via the parent .payment-list's
+     translateY pan. This is what guarantees the card is never blank. */
 }
 
 .payment-row-dot {
