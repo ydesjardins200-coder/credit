@@ -1253,10 +1253,27 @@ body.signup-page .site-footer .container {
 
 @media (min-width: 900px) {
   .signup-split {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;   /* default: 50/50 (FR and any future lang) */
     gap: var(--space-4);
     padding: var(--space-4);
     align-items: stretch;    /* children stretch to match tallest */
+  }
+}
+
+/* ===== Scenario-C layout scoped to English =====
+   Flips the signup split to 40/60 so the form gets visual weight. */
+@media (min-width: 900px) {
+  html[lang="en"] .signup-split {
+    grid-template-columns: 2fr 3fr;
+  }
+}
+
+/* On very wide EN screens cap the left column — otherwise the score card
+   and security block get absurdly big. FR keeps its 50/50 even on ultra-wide
+   until FR copy is reflowed for C. */
+@media (min-width: 1600px) {
+  html[lang="en"] .signup-split {
+    grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
   }
 }
 
@@ -1411,24 +1428,32 @@ body.signup-page .site-footer .container {
   }
 }
 
-/* On very wide screens, keep form content readable — centre it inside its card */
-@media (min-width: 1400px) {
-  .signup-form-card > * {
-    max-width: 540px;
+/* EN-scoped: form content lives in a centered column — card stays wide
+   with breathing room on either side, but form controls stay at a
+   readable/clickable width. FR keeps the old behaviour (content fills
+   its parent naturally) until FR is ported to Scenario C. */
+@media (min-width: 900px) {
+  html[lang="en"] .signup-form-card > * {
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
   }
 }
 
-/* Same for the intro column on ultra-wide — cap inner content width */
+/* Restore pre-Scenario-C ultra-wide inner caps for non-EN pages, so FR
+   renders exactly as it did before (no regressions on 1440+ screens). */
 @media (min-width: 1400px) {
-  .signup-intro > *:not(.logo) {
+  html:not([lang="en"]) .signup-form-card > * {
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  html:not([lang="en"]) .signup-intro > *:not(.logo) {
     max-width: 520px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
   }
-  /* The logo uses align-self: flex-start and stays left-aligned */
 }
 
 .signup-form-header {
@@ -1511,6 +1536,8 @@ body.signup-page .site-footer .container {
   list-style: none;
   padding: 0;
   margin: 0;
+  /* Baseline (FR, default): 1-col on narrow, 2-col on wider — same grid we
+     had before Scenario C. */
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.2rem;
@@ -1520,6 +1547,15 @@ body.signup-page .site-footer .container {
   .password-criteria ul { grid-template-columns: 1fr 1fr; gap: 0.2rem 1rem; }
 }
 
+/* EN override: horizontal flex row of pills.
+   Labels are shortened in the EN HTML to fit this tighter layout. */
+html[lang="en"] .password-criteria ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  grid-template-columns: none;
+}
+
 .password-criteria li {
   display: flex;
   align-items: center;
@@ -1527,6 +1563,12 @@ body.signup-page .site-footer .container {
   color: var(--color-muted);
   transition: color 0.15s ease;
   line-height: 1.3;
+}
+
+/* EN-only: criteria pills don't break mid-label in the horizontal row. */
+html[lang="en"] .password-criteria li {
+  white-space: nowrap;
+  gap: 0.4rem;
 }
 
 .password-criteria li::before {
