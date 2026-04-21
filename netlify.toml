@@ -1,0 +1,29 @@
+# Netlify configuration for iBoost frontend
+
+[build]
+  publish = "public"
+  # No build step needed for plain HTML/CSS/JS
+  command = ""
+
+# SPA-style fallback: if you later add client-side routing, uncomment:
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200
+
+# Security headers applied to all responses
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Tighten CSP once you know all required origins (Supabase URL, API URL, etc.)
+    # Content-Security-Policy = "default-src 'self'; ..."
+
+# Cache static assets aggressively
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
