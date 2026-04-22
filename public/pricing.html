@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="/assets/css/main.css" />
   <link rel="stylesheet" href="/assets/css/header-megamenu.css" />
 </head>
-<body class="iboost-mm">
+<body class="iboost-mm has-dark-hero">
   <!-- ============= HEADER ============= -->
   <!-- ============= SITE HEADER (mega menu) ============= -->
   <!-- Starts transparent on pages with a dark hero; flips to solid white
@@ -553,15 +553,44 @@
   </div>
   <!-- ============= END SITE HEADER ============= -->
   <main>
+    <!-- ============= HERO — PRICING (transparent ladder) ============= -->
+    <section class="hero hero-pricing" aria-labelledby="pricing-hero-title">
+      <!-- Decorative blueprint-style geometric shapes overlay.
+           Sits above the background skyline image and the dark navy
+           gradient layer, but below the text. Very low opacity to
+           avoid competing with the H1 copy. -->
+      <svg class="hero-pricing-shapes" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g fill="#2ECC71">
+          <circle class="hps-shape hps-shape-1" cx="120" cy="80" r="8" opacity="0.22"/>
+          <rect class="hps-shape hps-shape-2" x="1050" y="110" width="14" height="14" rx="2" opacity="0.2"/>
+          <circle class="hps-shape hps-shape-3" cx="80" cy="280" r="5" opacity="0.18"/>
+          <rect class="hps-shape hps-shape-4" x="1100" y="320" width="11" height="11" rx="2" opacity="0.18"/>
+        </g>
+        <g fill="#06b6d4">
+          <circle class="hps-shape hps-shape-5" cx="1020" cy="60" r="4" opacity="0.25"/>
+        </g>
+      </svg>
+
+      <div class="container">
+        <div class="hero-pricing-copy">
+          <span class="hero-eyebrow">
+            <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+            Pricing
+          </span>
+          <h1 id="pricing-hero-title">Three plans. <span class="hero-headline-gradient">Zero surprises.</span></h1>
+          <p class="lead">
+            Pick what fits today. Upgrade when you're ready. Cancel in 2 clicks — no credit check to start.
+          </p>
+          <p class="hero-microtrust">
+            Free plan always available · No contract · USD or CAD billing
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- ============= PRICING ============= -->
     <section id="pricing" class="section section-surface pricing-page-section">
       <div class="container">
-        <div class="section-header">
-          <span class="eyebrow">Simple pricing</span>
-          <h2>Three plans. Real credit work at any budget.</h2>
-          <p>Start free, upgrade when you're ready, cancel anytime.</p>
-        </div>
-
         <div class="pricing-wrap">
           <div class="currency-toggle" role="group" aria-label="Currency">
             <button type="button" data-currency-toggle="usd" aria-pressed="true">🇺🇸 USD</button>

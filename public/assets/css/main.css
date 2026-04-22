@@ -1930,6 +1930,106 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
+   HERO — PRICING (transparent ladder direction)
+   Compact hero for the pricing page. Uses hero-pricing.jpg (blueprint
+   skyline generated via Nano Banana Pro) heavily overlaid with a
+   centered radial glow to keep the gaze on the H1 and match the
+   symmetry of the pricing cards that follow.
+   ======================================================================= */
+
+.hero-pricing {
+  position: relative;
+  padding: var(--space-9) 0 var(--space-10);
+  min-height: clamp(440px, 55vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    /* Centered emerald halo — matches the 'Essential' card below sitting center */
+    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.32) 0%, transparent 60%),
+    /* Subtle cyan accent behind the title */
+    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
+    /* Bottom vignette — smooths the transition into the pricing cards */
+    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
+    /* Dark navy overlay — 78-82% alpha so the blueprint shows through ~20% */
+    linear-gradient(165deg, rgba(10, 37, 64, 0.8) 0%, rgba(14, 45, 77, 0.74) 50%, rgba(4, 20, 38, 0.85) 100%),
+    /* Blueprint skyline image (Nano Banana Pro) */
+    url('/assets/img/brand/hero-pricing.jpg') center bottom / cover no-repeat,
+    /* Fallback solid navy if image fails to load */
+    #0A2540;
+  color: #fff;
+  overflow: hidden;
+}
+
+/* Decorative geometric shapes overlay — cover the whole hero.
+   Shapes are positioned in corners / edges where they don't compete
+   with the H1 in the center. Very low opacity (set inline) for
+   subtle depth. */
+.hero-pricing-shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-pricing .container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Text column — centered */
+.hero-pricing-copy {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.hero-pricing-copy .hero-eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.hero-pricing h1 {
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
+  color: #fff;
+}
+
+.hero-pricing .lead {
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 540px;
+  margin: 0 auto var(--space-3);
+}
+
+.hero-pricing .hero-microtrust {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+/* Mobile: smaller vertical padding, less min-height */
+@media (max-width: 640px) {
+  .hero-pricing {
+    padding: var(--space-7) 0 var(--space-8);
+    min-height: 360px;
+  }
+  .hero-pricing .lead {
+    font-size: 0.95rem;
+  }
+  .hero-pricing .hero-microtrust {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+}
+
+/* =======================================================================
    HOW IT WORKS — dark-hero-matching section
    Mirrors the hero's visual grammar: navy base + emerald mesh gradient +
    upward-curve motif + translucent white cards. Tells the 3-step process
