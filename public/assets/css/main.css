@@ -10315,3 +10315,47 @@ body.auth-page .site-logo-glow {
     display: none !important;
   }
 }
+
+
+/* =======================================================================
+   FIX: force nav items to display properly
+   ----------------------------------------------------------------------
+   Debugging session 2026-04-22: .site-nav-item children were rendering
+   invisibly despite having correct HTML. This force-override block
+   ensures they're explicitly laid out. If this fixes the issue, the
+   root cause was a cascade problem that these explicit rules resolve.
+   ======================================================================= */
+
+.site-header[data-header] .site-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.site-header[data-header] .site-nav-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  position: relative;
+}
+
+.site-header[data-header] .site-nav-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.site-header[data-header] .site-nav-sep {
+  display: inline-block !important;
+  flex-shrink: 0;
+}
+
+.site-header[data-header] .site-nav-ghost,
+.site-header[data-header] .site-nav-cta {
+  display: inline-flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
