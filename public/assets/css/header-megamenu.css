@@ -23,10 +23,10 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: transparent !important;
+  border-bottom: 1px solid transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none;
   padding: 6px 0;
   transition:
@@ -40,10 +40,10 @@
 /* When scrolled past 60px, JS adds .is-scrolled on the header element.
    Flip to solid white with blur + subtle shadow. */
 .iboost-mm .site-header.is-scrolled {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px);
-  border-bottom-color: rgba(10, 37, 64, 0.08);
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: saturate(180%) blur(14px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(14px) !important;
+  border-bottom-color: rgba(10, 37, 64, 0.08) !important;
   box-shadow: 0 4px 24px rgba(10, 37, 64, 0.04);
   padding: 2px 0;
 }
@@ -52,10 +52,10 @@
    solid from the start — they get .iboost-mm but NOT .has-dark-hero.
    We detect this via body.iboost-mm:not(.has-dark-hero). */
 body.iboost-mm:not(.has-dark-hero) .site-header {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px);
-  border-bottom-color: rgba(10, 37, 64, 0.08);
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: saturate(180%) blur(14px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(14px) !important;
+  border-bottom-color: rgba(10, 37, 64, 0.08) !important;
 }
 
 /* Inner flex container for logo + nav */
@@ -112,21 +112,21 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-glow {
 /* ---------- NAV (desktop) ---------- */
 
 .iboost-mm .site-nav {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 4px;
 }
 
 .iboost-mm .site-nav-item {
   position: relative;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
 }
 
 /* Trigger button for each mega-menu dropdown */
 .iboost-mm .site-nav-trigger {
   padding: 10px 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9) !important;
   font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -134,7 +134,7 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-glow {
   border: 0;
   cursor: pointer;
   font-family: inherit;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 6px;
   border-radius: 8px;
@@ -167,7 +167,7 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-glow {
 /* Scrolled (or non-dark-hero) state: dark text on white */
 .iboost-mm .site-header.is-scrolled .site-nav-trigger,
 body.iboost-mm:not(.has-dark-hero) .site-nav-trigger {
-  color: #475569;
+  color: #475569 !important;
 }
 
 .iboost-mm .site-header.is-scrolled .site-nav-trigger:hover,
@@ -199,12 +199,12 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-sep {
 
 /* Sign in ghost button */
 .iboost-mm .site-nav-ghost {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   padding: 9px 16px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9) !important;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -222,8 +222,8 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-sep {
 
 .iboost-mm .site-header.is-scrolled .site-nav-ghost,
 body.iboost-mm:not(.has-dark-hero) .site-nav-ghost {
-  color: #0A2540;
-  border-color: #e5e7eb;
+  color: #0A2540 !important;
+  border-color: #e5e7eb !important;
 }
 
 .iboost-mm .site-header.is-scrolled .site-nav-ghost:hover,
