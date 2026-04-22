@@ -681,28 +681,31 @@
 
     <!-- ============= HOW IT WORKS ============= -->
     <section id="how" class="section how-dark" aria-labelledby="how-title">
+      <!-- Simpler motif — the hero already carries the trajectory imagery.
+           Here we use a subtle horizontal grid for structure, without
+           repeating the curve-and-dots pattern from the hero. -->
       <svg class="how-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-        <g stroke="#fff" stroke-width="1" stroke-opacity="0.05" fill="none">
+        <g stroke="#fff" stroke-width="1" stroke-opacity="0.04" fill="none">
           <line x1="0" y1="150" x2="1200" y2="150"/>
           <line x1="0" y1="300" x2="1200" y2="300"/>
           <line x1="0" y1="450" x2="1200" y2="450"/>
         </g>
-        <path d="M -60 580 Q 250 500 520 360 T 1260 60" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-opacity="0.35" stroke-linecap="round"/>
-        <path d="M -30 600 Q 200 540 460 420 T 1220 160" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.18" stroke-linecap="round"/>
-        <circle cx="60" cy="540" r="4" fill="#2ECC71" fill-opacity="0.5"/>
-        <circle cx="220" cy="470" r="5" fill="#2ECC71" fill-opacity="0.6"/>
-        <circle cx="440" cy="370" r="6" fill="#2ECC71" fill-opacity="0.7"/>
-        <circle cx="720" cy="240" r="7" fill="#2ECC71" fill-opacity="0.8"/>
-        <circle cx="1020" cy="110" r="9" fill="#2ECC71" fill-opacity="0.95"/>
+        <defs>
+          <radialGradient id="how-glow" cx="80%" cy="100%" r="50%">
+            <stop offset="0%" stop-color="rgba(46, 204, 113, 0.18)"/>
+            <stop offset="100%" stop-color="rgba(46, 204, 113, 0)"/>
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="1200" height="600" fill="url(#how-glow)"/>
       </svg>
 
       <div class="container">
         <div class="section-header how-header">
           <span class="eyebrow how-eyebrow">
             <span class="how-eyebrow-dot" aria-hidden="true"></span>
-            How it works
+            The process
           </span>
-          <h2 id="how-title">Three steps. One month to see results.</h2>
+          <h2 id="how-title">Three steps from signup to your first report.</h2>
           <p>
             No credit check to start. No hidden fees. No interest. The same
             process, whether you're in Toronto or Tampa.
@@ -791,8 +794,8 @@
     <section class="section pillars-section">
       <div class="container">
         <div class="section-header">
-          <span class="eyebrow">Why iBoost</span>
-          <h2>Credit building is simpler once you know <em class="pillar-accent">what actually moves your score</em>.</h2>
+          <span class="eyebrow">Credit mechanics</span>
+          <h2>What <span class="feature-accent">actually moves</span> your score.</h2>
           <p>
             The four things below are where most people get stuck — and what
             we built iBoost to fix.
@@ -920,6 +923,119 @@
       </div>
     </section>
 
+    <!-- ============= MONTHLY TIMELINE — what to expect month by month ============= -->
+    <section class="section timeline-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">The path</span>
+          <h2>What to expect, month by month.</h2>
+          <p>
+            Credit building isn't instant — but it's also not a mystery.
+            Here's the real timeline of what happens after you sign up.
+          </p>
+        </div>
+
+        <ol class="timeline-grid" aria-label="Credit score milestones from month 1 to month 12">
+
+          <li class="timeline-card">
+            <div class="timeline-card-head">
+              <span class="timeline-marker" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="timeline-when">Month 1</span>
+            </div>
+            <h3>First report appears.</h3>
+            <p>
+              Within 30 days of your first on-time payment, iBoost appears
+              as a new tradeline on your credit report at every major
+              bureau. Most members see a small score bump here — often
+              5-15 points.
+            </p>
+            <p class="timeline-stat">
+              <span class="timeline-stat-num">+5 to +15</span>
+              <span class="timeline-stat-label">pts typical</span>
+            </p>
+          </li>
+
+          <li class="timeline-card">
+            <div class="timeline-card-head">
+              <span class="timeline-marker" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="timeline-when">Month 3</span>
+            </div>
+            <h3>Momentum kicks in.</h3>
+            <p>
+              Three consecutive on-time payments = a strengthening payment
+              history, which is 35% of your score. Utilization tracking
+              starts to matter if you're using the budget tool. You'll see
+              your intelligence report refine with actionable tips.
+            </p>
+            <p class="timeline-stat">
+              <span class="timeline-stat-num">+20 to +35</span>
+              <span class="timeline-stat-label">pts typical, cumulative</span>
+            </p>
+          </li>
+
+          <li class="timeline-card">
+            <div class="timeline-card-head">
+              <span class="timeline-marker" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="timeline-when">Month 6</span>
+            </div>
+            <h3>Halfway to a new tier.</h3>
+            <p>
+              Six months of consistent reporting puts most members across
+              one credit-tier boundary — Fair into Good, or Good into
+              Very Good. Your intelligence report now has enough data to
+              spot personal utilization patterns and suggest moves.
+            </p>
+            <p class="timeline-stat">
+              <span class="timeline-stat-num">+45 to +65</span>
+              <span class="timeline-stat-label">pts typical, cumulative</span>
+            </p>
+          </li>
+
+          <li class="timeline-card timeline-card-highlight">
+            <div class="timeline-card-head">
+              <span class="timeline-marker timeline-marker-highlight" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="timeline-when">Month 12</span>
+            </div>
+            <h3>Credit that opens doors.</h3>
+            <p>
+              A full year of reported history typically unlocks access to
+              mainstream credit products — unsecured cards, better rates
+              on loans, mortgage pre-approval. This is where the math
+              starts paying you back.
+            </p>
+            <p class="timeline-stat">
+              <span class="timeline-stat-num">+92</span>
+              <span class="timeline-stat-label">pts average<sup>1</sup></span>
+            </p>
+          </li>
+
+        </ol>
+
+        <p class="timeline-disclaimer">
+          <sup>1</sup> Illustrative ranges based on iBoost beta patterns.
+          Individual results vary depending on your starting credit profile,
+          payment history, utilization, and other tradelines. Late payments
+          may negatively impact your score. See <a href="/disclosures.html">Disclosures</a>.
+        </p>
+      </div>
+    </section>
+
     <!-- ============= FINAL CTA ============= -->
     <section class="final-cta" aria-labelledby="how-cta-title">
       <svg class="final-cta-motif" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
@@ -931,11 +1047,11 @@
         <div class="final-cta-inner">
           <span class="final-cta-eyebrow">
             <span class="final-cta-eyebrow-dot" aria-hidden="true"></span>
-            Ready when you are
+            You know how it works
           </span>
 
           <h2 id="how-cta-title">
-            You've seen the journey.<br>
+            Now build the score.<br>
             <span class="final-cta-accent">Month 1 starts about thirty seconds after you sign up.</span>
           </h2>
 
