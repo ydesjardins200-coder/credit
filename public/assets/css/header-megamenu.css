@@ -66,7 +66,7 @@ body.iboost-mm:not(.has-dark-hero) .site-header {
   gap: 20px;
 }
 
-/* ---------- LOGO with emerald glow ---------- */
+/* ---------- LOGO (dual light/dark version) with emerald glow ---------- */
 
 .iboost-mm .site-logo {
   position: relative;
@@ -101,12 +101,45 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-glow {
   filter: blur(8px);
 }
 
-.iboost-mm .site-logo img {
+/* Both logo img variants share the base size + position */
+.iboost-mm .site-logo-img {
   display: block;
   height: 40px;
   width: auto;
   position: relative;
   z-index: 1;
+}
+
+/* Default: show light logo, hide dark logo */
+.iboost-mm .site-logo-light {
+  display: block;
+}
+
+.iboost-mm .site-logo-dark {
+  display: none;
+}
+
+/* On dark-hero pages AND header is NOT scrolled: show dark logo, hide light */
+.iboost-mm.has-dark-hero .site-header:not(.is-scrolled) .site-logo-light {
+  display: none;
+}
+
+.iboost-mm.has-dark-hero .site-header:not(.is-scrolled) .site-logo-dark {
+  display: block;
+}
+
+/* FALLBACK — if the dark logo PNG doesn't exist yet, the img onerror
+   handler adds .site-logo-img-fallback to the light logo. Then we
+   show the light logo with an inverted filter to make it visible
+   on dark backgrounds. Remove this block once logo-horizontal-dark-80.png
+   is properly provided. */
+.iboost-mm.has-dark-hero .site-header:not(.is-scrolled) .site-logo-light.site-logo-img-fallback {
+  display: block !important;
+  filter: brightness(0) invert(1);
+}
+
+.iboost-mm.has-dark-hero .site-header:not(.is-scrolled) .site-logo-img-fallback + .site-logo-dark {
+  display: none !important;
 }
 
 /* ---------- NAV (desktop) ---------- */

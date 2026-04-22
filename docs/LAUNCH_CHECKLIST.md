@@ -32,6 +32,24 @@ Last updated: 2026-04-21
 - [ ] **Favicon suite** — confirmed favicon.ico + shield-32/192/512 are
       correct sizes and resolve crisply on retina displays.
 
+- [ ] **Dark-mode logo variants** — the site header flips from transparent
+      (over dark hero) to solid white (on scroll or light-background pages).
+      The current logo PNG is designed for light backgrounds only, so a
+      temporary CSS filter (`brightness(0) invert(1)`) is being used as
+      a fallback to make it visible on dark navy. This strips all colour
+      from the shield — not great long-term.
+      **Files to produce** (same dimensions as existing light versions):
+        - `public/assets/img/brand/logo-horizontal-dark-80.png` (232×80px)
+        - `public/assets/img/brand/logo-horizontal-dark-160.png` (464×160px)
+      **Design specs:**
+        - Transparent background (not white — would show as rectangle on
+          dark navy)
+        - Shield/icon: emerald `#2ECC71` (keep the brand green)
+        - Wordmark "iBoost": white `#FFFFFF` or off-white `#F5F5F5`
+      Once the files exist at those paths, the header auto-swaps them
+      in on dark-hero pages — no code changes needed. Then remove the
+      `.site-logo-img-fallback` filter block from header-megamenu.css.
+
 ---
 
 ## Legal pages

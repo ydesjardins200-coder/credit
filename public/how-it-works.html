@@ -41,12 +41,26 @@
 
       <a href="/" class="site-logo" aria-label="iBoost home">
         <span class="site-logo-glow" aria-hidden="true"></span>
+        <!-- Light-background version (for scrolled/solid header state + pricing/faq) -->
         <img
+          class="site-logo-img site-logo-light"
           src="/assets/img/brand/logo-horizontal-80.png"
           srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
           alt="iBoost"
           width="232"
           height="80"
+        />
+        <!-- Dark-background version (for transparent header state over dark hero).
+             File to be created: /assets/img/brand/logo-horizontal-dark-80.png (+ @2x)
+             Until then, CSS falls back to inverting the light logo. -->
+        <img
+          class="site-logo-img site-logo-dark"
+          src="/assets/img/brand/logo-horizontal-dark-80.png"
+          srcset="/assets/img/brand/logo-horizontal-dark-80.png 1x, /assets/img/brand/logo-horizontal-dark-160.png 2x"
+          alt="iBoost"
+          width="232"
+          height="80"
+          onerror="this.style.display='none'; this.previousElementSibling.classList.add('site-logo-img-fallback');"
         />
       </a>
 
