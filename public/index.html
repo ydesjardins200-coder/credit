@@ -956,122 +956,116 @@
           <!-- Feature 2 -->
           <div class="feature-row reverse">
             <div class="feature-content feature-content-lg">
-              <span class="badge">Free forever</span>
-              <h3>Budget app that actually helps.</h3>
+              <span class="badge">Full visibility</span>
+              <h3>See all 3 bureaus in one place.</h3>
               <p>
-                Link your accounts (or enter manually), set goals, and get a
-                clear view of where your money goes. No ads, no paid tier
-                for basic features.
+                Most credit apps only show you one bureau, or charge extra
+                for the rest. We give you all three — side by side, updated
+                monthly, with the score deltas you need to see progress.
               </p>
               <ul>
-                <li>Automatic transaction categorization</li>
-                <li>Monthly spending insights</li>
-                <li>Savings goals with visual progress</li>
-                <li>Alerts when you're off-track</li>
+                <li>Equifax, TransUnion, and Experian — all included</li>
+                <li>Side-by-side score comparison across bureaus</li>
+                <li>Month-over-month deltas, no math required</li>
+                <li>Same subscription, no hidden upgrades</li>
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="budget-showcase" aria-label="Live example of the iBoost budget feed">
-                <div class="budget-showcase-header">
-                  <div class="budget-showcase-title">This month</div>
-                  <div class="budget-showcase-progress">
-                    <span class="budget-progress-amounts">$1,840 / $2,200</span>
-                    <span class="budget-progress-bar" aria-hidden="true">
-                      <span class="budget-progress-fill"></span>
-                    </span>
-                  </div>
+              <div class="bureaus-showcase" aria-label="Example dashboard showing the three credit bureaus side by side">
+                <div class="bureaus-showcase-header">
+                  <div class="bureaus-showcase-title">Your bureaus</div>
+                  <div class="bureaus-showcase-period">Updated Feb 2026</div>
                 </div>
 
-                <div class="budget-tx-viewport" aria-live="off">
-                  <div class="budget-tx-stack">
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-food"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Starbucks <span class="budget-tx-cat">· Coffee</span></div>
-                        <div class="budget-tx-time">just now</div>
+                <div class="bureaus-list">
+                  <!-- Equifax card -->
+                  <article class="bureau-card">
+                    <div class="bureau-card-head">
+                      <div class="bureau-card-name">
+                        <span class="bureau-card-dot" aria-hidden="true"></span>
+                        Equifax
                       </div>
-                      <span class="budget-tx-amount">−$5.40</span>
-                    </article>
+                      <div class="bureau-card-market">Canada &amp; U.S.</div>
+                    </div>
+                    <div class="bureau-card-row">
+                      <div class="bureau-card-score">
+                        <span class="bureau-card-score-num" data-count-up="680" data-count-duration="2500">680</span>
+                        <span class="bureau-card-score-max">/ 850</span>
+                      </div>
+                      <div class="bureau-card-delta bureau-card-delta-up">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+                        +22 pts
+                      </div>
+                    </div>
+                    <div class="bureau-card-bar" aria-hidden="true">
+                      <span class="bureau-card-bar-track"></span>
+                      <span class="bureau-card-bar-marker" style="left: 69%;"></span>
+                    </div>
+                    <div class="bureau-card-scale" aria-hidden="true">
+                      <span>Poor</span>
+                      <span>Fair</span>
+                      <span>Good</span>
+                      <span>V.good</span>
+                      <span>Excellent</span>
+                    </div>
+                  </article>
 
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-grocery"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Whole Foods <span class="budget-tx-cat">· Groceries</span></div>
-                        <div class="budget-tx-time">12 min ago</div>
+                  <!-- TransUnion card -->
+                  <article class="bureau-card">
+                    <div class="bureau-card-head">
+                      <div class="bureau-card-name">
+                        <span class="bureau-card-dot" aria-hidden="true"></span>
+                        TransUnion
                       </div>
-                      <span class="budget-tx-amount">−$87.32</span>
-                    </article>
+                      <div class="bureau-card-market">Canada &amp; U.S.</div>
+                    </div>
+                    <div class="bureau-card-row">
+                      <div class="bureau-card-score">
+                        <span class="bureau-card-score-num" data-count-up="675" data-count-duration="2500">675</span>
+                        <span class="bureau-card-score-max">/ 850</span>
+                      </div>
+                      <div class="bureau-card-delta bureau-card-delta-up">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+                        +18 pts
+                      </div>
+                    </div>
+                    <div class="bureau-card-bar" aria-hidden="true">
+                      <span class="bureau-card-bar-track"></span>
+                      <span class="bureau-card-bar-marker" style="left: 68%;"></span>
+                    </div>
+                  </article>
 
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-transit"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Uber <span class="budget-tx-cat">· Transport</span></div>
-                        <div class="budget-tx-time">1h ago</div>
+                  <!-- Experian card -->
+                  <article class="bureau-card">
+                    <div class="bureau-card-head">
+                      <div class="bureau-card-name">
+                        <span class="bureau-card-dot" aria-hidden="true"></span>
+                        Experian
                       </div>
-                      <span class="budget-tx-amount">−$14.20</span>
-                    </article>
-
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-sub"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Spotify <span class="budget-tx-cat">· Subscription</span></div>
-                        <div class="budget-tx-time">2h ago</div>
+                      <div class="bureau-card-market">U.S. only</div>
+                    </div>
+                    <div class="bureau-card-row">
+                      <div class="bureau-card-score">
+                        <span class="bureau-card-score-num" data-count-up="692" data-count-duration="2500">692</span>
+                        <span class="bureau-card-score-max">/ 850</span>
                       </div>
-                      <span class="budget-tx-amount">−$11.99</span>
-                    </article>
-
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-income"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Payroll deposit <span class="budget-tx-cat">· Income</span></div>
-                        <div class="budget-tx-time">this morning</div>
+                      <div class="bureau-card-delta bureau-card-delta-up">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+                        +15 pts
                       </div>
-                      <span class="budget-tx-amount budget-tx-amount-positive">+$2,400</span>
-                    </article>
-
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-transit"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Metro <span class="budget-tx-cat">· Transport</span></div>
-                        <div class="budget-tx-time">yesterday</div>
-                      </div>
-                      <span class="budget-tx-amount">−$3.25</span>
-                    </article>
-
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-sub"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Netflix <span class="budget-tx-cat">· Subscription</span></div>
-                        <div class="budget-tx-time">yesterday</div>
-                      </div>
-                      <span class="budget-tx-amount">−$15.99</span>
-                    </article>
-
-                    <article class="budget-tx">
-                      <span class="budget-tx-dot budget-tx-dot-shop"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Amazon <span class="budget-tx-cat">· Shopping</span></div>
-                        <div class="budget-tx-time">2 days ago</div>
-                      </div>
-                      <span class="budget-tx-amount">−$42.00</span>
-                    </article>
-
-                    <article class="budget-tx" aria-hidden="true">
-                      <span class="budget-tx-dot budget-tx-dot-food"></span>
-                      <div class="budget-tx-body">
-                        <div class="budget-tx-merchant">Starbucks <span class="budget-tx-cat">· Coffee</span></div>
-                        <div class="budget-tx-time">just now</div>
-                      </div>
-                      <span class="budget-tx-amount">−$5.40</span>
-                    </article>
-                  </div>
+                    </div>
+                    <div class="bureau-card-bar" aria-hidden="true">
+                      <span class="bureau-card-bar-track"></span>
+                      <span class="bureau-card-bar-marker" style="left: 71%;"></span>
+                    </div>
+                  </article>
                 </div>
 
-                <div class="budget-showcase-footer">
+                <div class="bureaus-showcase-footer">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M20 6 9 17l-5-5"/>
                   </svg>
-                  Auto-categorized by iBoost
+                  All 3 bureaus included — one subscription
                 </div>
               </div>
             </div>

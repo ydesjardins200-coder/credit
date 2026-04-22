@@ -80,6 +80,18 @@ Last updated: 2026-04-21
         - Staff a real support window that matches those hours, OR
         - Update to your actual hours before launch, OR
         - Remove the hours line entirely (`.footer-col-hours`).
+
+- [ ] **Future `/budget.html` page** — the homepage originally had a
+      "Budget app that actually helps" feature with a showcase of a
+      transaction feed. That section was removed from the homepage on
+      2026-04-22 because it wasn't tight enough to the core credit
+      pitch, but the CSS was preserved at
+      `public/assets/css/budget-showcase.css` (198 lines, includes
+      `.budget-showcase`, `.budget-tx-*`, `.budget-progress-*`). When
+      creating a dedicated `/budget.html` page, load this file via
+      `<link rel="stylesheet" href="/assets/css/budget-showcase.css" />`
+      and copy the HTML structure back from the git history (before
+      commit that replaced feature 2 with the bureau dashboard).
 - [ ] **Offers tab — affiliate partnerships & accuracy**
       The Offers tab currently shows fake bank logos (RBC, TD, BMO, Scotia,
       CIBC, Tangerine, Koho, Borrowell, Fairstone, Square One, Ladder) with

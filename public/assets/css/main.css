@@ -2697,12 +2697,13 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
-   BUDGET SHOWCASE (right column of the Budget feature row)
-   Rolling transaction feed that mirrors the AI showcase pattern.
-   8 unique transactions + 1 duplicate for seamless looping.
+   BUREAUS SHOWCASE (right column of the 'Full visibility' feature row)
+   Three bureau cards stacked with score + delta + range marker.
+   Mirrors the payment-showcase / budget-showcase visual language:
+   white card, soft shadow, rounded corners, emerald accents.
    ======================================================================= */
 
-.budget-showcase {
+.bureaus-showcase {
   background: #fff;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
@@ -2714,184 +2715,208 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.75rem;
 }
 
-.budget-showcase-header {
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid var(--color-border);
+.bureaus-showcase-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.budget-showcase-title {
+.bureaus-showcase-title {
   font-weight: 700;
   font-size: 0.98rem;
   color: var(--color-fg);
 }
 
-.budget-showcase-progress {
+.bureaus-showcase-period {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.bureaus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* Individual bureau card */
+.bureau-card {
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.budget-progress-amounts {
-  font-size: 0.78rem;
-  color: var(--color-muted);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  font-variant-numeric: tabular-nums;
-}
-
-.budget-progress-bar {
-  position: relative;
-  display: block;
-  height: 6px;
-  background: var(--color-surface-2);
-  border-radius: 100px;
-  overflow: hidden;
-}
-
-.budget-progress-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 84%;
-  background: linear-gradient(90deg, #2ECC71 0%, #22c55e 100%);
-  border-radius: 100px;
-  animation: budget-progress-fill 2s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate;
-  animation-duration: 2s !important;
-}
-
-@keyframes budget-progress-fill {
-  0%   { width: 82%; }
-  100% { width: 86%; }
-}
-
-.budget-tx-viewport {
-  height: 240px;
-  overflow: hidden;
-  position: relative;
-  -webkit-mask-image: linear-gradient(to bottom,
-    transparent 0%, #000 10%, #000 90%, transparent 100%);
-  mask-image: linear-gradient(to bottom,
-    transparent 0%, #000 10%, #000 90%, transparent 100%);
-}
-
-.budget-tx-stack {
+.bureau-card-head {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  animation: budget-tx-roll 28s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-  animation-duration: 28s !important;
-  will-change: transform;
-}
-
-@keyframes budget-tx-roll {
-  /* 8 unique transactions + 1 duplicate at the end for seamless looping.
-     Each slot = ~66px (tx row height 60px + flex gap 6px).
-     Each step holds ~3s, slides ~0.5s. */
-  0%,  10% { transform: translateY(0); }
-  12.5%, 22.5% { transform: translateY(-66px); }
-  25%, 35% { transform: translateY(-132px); }
-  37.5%, 47.5% { transform: translateY(-198px); }
-  50%, 60% { transform: translateY(-264px); }
-  62.5%, 72.5% { transform: translateY(-330px); }
-  75%, 85% { transform: translateY(-396px); }
-  87.5%, 97.5% { transform: translateY(-462px); }
-  100%    { transform: translateY(-528px); }
-}
-
-.budget-tx {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.7rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  min-height: 60px;
-  flex-shrink: 0;
+  gap: 8px;
 }
 
-.budget-tx-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--color-accent);
-}
-
-.budget-tx-dot-food     { background: #f59e0b; }
-.budget-tx-dot-grocery  { background: #10b981; }
-.budget-tx-dot-transit  { background: #3b82f6; }
-.budget-tx-dot-sub      { background: #8b5cf6; }
-.budget-tx-dot-income   { background: #2ECC71; box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
-.budget-tx-dot-shop     { background: #ec4899; }
-
-.budget-tx-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.budget-tx-merchant {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--color-fg);
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.budget-tx-cat {
-  font-weight: 400;
-  color: var(--color-muted);
-  font-size: 0.82rem;
-}
-
-.budget-tx-time {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  font-weight: 500;
-}
-
-.budget-tx-amount {
-  font-size: 0.92rem;
+.bureau-card-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-weight: 700;
+  font-size: 0.88rem;
   color: var(--color-fg);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+}
+
+.bureau-card-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
   flex-shrink: 0;
 }
 
-.budget-tx-amount-positive {
-  color: #059669;
+.bureau-card-market {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.budget-showcase-footer {
+.bureau-card-row {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--color-border);
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.bureau-card-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bureau-card-score-num {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--color-fg);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.bureau-card-score-max {
   font-size: 0.75rem;
   color: var(--color-muted);
   font-weight: 600;
 }
 
-.budget-showcase-footer svg {
+.bureau-card-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.bureau-card-delta svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.bureau-card-delta-up {
+  background: var(--color-accent-soft);
+  color: #065f46;
+}
+
+.bureau-card-delta-down {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Score range bar: 300 → 850 scale */
+.bureau-card-bar {
+  position: relative;
+  height: 5px;
+  margin-top: 0.15rem;
+}
+
+.bureau-card-bar-track {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    #fca5a5 0%,      /* Poor (red) */
+    #fcd34d 25%,     /* Fair (amber) */
+    #86efac 50%,     /* Good (light green) */
+    #2ECC71 75%,     /* Very good (emerald) */
+    #059669 100%);   /* Excellent (dark emerald) */
+  border-radius: 100px;
+  opacity: 0.35;
+}
+
+.bureau-card-bar-marker {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  background: #fff;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 4px rgba(10, 37, 64, 0.15);
+}
+
+/* Small scale labels under the bar (shown only on first card to keep
+   the layout tight — the second and third inherit the same scale visually) */
+.bureau-card-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.2rem;
+}
+
+.bureaus-showcase-footer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.74rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.bureaus-showcase-footer svg {
   width: 13px;
   height: 13px;
-  color: var(--color-accent);
+  color: var(--color-accent-hover);
   flex-shrink: 0;
+}
+
+/* Mobile: keep the showcase readable — slightly smaller fonts */
+@media (max-width: 640px) {
+  .bureaus-showcase {
+    padding: 0.9rem 0.9rem 0.8rem;
+  }
+  .bureau-card-score-num {
+    font-size: 1.35rem;
+  }
+  .bureau-card-market {
+    font-size: 0.6rem;
+  }
 }
 
 /* =======================================================================
