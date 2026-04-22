@@ -111,6 +111,10 @@ Last updated: 2026-04-21
           (either Stripe Elements or redirect to Stripe Checkout hosted)
         - Wire webhooks to update Supabase `subscriptions` table
         - Remove the amber `.checkout-dev-banner` from checkout.html
+        - Remove the `#checkout-fill-dummy` button from checkout.html
+          and its handler + CSS from checkout.js / main.css
+        - Replace the `setTimeout` mock in checkout.js with real
+          Stripe.js tokenization + backend call
         - Test the full flow with Stripe test cards (4242 4242 4242 4242)
         - Submit for Stripe account activation review (requires live
           legal pages + business registration)
