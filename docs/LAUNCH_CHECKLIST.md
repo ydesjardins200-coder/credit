@@ -66,6 +66,16 @@ Last updated: 2026-04-21
 
 - [ ] Run `supabase/migrations/0002_profile_metadata.sql` in the Supabase
       SQL editor to enable country persistence on signup.
+- [ ] **Email confirmation re-enabled in Supabase** — if disabled during
+      pre-launch demos (partner walkthroughs, UX testing), re-enable
+      before public launch. Auth > Providers > Email > "Confirm email".
+      Required to:
+        - Prevent account creation with someone else's email
+        - Block spam bots from flooding the DB with fake signups
+        - Meet YMYL fintech regulatory expectations (email ownership
+          proof is standard in CA and US consumer protection law)
+      Expected cost: slightly higher friction in the signup funnel,
+      but non-negotiable for a real credit-building service.
 - [ ] **Google OAuth consent screen branding** — currently the Google
       sign-in dialog shows `wwsnywzeorisuvolvbjh.supabase.co` as the
       app name, which looks unprofessional. Fix in Google Cloud Console:
