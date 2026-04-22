@@ -9576,12 +9576,18 @@ body:not(.has-dark-hero) .site-logo-glow {
 
 .site-nav-item {
   position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* Trigger button for each mega-menu dropdown */
-.site-nav-trigger {
+/* Trigger button for each mega-menu dropdown.
+   Color is explicitly declared twice — once at base, once with higher
+   specificity via body.has-dark-hero .site-header — because cascade
+   issues in this header area have been tricky. */
+.site-nav-trigger,
+body.has-dark-hero .site-nav-trigger {
   padding: 10px 14px;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -9594,6 +9600,7 @@ body:not(.has-dark-hero) .site-logo-glow {
   gap: 6px;
   border-radius: 8px;
   transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
 .site-nav-trigger svg {
@@ -9652,7 +9659,8 @@ body:not(.has-dark-hero) .site-nav-sep {
 }
 
 /* Sign in ghost button */
-.site-nav-ghost {
+.site-nav-ghost,
+body.has-dark-hero .site-nav-ghost {
   padding: 9px 16px;
   color: rgba(255, 255, 255, 0.9);
   background: transparent;
@@ -9663,6 +9671,9 @@ body:not(.has-dark-hero) .site-nav-sep {
   font-family: inherit;
   text-decoration: none;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .site-nav-ghost:hover {
