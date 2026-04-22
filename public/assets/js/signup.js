@@ -133,11 +133,16 @@
   // Set initial state
   updateSubmitState();
 
-  // ----- If already signed in, bounce to account page -----
+  // ----- If already signed in, bounce forward.
+  // If they came with ?plan=X from /pricing.html, honor that and send
+  // them to checkout (or account for Free). Otherwise, plain account
+  // redirect. Previously this ALWAYS went to /account.html, which
+  // silently ignored the plan selection — a signed-in user clicking
+  // a pricing CTA would never reach the checkout. -----
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
-    if (session) window.location.replace(t.accountPath);
+    if (session) window.location.replace(getPostSignupPath());
   })();
 
   // ----- FAQ mini accordion (in signup intro column) -----
