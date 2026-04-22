@@ -2294,11 +2294,21 @@ a:hover { text-decoration: underline; }
 .feature-content h3 { font-size: 1.75rem; margin-bottom: var(--space-2); }
 
 /* Accent span inside feature H3 — used to emphasize key words
-   (e.g. "about you" in feature 3). Uses italic + emerald to match
-   the brand accent without relying on the <em> semantic tag. */
+   (e.g. "about you" in feature 3). Uses the same animated emerald→cyan
+   gradient as .hero-headline-gradient for brand consistency across
+   the page's main text accents. */
 .feature-accent {
-  color: var(--color-accent);
-  font-style: italic;
+  background: linear-gradient(90deg,
+    #a7f3d0 0%,
+    #2ECC71 40%,
+    #06b6d4 70%,
+    #2ECC71 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: hero-gradient-shift 10s linear infinite;
+  animation-duration: 10s !important;
 }
 
 .feature-content p {
