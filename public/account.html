@@ -3,57 +3,330 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Account — iBoost</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Dashboard — iBoost</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
   <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
   <link rel="stylesheet" href="/assets/css/main.css" />
 </head>
-<body>
-  <header class="site-header">
-    <div class="container">
-      <a href="/" class="logo" aria-label="iBoost home">
-        <img
-          src="/assets/img/brand/logo-horizontal-80.png"
-          srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
-          alt="iBoost"
-          width="232"
-          height="80"
-        />
-      </a>
-      <nav class="site-nav" aria-label="Primary">
-        <button type="button" id="signout-btn" class="btn btn-ghost">Sign out</button>
-      </nav>
+<body class="dash-body">
+
+  <!-- DEV MODE banner — sticky, unmissable.
+       Honest disclosure: all numbers, names, and dates below are
+       placeholders. Real data appears after bureau integration +
+       first monthly report. Remove this banner when go live. -->
+  <div class="dash-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Preview dashboard</strong>
+    <span>— real data will appear after your first monthly report</span>
+  </div>
+
+  <!-- Top bar: logo + user identity + signout -->
+  <header class="dash-topbar">
+    <a href="/" class="dash-logo-link" aria-label="iBoost home">
+      <img
+        src="/assets/img/brand/logo-horizontal-80.png"
+        srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+        alt="iBoost"
+        width="140"
+        height="48"
+      />
+    </a>
+    <div class="dash-user">
+      <div class="dash-user-avatar" id="user-avatar" aria-hidden="true">—</div>
+      <div class="dash-user-info">
+        <div class="dash-user-name" id="user-name">Welcome</div>
+        <div class="dash-user-email" id="user-email">…</div>
+      </div>
+      <button type="button" id="signout-btn" class="dash-signout">Sign out</button>
     </div>
   </header>
 
-  <main class="auth-wrap">
-    <!-- Welcome banner shown when user lands from /checkout.html?signup=success.
-         Rendered by the inline script below, which reads ?signup= & ?plan= from URL. -->
-    <div class="account-welcome-banner" id="welcome-banner" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      <div>
-        <strong>Welcome to iBoost!</strong>
-        <span id="welcome-plan-msg">Your subscription is active.</span>
-      </div>
-    </div>
+  <main class="dash-main">
 
-    <div class="auth-card">
-      <h1>Your account</h1>
-      <p class="muted">Signed in as <strong id="user-email">…</strong>.</p>
-      <p>
-        This is a placeholder. The real dashboard — credit score tracking,
-        dispute tools, and monthly action items — goes here.
-      </p>
-    </div>
+    <!-- Welcome row: greeting + date + plan pill -->
+    <section class="dash-welcome">
+      <div>
+        <h1 id="greeting">Good afternoon.</h1>
+        <div class="dash-welcome-meta">
+          <span id="date-today">Wednesday, April 22</span>
+          <span aria-hidden="true">·</span>
+          <span>Day <strong>47</strong> with iBoost</span>
+        </div>
+      </div>
+      <div class="dash-plan-pill">
+        <span aria-hidden="true"></span>
+        <span id="plan-label">iBoost Essential</span>
+      </div>
+    </section>
+
+    <!-- Row 1: Score hero + 6-month graph -->
+    <section class="dash-grid-2">
+
+      <article class="dash-card dash-score-card">
+        <h3 class="dash-card-title">Your credit score</h3>
+        <div class="dash-score-body">
+          <!-- Circular score gauge -->
+          <div class="dash-gauge" role="img" aria-label="Current credit score 678, tier Good">
+            <svg viewBox="0 0 160 160" width="160" height="160" aria-hidden="true">
+              <circle cx="80" cy="80" r="68" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+              <circle cx="80" cy="80" r="68" fill="none" stroke="url(#dashGaugeGrad)" stroke-width="10" stroke-linecap="round"
+                      stroke-dasharray="427" stroke-dashoffset="128" transform="rotate(-90 80 80)"/>
+              <defs>
+                <linearGradient id="dashGaugeGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2ECC71"/>
+                  <stop offset="100%" stop-color="#0891b2"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="dash-gauge-number">
+              <div class="dash-gauge-score">678</div>
+              <div class="dash-gauge-tier">Good</div>
+            </div>
+          </div>
+
+          <div class="dash-score-right">
+            <h2>Up 14 points this month</h2>
+            <p class="dash-score-sub">Your April report was filed 3 days ago.</p>
+            <div class="dash-score-delta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="18 15 12 9 6 15"/>
+              </svg>
+              +14 pts vs March
+            </div>
+            <div class="dash-score-bureaus">
+              <div class="dash-score-bureau">
+                <div class="dash-score-bureau-name">Equifax</div>
+                <div class="dash-score-bureau-val">680</div>
+              </div>
+              <div class="dash-score-bureau">
+                <div class="dash-score-bureau-name">TransUnion</div>
+                <div class="dash-score-bureau-val">676</div>
+              </div>
+              <div class="dash-score-bureau">
+                <div class="dash-score-bureau-name">Experian</div>
+                <div class="dash-score-bureau-val">678</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="dash-card dash-graph-card">
+        <h3 class="dash-card-title">Score over 6 months</h3>
+        <div class="dash-graph">
+          <svg viewBox="0 0 320 180" width="100%" height="100%" preserveAspectRatio="none" aria-label="Score trend, November 540 to April 678, an upward line">
+            <!-- Horizontal grid lines -->
+            <line x1="0" y1="40" x2="320" y2="40" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="90" x2="320" y2="90" stroke="#f1f5f9" stroke-width="1"/>
+            <line x1="0" y1="140" x2="320" y2="140" stroke="#f1f5f9" stroke-width="1"/>
+            <!-- Filled area under line -->
+            <path d="M 15 140 L 65 132 L 115 115 L 165 100 L 215 78 L 265 60 L 305 50 L 305 180 L 15 180 Z"
+                  fill="url(#dashAreaGrad)" opacity="0.2"/>
+            <!-- Line -->
+            <path d="M 15 140 L 65 132 L 115 115 L 165 100 L 215 78 L 265 60 L 305 50"
+                  fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="dashAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2ECC71"/>
+                <stop offset="100%" stop-color="#2ECC71" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- Data dots -->
+            <circle cx="15" cy="140" r="3" fill="#2ECC71"/>
+            <circle cx="65" cy="132" r="3" fill="#2ECC71"/>
+            <circle cx="115" cy="115" r="3" fill="#2ECC71"/>
+            <circle cx="165" cy="100" r="3" fill="#2ECC71"/>
+            <circle cx="215" cy="78" r="3" fill="#2ECC71"/>
+            <circle cx="265" cy="60" r="3" fill="#2ECC71"/>
+            <circle cx="305" cy="50" r="4" fill="#fff" stroke="#2ECC71" stroke-width="2.5"/>
+            <!-- Month labels -->
+            <text x="15" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Nov</text>
+            <text x="65" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Dec</text>
+            <text x="115" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Jan</text>
+            <text x="165" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Feb</text>
+            <text x="215" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Mar</text>
+            <text x="265" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Apr</text>
+          </svg>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- AI tip (full-width dark navy banner — the one "dramatic" moment) -->
+    <section class="dash-ai-tip" aria-labelledby="ai-tip-title">
+      <div class="dash-ai-tip-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+        </svg>
+      </div>
+      <div class="dash-ai-tip-body">
+        <div class="dash-ai-tip-eyebrow">AI tip for April</div>
+        <h2 class="dash-ai-tip-title" id="ai-tip-title">Pay your Visa statement 5 days early this cycle</h2>
+        <p>Your statement closes April 24. Paying before then keeps your reported utilization under 10% — the threshold where scores accelerate.</p>
+      </div>
+      <button type="button" class="dash-ai-tip-cta">Learn more</button>
+    </section>
+
+    <!-- Action items: 3 cards -->
+    <article class="dash-card dash-actions-card">
+      <h3 class="dash-card-title">This month's focus</h3>
+      <div class="dash-actions-list">
+
+        <div class="dash-action dash-action-urgent">
+          <div class="dash-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <h4 class="dash-action-heading">Pay Visa card ending 4242</h4>
+          <p class="dash-action-desc">Statement balance $287. Pay $200 by April 28 to reduce utilization before the May report.</p>
+          <div class="dash-action-meta dash-action-meta-urgent">Due in 6 days</div>
+        </div>
+
+        <div class="dash-action dash-action-done">
+          <div class="dash-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h4 class="dash-action-heading">Monthly iBoost payment</h4>
+          <p class="dash-action-desc">Your $15 Essential subscription reported on time. +1 to your on-time streak.</p>
+          <div class="dash-action-meta dash-action-meta-done">Complete</div>
+        </div>
+
+        <div class="dash-action">
+          <div class="dash-action-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h4 class="dash-action-heading">Next report in 9 days</h4>
+          <p class="dash-action-desc">Your May report is filed May 1. Keep balances low through April 30 to maximize it.</p>
+          <div class="dash-action-meta">Upcoming</div>
+        </div>
+
+      </div>
+    </article>
+
+    <!-- 3-col row: progress / utilization / activity -->
+    <section class="dash-grid-3">
+
+      <article class="dash-card">
+        <h3 class="dash-card-title">Progress to Very Good</h3>
+        <div class="dash-progress-row">
+          <div class="dash-progress-current">678</div>
+          <div class="dash-progress-target">Target: 740</div>
+        </div>
+        <div class="dash-progress-bar" role="progressbar" aria-valuenow="58" aria-valuemin="0" aria-valuemax="100">
+          <div class="dash-progress-bar-fill" style="width: 58%"></div>
+        </div>
+        <div class="dash-progress-meta">
+          <span>Good</span>
+          <span class="dash-progress-pts">+62 pts to go</span>
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <h3 class="dash-card-title">Credit utilization</h3>
+        <div class="dash-util-amount">
+          <span class="dash-util-big">22</span><span class="dash-util-unit">% used</span>
+        </div>
+        <div class="dash-util-bar" role="progressbar" aria-valuenow="22" aria-valuemin="0" aria-valuemax="100">
+          <div class="dash-util-bar-fill" style="width: 22%"></div>
+        </div>
+        <div class="dash-util-meta">
+          <span>$660 / $3,000</span>
+          <span>Target &lt; 30%</span>
+        </div>
+        <div class="dash-util-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          On track. Hit 10% to accelerate.
+        </div>
+      </article>
+
+      <article class="dash-card">
+        <h3 class="dash-card-title">Recent activity</h3>
+        <ul class="dash-activity-list">
+          <li class="dash-activity-item">
+            <span class="dash-activity-dot" aria-hidden="true"></span>
+            <div class="dash-activity-text">
+              Score refreshed from Equifax: <strong>+14 pts</strong>
+              <span class="dash-activity-time">3 days ago</span>
+            </div>
+          </li>
+          <li class="dash-activity-item dash-activity-info">
+            <span class="dash-activity-dot" aria-hidden="true"></span>
+            <div class="dash-activity-text">
+              April on-time payment reported
+              <span class="dash-activity-time">Apr 15</span>
+            </div>
+          </li>
+          <li class="dash-activity-item">
+            <span class="dash-activity-dot" aria-hidden="true"></span>
+            <div class="dash-activity-text">
+              New AI tip: utilization timing
+              <span class="dash-activity-time">Apr 12</span>
+            </div>
+          </li>
+          <li class="dash-activity-item dash-activity-warn">
+            <span class="dash-activity-dot" aria-hidden="true"></span>
+            <div class="dash-activity-text">
+              Statement close reminder: Visa 4242
+              <span class="dash-activity-time">Apr 10</span>
+            </div>
+          </li>
+        </ul>
+      </article>
+
+    </section>
+
   </main>
 
+  <!-- Welcome banner shown when arriving from /checkout.html?signup=success.
+       Appears briefly at top when URL has ?signup=success&plan=X. -->
+  <div class="account-welcome-banner" id="welcome-banner" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <div>
+      <strong>Welcome to iBoost!</strong>
+      <span id="welcome-plan-msg">Your subscription is active.</span>
+    </div>
+  </div>
+
   <script>
-    // Show welcome banner if arriving from checkout success
+    // Populate greeting + date from current time. Runs immediately
+    // (not deferred) so there's no FOUC on the greeting.
+    (function () {
+      var hour = new Date().getHours();
+      var greeting;
+      if (hour < 12) greeting = 'Good morning';
+      else if (hour < 18) greeting = 'Good afternoon';
+      else greeting = 'Good evening';
+      var greetEl = document.getElementById('greeting');
+      if (greetEl) greetEl.textContent = greeting + '.';
+
+      var dateEl = document.getElementById('date-today');
+      if (dateEl) {
+        var d = new Date();
+        var opts = { weekday: 'long', month: 'long', day: 'numeric' };
+        dateEl.textContent = d.toLocaleDateString('en-US', opts);
+      }
+    })();
+
+    // Show welcome banner if arriving from checkout success.
     (function () {
       try {
         var params = new URLSearchParams(window.location.search);
@@ -68,6 +341,15 @@
           }[planKey] || 'Your subscription is active.';
           if (msg) msg.textContent = planLabel;
           if (banner) banner.hidden = false;
+
+          // Also sync the plan pill in the welcome section
+          var planPillEl = document.getElementById('plan-label');
+          var planPillName = {
+            essential: 'iBoost Essential',
+            complete: 'iBoost Complete',
+            free: 'iBoost Free'
+          }[planKey];
+          if (planPillEl && planPillName) planPillEl.textContent = planPillName;
 
           // Clean up the URL so refresh doesn't reshow the banner
           if (window.history && window.history.replaceState) {
