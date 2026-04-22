@@ -53,9 +53,11 @@
 
   function animateElement(el) {
     var target   = parseFloat(el.getAttribute('data-count-up')) || 0;
+    var from     = parseFloat(el.getAttribute('data-count-from')) || 0;
     var duration = parseInt(el.getAttribute('data-count-duration'), 10) || 1800;
     var prefix   = el.getAttribute('data-count-prefix') || '';
     var suffix   = el.getAttribute('data-count-suffix') || '';
+    var range    = target - from;
 
     // Reduced-motion: just write the final value and bail.
     if (reduceMotion) {
@@ -71,7 +73,7 @@
       var elapsed = now - startTime;
       var progress = Math.min(elapsed / duration, 1);
       var eased = easeOutCubic(progress);
-      var current = eased * target;
+      var current = from + (eased * range);
 
       el.textContent = prefix + formatNumber(current, target) + suffix;
 
@@ -137,10 +139,11 @@
     targets.forEach(function (el) {
       // Store the fallback text in case we need to restore it on error.
       el.setAttribute('data-count-fallback', el.textContent);
-      // Reset to 0 so the animation has somewhere to count from.
+      // Reset to the starting value so the animation has somewhere to count from.
       var prefix = el.getAttribute('data-count-prefix') || '';
       var suffix = el.getAttribute('data-count-suffix') || '';
-      el.textContent = prefix + '0' + suffix;
+      var from   = el.getAttribute('data-count-from') || '0';
+      el.textContent = prefix + from + suffix;
       observer.observe(el);
     });
 
@@ -174,7 +177,43 @@
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCountUp);
+    document.addEventListener('DOMContentLoaded', initJourneyShowcase);
   } else {
     initCountUp();
+    initJourneyShowcase();
+  }
+
+  /* ------------------------------------------------------------------
+     initJourneyShowcase — toggles .is-visible on .journey-showcase
+     elements when they scroll into view, so the SVG path-draw +
+     marker-slide CSS animations fire at the right moment.
+     Separate from count-up observer above because the threshold is
+     slightly different (the showcase is a bigger element and we want
+     to fire once ~20% of it is visible).
+     ------------------------------------------------------------------ */
+  function initJourneyShowcase() {
+    var showcases = document.querySelectorAll('.journey-showcase');
+    if (!showcases.length) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+
+    showcases.forEach(function (el) {
+      observer.observe(el);
+    });
+
+    // Safety fallback: if for some reason IO never fires, add the class
+    // after 2s so the user still sees the animated state.
+    setTimeout(function () {
+      showcases.forEach(function (el) {
+        el.classList.add('is-visible');
+      });
+    }, 2000);
   }
 })();

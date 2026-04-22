@@ -1336,245 +1336,303 @@ a:hover { text-decoration: underline; }
   min-width: 0;
 }
 
-.score-card {
-  /* Dark navy matching hero gradient's mid-tone, with emerald border,
-     soft emerald glow, and subtle 3D via layered insets + top sheen.
-     Anchors the card to the rest of the hero's visual language. */
-  position: relative;
-  background: linear-gradient(160deg, #143a62 0%, #10355a 50%, #0c2a47 100%);
-  color: #fff;
-  border-radius: 20px;
-  box-shadow:
-    0 24px 56px rgba(0, 0, 0, 0.45),
-    0 0 60px rgba(46, 204, 113, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-  padding: 1.25rem;
-  width: 100%;
-  max-width: 400px;
-  margin: 0 0 0 auto;
-  border: 1px solid rgba(46, 204, 113, 0.32);
-  overflow: hidden;
-}
-
-/* Specular sheen — a faint light-reflection streak across the top of
-   the card that sells the 'glossy' feel without tipping into plastic. */
-.score-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0) 100%);
-  pointer-events: none;
-  border-radius: 20px 20px 0 0;
-  z-index: 0;
-}
-
-/* All direct children of the scorecard sit above the sheen. */
-.score-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.score-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-2);
-}
-
-.mock-screen-title {
-  font-weight: 600;
-  font-size: 0.88rem;
-  color: #fff;
-  margin-bottom: 0.15rem;
-}
-
-.sc-month-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.score-change {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.6rem;
-  background: var(--color-accent-soft);
-  color: #065f46;
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  margin: 0;  /* override the bottom-of-card position */
-}
-
-.score-change-icon {
-  width: 16px;
-  height: 16px;
-  background: var(--color-accent);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.6rem;
-}
-
-.score-dial {
-  text-align: center;
-  padding: 0.25rem 0 0.5rem;
-}
-
-.score-number {
-  font-size: clamp(2.6rem, 6vw, 3.3rem);
-  font-weight: 800;
-  color: #fff;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  transition: color 0.3s ease;
-  text-shadow: 0 2px 20px rgba(46, 204, 113, 0.15);
-}
-
-.score-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 0.2rem;
-}
-
-/* Mini trend chart */
-.sc-trend {
-  width: 100%;
-  height: 90px;
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.score-bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 100px;
-  overflow: hidden;
-  margin: 0.4rem 0 var(--space-2);
-  position: relative;
-}
-
-.score-bar-fill {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #2ECC71 80%, #059669 100%);
-  border-radius: 100px;
-  opacity: 0.9;
-}
-
-.score-bar-marker {
-  position: absolute;
-  top: -4px;
-  left: 25%;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border: 3px solid #2ECC71;
-  border-radius: 50%;
-  transform: translateX(-50%);
-  transition: left 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.mock-ai {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.6rem 0.7rem;
-  background: linear-gradient(135deg,
-    rgba(46, 204, 113, 0.18) 0%,
-    rgba(46, 204, 113, 0.08) 100%);
-  border: 1px solid rgba(46, 204, 113, 0.45);
-  border-radius: 10px;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.92);
-  height: 84px;
-  overflow: hidden;
-  transition: opacity 0.25s ease;
-}
-
-.mock-ai-label {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #6ee7a8;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.15rem;
-}
-
-/* Replay controls */
-.sc-controls {
-  margin-top: 0.8rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sc-controls-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.sc-controls-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.sc-play-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
-  font-family: inherit;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.sc-play-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(46, 204, 113, 0.5);
-}
-
-.sc-slider {
-  width: 100%;
-  accent-color: var(--color-accent);
-  cursor: pointer;
-}
 
 .sc-disclaimer {
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-muted);
   font-style: italic;
-  text-align: right;
-  margin: 0.5rem 0 0 auto;
-  max-width: 400px;
-  padding-right: 0.25rem;
+  text-align: center;
+  margin: 0.5rem auto 0;
+  max-width: 420px;
 }
 
 .sc-disclaimer a {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-muted);
   text-decoration: underline;
+}
+
+/* =======================================================================
+   JOURNEY SHOWCASE — white passive card matching the homepage showcases
+   (.payment-showcase, .bureaus-showcase, .ai-tip-showcase pattern).
+   Replaces the old interactive .score-card with a scroll-triggered
+   auto-animated version that fits the site-wide design system.
+   Used inside .feature-visual on /how-it-works.html.
+   ======================================================================= */
+
+.journey-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1.1rem 1.2rem 1rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* ----- Header ----- */
+
+.journey-showcase-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.journey-showcase-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  line-height: 1.2;
+}
+
+.journey-showcase-subtitle {
+  font-size: 0.73rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.journey-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+  padding: 4px 8px;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+.journey-delta svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ----- Dial (the big number) ----- */
+
+.journey-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0 0.2rem;
+}
+
+.journey-number {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-fg);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.journey-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.journey-label svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.journey-label-from {
+  color: var(--color-muted);
+}
+
+.journey-label-to {
+  color: var(--color-accent-hover);
+}
+
+/* ----- Trajectory SVG ----- */
+
+.journey-trajectory {
+  width: 100%;
+  height: 90px;
+  overflow: visible;
+}
+
+/* Path drawing animation: the line draws itself from left-to-right
+   when the showcase is in view (.is-visible class toggled by JS).
+   Uses stroke-dasharray + stroke-dashoffset trick. */
+.journey-path {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+}
+
+.journey-endpoint,
+.journey-endpoint-pulse {
+  opacity: 0;
+}
+
+.journey-showcase.is-visible .journey-path {
+  animation: journey-draw 2.8s ease-out 0.2s forwards;
+}
+
+.journey-showcase.is-visible .journey-endpoint {
+  animation: journey-endpoint-appear 0.4s ease-out 2.8s forwards;
+}
+
+.journey-showcase.is-visible .journey-endpoint-pulse {
+  animation:
+    journey-endpoint-appear 0.4s ease-out 2.9s forwards,
+    journey-pulse 1.8s ease-out 3.3s infinite;
+}
+
+@keyframes journey-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes journey-endpoint-appear {
+  to { opacity: 1; }
+}
+
+@keyframes journey-pulse {
+  0%   { r: 5; opacity: 0.5; }
+  100% { r: 14; opacity: 0; }
+}
+
+/* Reduced-motion: disable the drawing animation, show the final state. */
+@media (prefers-reduced-motion: reduce) {
+  .journey-path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+  .journey-endpoint,
+  .journey-endpoint-pulse {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* ----- Range bar (Poor -> Excellent) with position marker ----- */
+
+.journey-range {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.journey-range-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  position: relative;
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.journey-range-seg {
+  flex: 1;
+  border-radius: 2px;
+}
+
+/* Color segments: Poor / Fair / Good / Very Good / Excellent */
+.journey-range-seg-1 { background: #ef4444; } /* Poor */
+.journey-range-seg-2 { background: #f59e0b; } /* Fair */
+.journey-range-seg-3 { background: #10b981; } /* Good */
+.journey-range-seg-4 { background: #0ea5e9; } /* Very Good */
+.journey-range-seg-5 { background: #6366f1; } /* Excellent */
+
+/* Marker that positions at 672/900 ≈ 62% along the bar, minus the start offset at 300.
+   Actually range 300-900 = 600 total. 672-300 = 372. 372/600 ≈ 62%.
+   So we use left: 62% */
+.journey-range-marker {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 2.5px solid var(--color-accent);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 6px rgba(10, 37, 64, 0.15);
+}
+
+.journey-showcase.is-visible .journey-range-marker {
+  animation: journey-marker-slide 2.8s ease-out 0.2s forwards;
+}
+
+@keyframes journey-marker-slide {
+  from { left: 0; }
+  to   { left: 62%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-range-marker {
+    left: 62%;
+    animation: none;
+  }
+}
+
+.journey-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* ----- Footer ----- */
+
+.journey-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-fg-soft);
+  line-height: 1.4;
+}
+
+.journey-showcase-footer svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Mobile: tighten the padding */
+@media (max-width: 520px) {
+  .journey-showcase {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  .journey-number {
+    font-size: 2.5rem;
+  }
+  .journey-label {
+    font-size: 0.72rem;
+    gap: 0.5rem;
+  }
+  .journey-delta {
+    font-size: 0.72rem;
+    padding: 3px 7px;
+  }
 }
 
 /* Supporting mini-stats row beneath the scorecard — 3 peer proof cards.
@@ -1698,7 +1756,7 @@ a:hover { text-decoration: underline; }
 /* Mobile tweaks */
 @media (max-width: 899px) {
   .hero-visual { margin-top: var(--space-3); }
-  .score-card, .sc-disclaimer, .hero-mini-stats {
+  .journey-showcase, .sc-disclaimer, .hero-mini-stats {
     margin-left: auto;
     margin-right: auto;
   }

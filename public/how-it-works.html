@@ -597,11 +597,11 @@
           <div class="feature-row">
             <div class="feature-content feature-content-lg">
               <span class="badge">Live projection</span>
-              <h3>Watch twelve months of credit building in <span class="feature-accent">thirty seconds</span>.</h3>
+              <h3>Twelve months of credit building, <span class="feature-accent">visualized</span>.</h3>
               <p>
-                On the right is the journey of a real iBoost member — or the
-                one who will be you. Press <strong>Play</strong>, or drag the
-                slider to scrub through any month.
+                On the right is the average journey of an iBoost member — the
+                one who will be you. Starting at Fair, finishing at Good,
+                with every month on report.
               </p>
               <ul>
                 <li>Starting point: Fair (580)<sup>1</sup></li>
@@ -611,61 +611,67 @@
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="score-card" role="region" aria-label="Interactive 12-month credit score projection">
+              <div class="journey-showcase" role="region" aria-label="12-month credit score journey projection">
 
-                <div class="score-card-header">
+                <div class="journey-showcase-header">
                   <div>
-                    <div class="mock-screen-title">Your credit score</div>
-                    <div id="sc-month-label" class="sc-month-label">Month 1 of 12</div>
+                    <div class="journey-showcase-title">Credit score journey</div>
+                    <div class="journey-showcase-subtitle">12-month projection</div>
                   </div>
-                  <div class="score-change">
-                    <span class="score-change-icon" aria-hidden="true">↑</span>
-                    <span>+<span id="sc-change">2</span></span>
+                  <div class="journey-delta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="6 15 12 9 18 15"/>
+                    </svg>
+                    <span>+92 pts</span>
                   </div>
                 </div>
 
-                <div class="score-dial">
-                  <div class="score-number" id="sc-score">580</div>
-                  <div class="score-label" id="sc-label">Fair</div>
+                <div class="journey-dial">
+                  <div class="journey-number" data-count-up="672" data-count-from="580" data-count-duration="2800">580</div>
+                  <div class="journey-label">
+                    <span class="journey-label-from">Fair</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                      <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                    <span class="journey-label-to">Good</span>
+                  </div>
                 </div>
 
-                <svg class="sc-trend" viewBox="0 0 300 90" aria-label="12-month credit score trajectory with tier milestones">
-                  <line x1="18" y1="33" x2="300" y2="33" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
-                  <line x1="18" y1="15" x2="300" y2="15" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
-                  <text x="298" y="30" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.5)" style="letter-spacing: 0.03em">GOOD 670</text>
-                  <text x="298" y="12" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.65)" style="letter-spacing: 0.03em">VERY GOOD 740</text>
-                  <path id="sc-trend-future" d="" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path id="sc-trend-traveled" d="" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <g id="sc-trend-milestones"></g>
-                  <circle id="sc-trend-dot" cx="18" cy="85" r="5" fill="#2ECC71" stroke="#fff" stroke-width="2.5"/>
-                  <circle id="sc-trend-pulse" cx="18" cy="85" r="5" fill="none" stroke="#2ECC71" stroke-width="2" opacity="0.5">
-                    <animate attributeName="r" from="5" to="12" dur="1.8s" repeatCount="indefinite"/>
-                    <animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite"/>
-                  </circle>
+                <svg class="journey-trajectory" viewBox="0 0 300 90" aria-label="Score trajectory over 12 months">
+                  <!-- Dashed tier guides -->
+                  <line x1="0" y1="50" x2="300" y2="50" stroke="var(--color-border)" stroke-width="1" stroke-dasharray="3 3"/>
+                  <line x1="0" y1="28" x2="300" y2="28" stroke="var(--color-border)" stroke-width="1" stroke-dasharray="3 3"/>
+                  <!-- Tier labels on the right -->
+                  <text x="296" y="47" text-anchor="end" font-size="8" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">GOOD</text>
+                  <text x="296" y="25" text-anchor="end" font-size="8" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">VERY GOOD</text>
+                  <!-- The actual trajectory path: starts bottom-left, ends upper-right -->
+                  <path class="journey-path" d="M 5 78 Q 50 74 80 68 T 155 52 T 230 38 T 290 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- Endpoint circle -->
+                  <circle class="journey-endpoint" cx="290" cy="24" r="5" fill="var(--color-accent)" stroke="#fff" stroke-width="2.5"/>
+                  <circle class="journey-endpoint-pulse" cx="290" cy="24" r="5" fill="none" stroke="var(--color-accent)" stroke-width="2" opacity="0.5"/>
                 </svg>
 
-                <div class="score-bar" aria-hidden="true">
-                  <div class="score-bar-fill"></div>
-                  <div class="score-bar-marker" id="sc-marker"></div>
-                </div>
-
-                <div class="mock-ai" id="sc-tip-wrap">
-                  <span class="mock-ai-label">💡 Tips</span>
-                  <span id="sc-tip">Set up autopay so you never miss an iBoost payment.</span>
-                </div>
-
-                <div class="sc-controls">
-                  <div class="sc-controls-row">
-                    <span class="sc-controls-label">Replay journey</span>
-                    <button type="button" id="sc-play" class="sc-play-btn" aria-label="Play the 12-month journey">▶ Play</button>
+                <div class="journey-range">
+                  <div class="journey-range-bar" aria-hidden="true">
+                    <span class="journey-range-seg journey-range-seg-1"></span>
+                    <span class="journey-range-seg journey-range-seg-2"></span>
+                    <span class="journey-range-seg journey-range-seg-3"></span>
+                    <span class="journey-range-seg journey-range-seg-4"></span>
+                    <span class="journey-range-seg journey-range-seg-5"></span>
+                    <span class="journey-range-marker"></span>
                   </div>
-                  <input
-                    type="range"
-                    id="sc-slider"
-                    min="1" max="12" step="1" value="1"
-                    aria-label="Month selector"
-                    class="sc-slider"
-                  />
+                  <div class="journey-range-labels">
+                    <span>300</span>
+                    <span>900</span>
+                  </div>
+                </div>
+
+                <div class="journey-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Fair → Good crossover · 12 months · reported monthly</span>
                 </div>
               </div>
 
@@ -1212,6 +1218,7 @@
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/header.js" defer></script>
   <script src="/assets/js/landing.js" defer></script>
+  <script src="/assets/js/hero-counter.js?v=4" defer></script>
   <script>
     // Footer year
     document.addEventListener('DOMContentLoaded', function () {
