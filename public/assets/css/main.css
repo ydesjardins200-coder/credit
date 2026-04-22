@@ -3808,6 +3808,93 @@ a:hover { text-decoration: underline; }
 .faq-answer a:hover { color: var(--color-accent-hover); }
 
 /* =======================================================================
+   WHY IBOOST — differentiators strip (used on pricing page)
+   4-card grid showing what makes iBoost different, without naming
+   competitors directly. Uses light surface to contrast with the dark
+   hero above and the final CTA below.
+   ======================================================================= */
+
+.why-iboost {
+  background: #fff;
+}
+
+.why-iboost-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.why-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.why-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent);
+  box-shadow: 0 12px 32px rgba(10, 37, 64, 0.08);
+}
+
+.why-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.why-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.why-card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-fg);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.why-card p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-fg-soft);
+  margin: 0;
+}
+
+/* Mobile: stack to single column */
+@media (max-width: 820px) {
+  .why-iboost-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    max-width: 520px;
+  }
+  .why-card {
+    padding: var(--space-3);
+  }
+  .why-card h3 {
+    font-size: 1.05rem;
+  }
+  .why-card p {
+    font-size: 0.9rem;
+  }
+}
+
+/* =======================================================================
    FINAL CTA — single-card close bookending the hero's dark-navy look
    ======================================================================= */
 
