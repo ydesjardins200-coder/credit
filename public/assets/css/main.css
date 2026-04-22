@@ -1720,15 +1720,36 @@ a:hover { text-decoration: underline; }
   margin-top: var(--space-2);
 }
 
-/* ---------- Pillars — YMYL 2x2 substantive cards ---------- */
+/* ---------- Pillars — YMYL 2x2 dark cards on white background ----------
+   Redesigned Apr 2026: cards are now solid dark navy tiles (same palette
+   as the hero's bureau cards) floating on a white section background.
+   Visual continuity with the hero via:
+     - Same navy gradient (#143a62 → #0c2a47) used for bureau nodes
+     - Emerald accent borders and inner glows
+     - Icon treatment matching .hub-node-ico style
+     - Receipt panel nested darker (navy 60%) for hierarchy
+   No glass/backdrop-blur here (fond blanc, rien à flouter) — instead
+   solid tiles with glossy finish: inset top highlight + gradient + shadow. */
 
 .pillars-section .section-header {
   max-width: 740px;
+  margin: 0 auto var(--space-5);
+  text-align: center;
 }
 
 .pillars-section .section-header h2 {
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--color-primary);
+}
+
+.pillars-section .section-header h2 .pillar-accent {
+  font-style: normal;
+  background: linear-gradient(90deg, #2ECC71 0%, #0891b2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .pillars-grid {
@@ -1746,97 +1767,143 @@ a:hover { text-decoration: underline; }
   }
 }
 
+/* The dark-navy solid card with glossy finish */
 .pillar {
-  padding: 1.3rem 1.4rem;
-  background: #fff;
-  border: 1px solid var(--color-border);
+  position: relative;
+  padding: 1.6rem 1.5rem;
+  background: linear-gradient(180deg, #143a62 0%, #0c2a47 100%);
+  border: 1px solid rgba(46, 204, 113, 0.25);
   border-radius: var(--radius-lg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow:
+    0 12px 32px rgba(10, 37, 64, 0.15),
+    0 4px 10px rgba(10, 37, 64, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* Subtle radial glow top-left — simulates 'light from above-left' */
+.pillar::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: -15%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(46, 204, 113, 0.08) 0%, transparent 65%);
+  pointer-events: none;
 }
 
 .pillar:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 8px 24px rgba(10, 37, 64, 0.06);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  border-color: rgba(46, 204, 113, 0.55);
+  box-shadow:
+    0 20px 50px rgba(10, 37, 64, 0.25),
+    0 0 0 3px rgba(46, 204, 113, 0.08),
+    0 0 30px rgba(46, 204, 113, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .pillar-head {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.75rem;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+  position: relative;
+  z-index: 1;
 }
 
+/* Bigger icon tile with emerald gradient + glossy highlights (matches
+   the hero's hub-node-ico and ribbon icon styles) */
 .pillar-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  background: var(--color-accent-soft);
-  border-radius: 8px;
-  color: #065f46;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(160deg,
+    rgba(46, 204, 113, 0.32),
+    rgba(46, 204, 113, 0.14));
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 12px;
+  color: #6ee7a8;
   flex-shrink: 0;
+  box-shadow:
+    0 4px 12px rgba(46, 204, 113, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .pillar-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
 }
 
 .pillar-kicker {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-accent-hover);
+  color: #6ee7a8;
 }
 
 .pillar h3 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-fg);
+  color: #fff;
   line-height: 1.3;
-  margin: 0 0 0.5rem;
-  letter-spacing: -0.005em;
+  margin: 0 0 0.55rem;
+  letter-spacing: -0.01em;
+  position: relative;
+  z-index: 1;
 }
 
 .pillar > p {
   font-size: 0.92rem;
   line-height: 1.6;
-  color: var(--color-fg-soft);
+  color: rgba(255, 255, 255, 0.78);
   margin: 0 0 var(--space-2);
   flex-grow: 1;
+  position: relative;
+  z-index: 1;
 }
 
+/* Receipt — darker nested panel for internal hierarchy */
 .pillar-receipt {
-  padding: 0.7rem 0.85rem;
-  background: var(--color-surface);
-  border-left: 3px solid var(--color-accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  position: relative;
+  padding: 0.75rem 0.9rem 0.75rem 1rem;
+  background: linear-gradient(180deg,
+    rgba(4, 20, 38, 0.6) 0%,
+    rgba(4, 20, 38, 0.4) 100%);
+  border: 1px solid rgba(46, 204, 113, 0.22);
+  border-left: 3px solid #2ECC71;
+  border-radius: var(--radius);
   font-size: 0.8rem;
-  line-height: 1.5;
-  color: var(--color-fg-soft);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.85);
   margin-top: auto;
+  z-index: 1;
 }
 
 .pillar-receipt strong {
-  color: var(--color-primary);
+  color: #6ee7a8;
   font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .pillar-receipt a {
-  color: var(--color-accent-hover);
+  color: #6ee7a8;
   text-decoration: underline;
+  text-decoration-color: rgba(110, 231, 168, 0.4);
   text-underline-offset: 2px;
   white-space: nowrap;
   margin-left: 0.2rem;
 }
 
 .pillar-receipt a:hover {
-  color: var(--color-primary);
+  color: #a7f3d0;
+  text-decoration-color: rgba(167, 243, 208, 0.7);
 }
 
 /* =======================================================================
