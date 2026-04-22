@@ -32,21 +32,19 @@
     accountPath: document.body.dataset.accountPath || '/account.html',
   };
 
-  // ----- Plan routing -----
-  // Signup requires a ?plan= query param — that's how users learn about
-  // the 3 tiers (Free, Essential, Complete) and make an informed choice.
-  // If someone hits /signup.html directly (typed URL, old bookmark, or
-  // external link), we bounce them to /pricing.html first so they can
-  // choose their plan before creating an account.
+  // ----- Plan routing + selector wiring -----
+  // The signup page has an inline plan selector (3 mini-cards: Free,
+  // Essential, Complete) visible above the OAuth buttons. This replaces
+  // the previous "force redirect to pricing if no plan" behavior:
+  // users without a plan param can now pick inline, and users who
+  // arrived with ?plan=X see their choice pre-selected and can still
+  // change it without leaving the page.
   //
-  // Exceptions that stay on /signup.html without ?plan=:
-  //   - Footer "Sign up" links (treated as "I already know, just let me
-  //     sign up") — these will default to 'essential' silently.
-  //   - login.html "Don't have an account" links — same intent.
-  //
-  // To distinguish an intentional direct-signup from a lost user, we
-  // check if the document referrer is from our own site (they clicked
-  // an internal link = intentional) vs. external or empty (= lost).
+  // Flow:
+  //   1. On load: read ?plan= (if any), set pendingPlan, sync selector UI.
+  //   2. User clicks a card: update pendingPlan + UI + URL.
+  //   3. On submit: post-signup path uses whatever pendingPlan is now.
+
   function getUrlParam(name) {
     try {
       return new URLSearchParams(window.location.search).get(name);
@@ -55,31 +53,81 @@
     }
   }
 
-  function isInternalReferrer() {
-    try {
-      if (!document.referrer) return false;
-      var refUrl = new URL(document.referrer);
-      return refUrl.host === window.location.host;
-    } catch (e) {
-      return false;
-    }
+  // Plan catalog — kept in sync with pricing page
+  var PLAN_AMOUNTS = {
+    free:      { usd: 0,  cad: 0  },
+    essential: { usd: 15, cad: 20 },
+    complete:  { usd: 30, cad: 40 }
+  };
+  var VALID_PLANS = ['free', 'essential', 'complete'];
+
+  // Mutable state: the currently-selected plan. Starts from URL param
+  // or defaults to essential. Lowercased + validated against VALID_PLANS.
+  var urlPlan = (getUrlParam('plan') || '').toLowerCase();
+  var pendingPlan = VALID_PLANS.indexOf(urlPlan) >= 0 ? urlPlan : 'essential';
+
+  // Read currency preference from localStorage (set by landing.js on pricing)
+  var currency = 'usd';
+  try {
+    var saved = localStorage.getItem('iboost.currency');
+    if (saved === 'cad') currency = 'cad';
+  } catch (e) { /* storage disabled */ }
+
+  // Sync the selector UI and the amount labels to match pendingPlan
+  // and the current currency. Called once on load and again every
+  // time the user clicks a different card.
+  function syncPlanSelectorUI() {
+    var cards = document.querySelectorAll('.signup-plan-card');
+    cards.forEach(function (card) {
+      var planKey = card.getAttribute('data-plan');
+      var isSelected = planKey === pendingPlan;
+      card.classList.toggle('is-selected', isSelected);
+      card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    });
+
+    // Update the amount shown on each card per current currency
+    var amountEls = document.querySelectorAll('[data-plan-amount]');
+    amountEls.forEach(function (el) {
+      var planKey = el.getAttribute('data-plan-amount');
+      if (PLAN_AMOUNTS[planKey]) {
+        el.textContent = '$' + PLAN_AMOUNTS[planKey][currency];
+      }
+    });
+
+    // Update the "Prices shown in USD/CAD" note
+    var label = document.getElementById('signup-plan-currency-label');
+    if (label) label.textContent = currency.toUpperCase();
   }
 
-  var urlPlan = getUrlParam('plan');
+  // Wire up click handlers on the 3 mini-cards
+  function initPlanSelector() {
+    var cards = document.querySelectorAll('.signup-plan-card');
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        var planKey = card.getAttribute('data-plan');
+        if (VALID_PLANS.indexOf(planKey) < 0) return;
+        pendingPlan = planKey;
+        syncPlanSelectorUI();
 
-  // If no plan and no internal referrer, redirect to pricing so the
-  // user makes a conscious choice. Don't redirect if they came from
-  // an internal page (footer or login link) — that's intentional.
-  if (!urlPlan && !isInternalReferrer()) {
-    window.location.replace('/pricing.html');
-    return;
+        // Update the URL so refresh preserves the choice and so the
+        // user can share the URL with their plan embedded
+        if (window.history && window.history.replaceState) {
+          var newUrl = window.location.pathname + '?plan=' + encodeURIComponent(planKey) + window.location.hash;
+          window.history.replaceState({}, '', newUrl);
+        }
+      });
+    });
   }
 
-  const pendingPlan = (urlPlan || 'essential').toLowerCase();
+  // Initial sync + wiring
+  syncPlanSelectorUI();
+  initPlanSelector();
 
   // Compute where the user should land after signup succeeds.
   //   Free -> /account.html (no payment step)
   //   Paid -> /checkout.html?plan=X (visual payment mockup for now)
+  // Uses pendingPlan's CURRENT value (updated by the selector),
+  // not whatever was in the URL at page load.
   function getPostSignupPath() {
     if (pendingPlan === 'free') {
       return t.accountPath;

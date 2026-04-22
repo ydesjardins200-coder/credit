@@ -220,6 +220,89 @@
           </span>
         </div>
 
+        <!-- ============= PLAN SELECTOR =============
+             Three mini-cards (Free / Essential / Complete) that let the user
+             pick or confirm their plan inline on the signup page. Pre-selects
+             based on ?plan= URL param (coming from pricing page CTAs).
+             Always visible — even if the user came with a plan param, they
+             can change their mind here without leaving the signup flow. -->
+        <div class="signup-plan-selector" role="radiogroup" aria-label="Choose your plan">
+          <div class="signup-plan-head">
+            <h3>Choose your plan</h3>
+            <p>
+              You can change this later.
+              <a href="/pricing.html" target="_blank" rel="noopener" class="signup-plan-compare">Compare all features <span aria-hidden="true">↗</span></a>
+            </p>
+          </div>
+
+          <div class="signup-plan-grid">
+
+            <!-- FREE -->
+            <button type="button" class="signup-plan-card" data-plan="free" role="radio" aria-checked="false">
+              <span class="signup-plan-radio" aria-hidden="true"></span>
+              <h4 class="signup-plan-name">Free</h4>
+              <div class="signup-plan-price">
+                <span class="signup-plan-amount" data-plan-amount="free">$0</span>
+                <span class="signup-plan-period">forever</span>
+              </div>
+              <ul class="signup-plan-features">
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Budget app</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Education library</span>
+                </li>
+              </ul>
+            </button>
+
+            <!-- ESSENTIAL — default pre-selected -->
+            <button type="button" class="signup-plan-card is-selected" data-plan="essential" role="radio" aria-checked="true">
+              <span class="signup-plan-badge">Most popular</span>
+              <span class="signup-plan-radio" aria-hidden="true"></span>
+              <h4 class="signup-plan-name">Essential</h4>
+              <div class="signup-plan-price">
+                <span class="signup-plan-amount" data-plan-amount="essential">$15</span>
+                <span class="signup-plan-period">/ mo</span>
+              </div>
+              <ul class="signup-plan-features">
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>$750 reported line</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>All 3 bureaus</span>
+                </li>
+              </ul>
+            </button>
+
+            <!-- COMPLETE -->
+            <button type="button" class="signup-plan-card" data-plan="complete" role="radio" aria-checked="false">
+              <span class="signup-plan-radio" aria-hidden="true"></span>
+              <h4 class="signup-plan-name">Complete</h4>
+              <div class="signup-plan-price">
+                <span class="signup-plan-amount" data-plan-amount="complete">$30</span>
+                <span class="signup-plan-period">/ mo</span>
+              </div>
+              <ul class="signup-plan-features">
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>$2,000 reported line</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Unlimited AI advice</span>
+                </li>
+              </ul>
+            </button>
+
+          </div>
+
+          <p class="signup-plan-currency-note">Prices shown in <span id="signup-plan-currency-label">USD</span></p>
+        </div>
+
         <div id="alert" hidden></div>
 
         <button type="button" class="btn btn-oauth" data-oauth="google">

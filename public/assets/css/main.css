@@ -6015,3 +6015,221 @@ body.auth-page .site-footer .container {
   font-size: 0.85rem;
   color: #047857;
 }
+
+
+/* =======================================================================
+   SIGNUP PAGE — Plan selector (3 mini-cards at top of signup form)
+   ----------------------------------------------------------------------
+   Always-visible radio group with 3 plan mini-cards. Pre-selects based
+   on ?plan= URL param (set by pricing page CTAs). Clicking a card
+   updates aria-checked, the hidden form state, and the URL (via
+   history.replaceState) so refreshes preserve the choice.
+   ======================================================================= */
+
+.signup-plan-selector {
+  margin-bottom: var(--space-3);
+  padding: 18px 16px 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.signup-plan-head {
+  margin-bottom: 12px;
+}
+
+.signup-plan-head h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0 0 4px;
+  letter-spacing: -0.005em;
+}
+
+.signup-plan-head p {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.signup-plan-compare {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 3px;
+}
+
+.signup-plan-compare:hover {
+  text-decoration: underline;
+}
+
+.signup-plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+/* Mini-card — also a button (clickable entire surface).
+   Using <button> ensures keyboard accessibility by default. */
+.signup-plan-card {
+  position: relative;
+  padding: 12px 10px;
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: inherit;
+  min-height: 130px;
+}
+
+.signup-plan-card:hover:not(.is-selected) {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.signup-plan-card:focus-visible {
+  outline: 2px solid #2ECC71;
+  outline-offset: 2px;
+}
+
+.signup-plan-card.is-selected {
+  border-color: #2ECC71;
+  background: linear-gradient(180deg, rgba(46, 204, 113, 0.05) 0%, rgba(46, 204, 113, 0.01) 100%);
+  box-shadow:
+    0 0 0 3px rgba(46, 204, 113, 0.15),
+    0 4px 12px rgba(46, 204, 113, 0.1);
+}
+
+.signup-plan-radio {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.signup-plan-card.is-selected .signup-plan-radio {
+  border-color: #2ECC71;
+  background: #2ECC71;
+}
+
+.signup-plan-card.is-selected .signup-plan-radio::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.signup-plan-badge {
+  position: absolute;
+  top: -9px;
+  left: 10px;
+  padding: 2px 7px;
+  background: linear-gradient(180deg, #3ee082 0%, #22a85d 100%);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(46, 204, 113, 0.35);
+  pointer-events: none;
+}
+
+.signup-plan-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0A2540;
+  letter-spacing: -0.005em;
+  margin: 0;
+  padding-right: 22px; /* leave room for radio */
+}
+
+.signup-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.signup-plan-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0A2540;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.signup-plan-period {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.signup-plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.signup-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.68rem;
+  color: #475569;
+  line-height: 1.3;
+}
+
+.signup-plan-features svg {
+  width: 9px;
+  height: 9px;
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.signup-plan-currency-note {
+  margin: 10px 0 0;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: right;
+}
+
+/* Mobile: stack the 3 cards vertically. 3 columns at ~110px each is too
+   narrow for "$2,000 reported line" to fit on one line. */
+@media (max-width: 540px) {
+  .signup-plan-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .signup-plan-card {
+    min-height: auto;
+    padding: 14px 14px;
+  }
+
+  .signup-plan-features li {
+    font-size: 0.78rem;
+  }
+
+  .signup-plan-amount {
+    font-size: 1.4rem;
+  }
+}
