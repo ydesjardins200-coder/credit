@@ -2030,6 +2030,102 @@ a:hover { text-decoration: underline; }
 }
 
 /* =======================================================================
+   HERO — HOW IT WORKS (pedagogical / score trajectory direction)
+   Same compact dark-hero pattern as .hero-pricing, with:
+     - hero-how-it-works.jpg (ascending trajectory, Nano Banana Pro)
+     - Centered glow (matches the H1 + aligns with the pedagogical theme)
+     - Subtle geometric shapes overlay
+   ======================================================================= */
+
+.hero-how-it-works {
+  position: relative;
+  padding: var(--space-9) 0 var(--space-10);
+  min-height: clamp(440px, 55vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    /* Centered emerald halo */
+    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.3) 0%, transparent 60%),
+    /* Subtle cyan accent behind the title */
+    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
+    /* Bottom vignette */
+    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
+    /* Dark navy overlay — slightly lighter than pricing (78%) so the
+       beautiful trajectory curve shows through a bit more */
+    linear-gradient(165deg, rgba(10, 37, 64, 0.78) 0%, rgba(14, 45, 77, 0.72) 50%, rgba(4, 20, 38, 0.82) 100%),
+    /* Score trajectory image (Nano Banana Pro) */
+    url('/assets/img/brand/hero-how-it-works.jpg') center bottom / cover no-repeat,
+    /* Fallback */
+    #0A2540;
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-how-shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-how-it-works .container {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-how-copy {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero-how-copy .hero-eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.hero-how-it-works h1 {
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
+  color: #fff;
+}
+
+.hero-how-it-works .lead {
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 580px;
+  margin: 0 auto var(--space-3);
+}
+
+.hero-how-it-works .hero-microtrust {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+/* Mobile: smaller vertical padding */
+@media (max-width: 640px) {
+  .hero-how-it-works {
+    padding: var(--space-7) 0 var(--space-8);
+    min-height: 360px;
+  }
+  .hero-how-it-works .lead {
+    font-size: 0.95rem;
+  }
+  .hero-how-it-works .hero-microtrust {
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+}
+
+/* =======================================================================
    HOW IT WORKS — dark-hero-matching section
    Mirrors the hero's visual grammar: navy base + emerald mesh gradient +
    upward-curve motif + translucent white cards. Tells the 3-step process

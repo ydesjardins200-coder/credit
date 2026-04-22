@@ -555,133 +555,125 @@
   <!-- ============= END SITE HEADER ============= -->
   <main>
 
-    <!-- ============= HERO WITH SCORECARD ============= -->
-    <section class="hero hero-dark" aria-labelledby="how-hero-title">
-      <!-- Decorative motif -->
-      <svg class="hero-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-        <g stroke="#fff" stroke-width="1" stroke-opacity="0.05" fill="none">
-          <line x1="0" y1="150" x2="1200" y2="150"/>
-          <line x1="0" y1="300" x2="1200" y2="300"/>
-          <line x1="0" y1="450" x2="1200" y2="450"/>
+    <!-- ============= HERO — HOW IT WORKS (compact, pedagogical) ============= -->
+    <section class="hero hero-how-it-works" aria-labelledby="how-hero-title">
+      <!-- Decorative geometric shapes overlay (subtle, same pattern as
+           pricing hero — positioned in corners to not compete with copy) -->
+      <svg class="hero-how-shapes" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g fill="#2ECC71">
+          <circle class="hhs-shape hhs-shape-1" cx="100" cy="70" r="7" opacity="0.22"/>
+          <rect class="hhs-shape hhs-shape-2" x="1080" y="90" width="13" height="13" rx="2" opacity="0.2"/>
+          <circle class="hhs-shape hhs-shape-3" cx="70" cy="290" r="5" opacity="0.18"/>
         </g>
-        <path d="M -60 580 Q 250 500 520 360 T 1260 60" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-opacity="0.45" stroke-linecap="round"/>
-        <path d="M -30 600 Q 200 540 460 420 T 1220 160" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.2" stroke-linecap="round"/>
-        <circle cx="60" cy="540" r="4" fill="#2ECC71" fill-opacity="0.5"/>
-        <circle cx="220" cy="470" r="5" fill="#2ECC71" fill-opacity="0.6"/>
-        <circle cx="440" cy="370" r="6" fill="#2ECC71" fill-opacity="0.75"/>
-        <circle cx="720" cy="240" r="7" fill="#2ECC71" fill-opacity="0.85"/>
-        <circle cx="1020" cy="110" r="10" fill="#2ECC71" fill-opacity="1"/>
-        <circle cx="1020" cy="110" r="18" fill="none" stroke="#2ECC71" stroke-width="1.5" stroke-opacity="0.35"/>
+        <g fill="#06b6d4">
+          <circle class="hhs-shape hhs-shape-4" cx="1040" cy="50" r="4" opacity="0.25"/>
+        </g>
       </svg>
 
       <div class="container">
-        <div class="hero-grid">
-          <!-- Left: editorial copy (different from the homepage) -->
-          <div class="hero-copy">
-            <span class="hero-eyebrow">
-              <span class="hero-eyebrow-dot" aria-hidden="true"></span>
-              How iBoost works
-            </span>
-            <h1 id="how-hero-title">Watch twelve months of credit building in thirty seconds.</h1>
-            <p class="lead">
-              On the right is the journey of a real iBoost member&#8239;&mdash; or the
-              one who will be you. Press <strong class="lead-price">Play</strong>,
-              or drag the slider to scrub through any month.
-            </p>
-            <p class="hero-microtrust">
-              Starting point: Fair (580) &middot; End point: Good (672) &middot; +92 pts in 12 months<sup>1</sup>
-            </p>
-            <div class="hero-cta-row">
-              <a href="/pricing.html" class="btn btn-primary btn-lg btn-cta-glow hero-cta-primary">
-                See our plans
-                <svg class="hero-cta-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
+        <div class="hero-how-copy">
+          <span class="hero-eyebrow">
+            <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+            How it works
+          </span>
+          <h1 id="how-hero-title">Credit building, <span class="hero-headline-gradient">demystified</span>.</h1>
+          <p class="lead">
+            The real math behind your score. The three steps it takes to start moving it. And what to expect each month along the way.
+          </p>
+          <p class="hero-microtrust">
+            No credit check to start · Reported to every major bureau · Cancel in 2 clicks
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= FEATURE ROW — Interactive journey score-card ============= -->
+    <!-- This was formerly the scorecard inside the hero — moved here as a
+         feature-row component so the hero stays compact and the scorecard
+         becomes a standalone interactive illustration. -->
+    <section class="section">
+      <div class="container">
+        <div class="features-stack">
+          <div class="feature-row">
+            <div class="feature-content feature-content-lg">
+              <span class="badge">Live projection</span>
+              <h3>Watch twelve months of credit building in <span class="feature-accent">thirty seconds</span>.</h3>
+              <p>
+                On the right is the journey of a real iBoost member — or the
+                one who will be you. Press <strong>Play</strong>, or drag the
+                slider to scrub through any month.
+              </p>
+              <ul>
+                <li>Starting point: Fair (580)<sup>1</sup></li>
+                <li>End point: Good (672) — past the mortgage threshold</li>
+                <li>+92 points in 12 months (iBoost member average)</li>
+                <li>Weekly score refresh on paid plans</li>
+              </ul>
+            </div>
+            <div class="feature-visual">
+              <div class="score-card" role="region" aria-label="Interactive 12-month credit score projection">
+
+                <div class="score-card-header">
+                  <div>
+                    <div class="mock-screen-title">Your credit score</div>
+                    <div id="sc-month-label" class="sc-month-label">Month 1 of 12</div>
+                  </div>
+                  <div class="score-change">
+                    <span class="score-change-icon" aria-hidden="true">↑</span>
+                    <span>+<span id="sc-change">2</span></span>
+                  </div>
+                </div>
+
+                <div class="score-dial">
+                  <div class="score-number" id="sc-score">580</div>
+                  <div class="score-label" id="sc-label">Fair</div>
+                </div>
+
+                <svg class="sc-trend" viewBox="0 0 300 90" aria-label="12-month credit score trajectory with tier milestones">
+                  <line x1="18" y1="33" x2="300" y2="33" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
+                  <line x1="18" y1="15" x2="300" y2="15" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
+                  <text x="298" y="30" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.5)" style="letter-spacing: 0.03em">GOOD 670</text>
+                  <text x="298" y="12" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.65)" style="letter-spacing: 0.03em">VERY GOOD 740</text>
+                  <path id="sc-trend-future" d="" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path id="sc-trend-traveled" d="" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <g id="sc-trend-milestones"></g>
+                  <circle id="sc-trend-dot" cx="18" cy="85" r="5" fill="#2ECC71" stroke="#fff" stroke-width="2.5"/>
+                  <circle id="sc-trend-pulse" cx="18" cy="85" r="5" fill="none" stroke="#2ECC71" stroke-width="2" opacity="0.5">
+                    <animate attributeName="r" from="5" to="12" dur="1.8s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite"/>
+                  </circle>
                 </svg>
-              </a>
-              <a href="#how" class="btn btn-ghost-dark btn-lg">
-                See the three steps &darr;
-              </a>
-            </div>
 
-            <!-- Social-proof strip: same as homepage hero for consistency -->
-            <div class="hero-social">
-              <div class="hero-avatars" aria-hidden="true">
-                <span class="avatar avatar-1">M</span>
-                <span class="avatar avatar-2">A</span>
-                <span class="avatar avatar-3">D</span>
-                <span class="avatar avatar-4">K</span>
-              </div>
-              <span class="hero-social-text">
-                Trusted by early members in Toronto, Montr&eacute;al, Phoenix &amp; Atlanta
-              </span>
-            </div>
-          </div>
-
-          <!-- Right: the interactive scorecard -->
-          <div class="hero-visual">
-            <div class="score-card" role="region" aria-label="Interactive 12-month credit score projection">
-
-              <div class="score-card-header">
-                <div>
-                  <div class="mock-screen-title">Your credit score</div>
-                  <div id="sc-month-label" class="sc-month-label">Month 1 of 12</div>
+                <div class="score-bar" aria-hidden="true">
+                  <div class="score-bar-fill"></div>
+                  <div class="score-bar-marker" id="sc-marker"></div>
                 </div>
-                <div class="score-change">
-                  <span class="score-change-icon" aria-hidden="true">↑</span>
-                  <span>+<span id="sc-change">2</span></span>
+
+                <div class="mock-ai" id="sc-tip-wrap">
+                  <span class="mock-ai-label">💡 Tips</span>
+                  <span id="sc-tip">Set up autopay so you never miss an iBoost payment.</span>
+                </div>
+
+                <div class="sc-controls">
+                  <div class="sc-controls-row">
+                    <span class="sc-controls-label">Replay journey</span>
+                    <button type="button" id="sc-play" class="sc-play-btn" aria-label="Play the 12-month journey">▶ Play</button>
+                  </div>
+                  <input
+                    type="range"
+                    id="sc-slider"
+                    min="1" max="12" step="1" value="1"
+                    aria-label="Month selector"
+                    class="sc-slider"
+                  />
                 </div>
               </div>
 
-              <div class="score-dial">
-                <div class="score-number" id="sc-score">580</div>
-                <div class="score-label" id="sc-label">Fair</div>
-              </div>
-
-              <svg class="sc-trend" viewBox="0 0 300 90" aria-label="12-month credit score trajectory with tier milestones">
-                <line x1="18" y1="33" x2="300" y2="33" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
-                <line x1="18" y1="15" x2="300" y2="15" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3"/>
-                <text x="298" y="30" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.5)" style="letter-spacing: 0.03em">GOOD 670</text>
-                <text x="298" y="12" text-anchor="end" font-size="9" font-weight="600" fill="rgba(255,255,255,0.65)" style="letter-spacing: 0.03em">VERY GOOD 740</text>
-                <path id="sc-trend-future" d="" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path id="sc-trend-traveled" d="" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <g id="sc-trend-milestones"></g>
-                <circle id="sc-trend-dot" cx="18" cy="85" r="5" fill="#2ECC71" stroke="#fff" stroke-width="2.5"/>
-                <circle id="sc-trend-pulse" cx="18" cy="85" r="5" fill="none" stroke="#2ECC71" stroke-width="2" opacity="0.5">
-                  <animate attributeName="r" from="5" to="12" dur="1.8s" repeatCount="indefinite"/>
-                  <animate attributeName="opacity" from="0.5" to="0" dur="1.8s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-
-              <div class="score-bar" aria-hidden="true">
-                <div class="score-bar-fill"></div>
-                <div class="score-bar-marker" id="sc-marker"></div>
-              </div>
-
-              <div class="mock-ai" id="sc-tip-wrap">
-                <span class="mock-ai-label">💡 Tips</span>
-                <span id="sc-tip">Set up autopay so you never miss an iBoost payment.</span>
-              </div>
-
-              <div class="sc-controls">
-                <div class="sc-controls-row">
-                  <span class="sc-controls-label">Replay journey</span>
-                  <button type="button" id="sc-play" class="sc-play-btn" aria-label="Play the 12-month journey">▶ Play</button>
-                </div>
-                <input
-                  type="range"
-                  id="sc-slider"
-                  min="1" max="12" step="1" value="1"
-                  aria-label="Month selector"
-                  class="sc-slider"
-                />
-              </div>
+              <p class="sc-disclaimer">
+                Illustrative projection. Your results will vary.
+                See <a href="/disclosures.html">Disclosures</a>.
+              </p>
             </div>
-
-            <p class="sc-disclaimer">
-              Illustrative projection. Your results will vary.
-              See <a href="/disclosures.html">Disclosures</a>.
-            </p>
           </div>
         </div>
       </div>
