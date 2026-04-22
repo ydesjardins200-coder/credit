@@ -111,6 +111,10 @@ Last updated: 2026-04-21
           (either Stripe Elements or redirect to Stripe Checkout hosted)
         - Wire webhooks to update Supabase `subscriptions` table
         - Remove the amber `.checkout-dev-banner` from checkout.html
+        - Remove the amber `.dash-dev-banner` from account.html
+        - Replace all fake dashboard data (score 678, +14 pts, Visa 4242,
+          activity dates, etc.) with real bureau + Stripe data once
+          those integrations are live
         - Remove the `#checkout-fill-dummy` button from checkout.html
           and its handler + CSS from checkout.js / main.css
         - Replace the `setTimeout` mock in checkout.js with real
