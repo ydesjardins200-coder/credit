@@ -9441,3 +9441,864 @@ body.auth-page .site-footer .container {
   }
   .dash-danger-btn { justify-self: start; }
 }
+
+
+/* =======================================================================
+   SITE HEADER — mega menu, transparent/solid states, mobile drawer
+   ----------------------------------------------------------------------
+   Philosophy:
+     - On pages with a dark hero (homepage, pricing, how-it-works, faq),
+       the header starts transparent and flips to solid white when the
+       user scrolls past ~60px. Controlled by header.js which toggles
+       .is-scrolled on the <header>.
+     - Logo has an emerald glow radial behind it that's stronger on dark
+       (more visible) and softer on white (still present, just subtle).
+     - Desktop nav has 4 mega-menu dropdowns (Product, Resources, For you,
+       Company) with colored icons, descriptions, and a featured panel.
+     - Mobile (<900px) swaps nav for a hamburger opening a right-side
+       drawer with accordion sections.
+     - The "Get started" gradient CTA is the one visual anchor that
+       stays identical across states. It's the brand handshake.
+   ======================================================================= */
+
+/* The new header completely replaces the old .site-header styles above
+   for pages that opt in via [data-header] attribute. Legal pages and
+   auth pages keep the OLD .site-header styles (solid white, simple). */
+
+.site-header[data-header] {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: none;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    backdrop-filter 0.25s ease,
+    box-shadow 0.25s ease,
+    padding 0.2s ease;
+  padding: 6px 0;
+}
+
+/* Scrolled state — solid white with backdrop blur + subtle shadow */
+.site-header[data-header].is-scrolled {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom-color: rgba(10, 37, 64, 0.08);
+  box-shadow: 0 4px 24px rgba(10, 37, 64, 0.04);
+  padding: 2px 0;
+}
+
+/* Also solid on pages that don't have a dark hero (e.g. pricing, faq) —
+   when body lacks .has-dark-hero, keep the header solid all the time. */
+body:not(.has-dark-hero) .site-header[data-header] {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom-color: rgba(10, 37, 64, 0.08);
+}
+
+/* Inner flex container */
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* ---------- LOGO with emerald glow ---------- */
+.site-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  line-height: 0;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.site-logo-glow {
+  position: absolute;
+  inset: -6px -10px;
+  background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.32) 0%, transparent 65%);
+  filter: blur(10px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Glow visible on transparent (dark hero) state */
+.site-header:not(.is-scrolled) .site-logo-glow {
+  opacity: 1;
+}
+
+/* Softer glow on scrolled white state */
+.site-header.is-scrolled .site-logo-glow {
+  opacity: 0.4;
+  background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.25) 0%, transparent 65%);
+  filter: blur(8px);
+}
+
+/* Legal pages / solid-default pages — softer glow by default */
+body:not(.has-dark-hero) .site-logo-glow {
+  opacity: 0.4;
+  background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.25) 0%, transparent 65%);
+  filter: blur(8px);
+}
+
+.site-logo img {
+  display: block;
+  height: 40px;
+  width: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- NAV (desktop) ---------- */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.site-nav-item {
+  position: relative;
+}
+
+/* Trigger button for each mega-menu dropdown */
+.site-nav-trigger {
+  padding: 10px 14px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.site-nav-trigger svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0.6;
+  transition: transform 0.25s ease, opacity 0.2s;
+}
+
+.site-nav-trigger:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.site-nav-trigger[aria-expanded="true"] {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.site-nav-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Scrolled state: dark text on white */
+.site-header.is-scrolled .site-nav-trigger,
+body:not(.has-dark-hero) .site-nav-trigger {
+  color: #475569;
+}
+
+.site-header.is-scrolled .site-nav-trigger:hover,
+.site-header.is-scrolled .site-nav-trigger[aria-expanded="true"],
+body:not(.has-dark-hero) .site-nav-trigger:hover,
+body:not(.has-dark-hero) .site-nav-trigger[aria-expanded="true"] {
+  color: #0A2540;
+  background: rgba(10, 37, 64, 0.04);
+}
+
+.site-header.is-scrolled .site-nav-trigger svg,
+body:not(.has-dark-hero) .site-nav-trigger svg {
+  opacity: 0.5;
+}
+
+/* Separator between menu triggers and auth buttons */
+.site-nav-sep {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 4px;
+}
+
+.site-header.is-scrolled .site-nav-sep,
+body:not(.has-dark-hero) .site-nav-sep {
+  background: rgba(10, 37, 64, 0.1);
+}
+
+/* Sign in ghost button */
+.site-nav-ghost {
+  padding: 9px 16px;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.site-nav-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.site-header.is-scrolled .site-nav-ghost,
+body:not(.has-dark-hero) .site-nav-ghost {
+  color: #0A2540;
+  border-color: #e5e7eb;
+}
+
+.site-header.is-scrolled .site-nav-ghost:hover,
+body:not(.has-dark-hero) .site-nav-ghost:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+/* Get started gradient CTA — identical in both states (brand anchor) */
+.site-nav-cta {
+  padding: 9px 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #22a85d 100%);
+  border: 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  letter-spacing: -0.005em;
+  box-shadow:
+    0 6px 18px rgba(46, 204, 113, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.15s, filter 0.15s, box-shadow 0.2s;
+}
+
+.site-nav-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 8px 22px rgba(46, 204, 113, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.site-nav-cta:active {
+  transform: translateY(0);
+}
+
+/* ---------- MEGA MENU ---------- */
+.site-mega {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  min-width: 640px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow:
+    0 24px 60px rgba(10, 37, 64, 0.22),
+    0 4px 12px rgba(10, 37, 64, 0.1),
+    0 0 0 1px rgba(10, 37, 64, 0.05);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 20px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    visibility 0s linear 0.2s,
+    transform 0.2s ease;
+  z-index: 100;
+}
+
+/* Caret arrow pointing at the trigger */
+.site-mega::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  box-shadow: -1px -1px 0 rgba(10, 37, 64, 0.05);
+}
+
+/* Open state: triggered by [aria-expanded=true] on the trigger inside */
+.site-nav-item:has(.site-nav-trigger[aria-expanded="true"]) .site-mega,
+.site-nav-item.is-open .site-mega {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition:
+    opacity 0.2s ease,
+    visibility 0s linear 0s,
+    transform 0.2s ease;
+}
+
+/* Columns wrapper for 2-col menus (Product, Resources) */
+.site-mega-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* For single-wide menus (For you, Company) — one column spans both */
+.site-mega-col-full {
+  grid-column: 1 / -1;
+}
+
+.site-mega-col-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  padding: 0 10px;
+}
+
+.site-mega-col-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-mega-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.site-mega-item:hover {
+  background: #f8fafc;
+}
+
+.site-mega-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e7f7ee;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.site-mega-ico svg {
+  width: 17px;
+  height: 17px;
+}
+
+.site-mega-ico-cyan   { background: #dbeafe; color: #0891b2; }
+.site-mega-ico-amber  { background: #fef3c7; color: #b45309; }
+.site-mega-ico-purple { background: #f3e8ff; color: #8b5cf6; }
+.site-mega-ico-pink   { background: #fce7f3; color: #ec4899; }
+
+.site-mega-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-mega-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0A2540;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.site-mega-desc {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.site-mega-badge {
+  padding: 1px 7px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 100px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Featured panel (right column) — dark navy mini */
+.site-mega-feat {
+  background: linear-gradient(135deg, #0A2540 0%, #143a62 100%);
+  border-radius: 10px;
+  padding: 16px 18px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-mega-feat::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(46, 204, 113, 0.3), transparent 60%);
+  pointer-events: none;
+}
+
+.site-mega-feat-eye {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6ee7a8;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.site-mega-feat-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.site-mega-feat-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 12px;
+  line-height: 1.45;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.site-mega-feat-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #6ee7a8;
+  font-weight: 700;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+}
+
+.site-mega-feat-cta:hover {
+  color: #fff;
+}
+
+.site-mega-feat-cta svg {
+  width: 11px;
+  height: 11px;
+  transition: transform 0.15s;
+}
+
+.site-mega-feat-cta:hover svg {
+  transform: translateX(2px);
+}
+
+/* ---------- HAMBURGER (mobile) ---------- */
+.site-hamburger {
+  display: none;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.site-hamburger:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.site-header.is-scrolled .site-hamburger,
+body:not(.has-dark-hero) .site-hamburger {
+  background: #fff;
+  border-color: #e5e7eb;
+}
+
+.site-header.is-scrolled .site-hamburger:hover,
+body:not(.has-dark-hero) .site-hamburger:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.site-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+.site-header.is-scrolled .site-hamburger span,
+body:not(.has-dark-hero) .site-hamburger span {
+  background: #0A2540;
+}
+
+/* ---------- MOBILE DRAWER ---------- */
+.site-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.site-drawer[hidden] {
+  display: none;
+}
+
+.site-drawer:not([hidden]) {
+  pointer-events: auto;
+}
+
+.site-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 37, 64, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.site-drawer.is-open .site-drawer-scrim {
+  opacity: 1;
+}
+
+.site-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 85%;
+  max-width: 420px;
+  background: #fff;
+  box-shadow: -20px 0 60px rgba(10, 37, 64, 0.25);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+}
+
+.site-drawer.is-open .site-drawer-panel {
+  transform: translateX(0);
+}
+
+.site-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.site-drawer-logo img {
+  display: block;
+  height: 36px;
+  width: auto;
+}
+
+.site-drawer-close {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.site-drawer-close:hover {
+  background: #f8fafc;
+  color: #0A2540;
+}
+
+.site-drawer-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.site-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Accordion sections inside drawer */
+.site-acc {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.site-acc:last-child {
+  border-bottom: 0;
+}
+
+.site-acc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 16px;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0A2540;
+  letter-spacing: -0.01em;
+}
+
+.site-acc-head svg {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  transition: transform 0.2s, color 0.15s;
+}
+
+.site-acc-head:hover {
+  background: #fafbfc;
+}
+
+.site-acc-head[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+  color: #16a34a;
+}
+
+.site-acc-body {
+  padding: 0 16px 12px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.site-acc.is-open .site-acc-body {
+  display: flex;
+}
+
+.site-acc-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.site-acc-item:hover {
+  background: #f8fafc;
+}
+
+.site-acc-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: #e7f7ee;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.site-acc-ico svg {
+  width: 15px;
+  height: 15px;
+}
+
+.site-acc-ico-cyan   { background: #dbeafe; color: #0891b2; }
+.site-acc-ico-amber  { background: #fef3c7; color: #b45309; }
+.site-acc-ico-purple { background: #f3e8ff; color: #8b5cf6; }
+.site-acc-ico-pink   { background: #fce7f3; color: #ec4899; }
+
+.site-acc-body-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-acc-item-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0A2540;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.site-acc-item-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 1px;
+  line-height: 1.4;
+}
+
+.site-acc-badge {
+  padding: 1px 7px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 100px;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Drawer footer with sticky CTAs */
+.site-drawer-foot {
+  padding: 14px 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.site-drawer-cta-primary {
+  width: 100%;
+  padding: 13px 16px;
+  background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #22a85d 100%);
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  text-align: center;
+  box-shadow:
+    0 4px 12px rgba(46, 204, 113, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.site-drawer-cta-primary:hover {
+  filter: brightness(1.05);
+}
+
+.site-drawer-cta-ghost {
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #0A2540;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.site-drawer-cta-ghost:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+/* Body scroll lock when drawer open (set by JS) */
+body.site-drawer-open {
+  overflow: hidden;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+  .site-nav {
+    display: none;
+  }
+  .site-hamburger {
+    display: flex;
+  }
+  .site-logo img {
+    height: 36px;
+  }
+}
+
+@media (min-width: 901px) {
+  .site-hamburger {
+    display: none !important;
+  }
+}
+
+/* On auth pages, the original logo-only minimal header is preserved —
+   we hide the new nav and drawer-related elements since they're not
+   needed in signup/login/checkout flows */
+body.auth-page .site-nav,
+body.auth-page .site-hamburger,
+body.auth-page .site-drawer {
+  display: none !important;
+}
+
+body.auth-page .site-logo-glow {
+  opacity: 0.3;
+}
+
+/* Keep mega menus invisible if user somehow triggers on mobile */
+@media (max-width: 900px) {
+  .site-mega {
+    display: none !important;
+  }
+}
