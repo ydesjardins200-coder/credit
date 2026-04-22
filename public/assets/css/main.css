@@ -1025,36 +1025,51 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-/* Mobile: collapse to a simpler, stacked list.
-   The single-pill pattern doesn't wrap gracefully — on small
-   screens the 4 items become a centered vertical list without
-   the ribbon chrome (no backdrop, no shine) since the unified
-   look breaks when items stack. */
+/* Mobile: collapse into horizontal wrapping chip-pills.
+   Each trust item becomes its own rounded pill with a subtle border
+   and translucent bg — centered, flex-wrap across 1-2 lines depending
+   on viewport width. More modern/fintech than the old stacked list. */
 @media (max-width: 899px) {
   .hero-ribbon {
-    flex-direction: column;
-    align-items: flex-start;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
     width: auto;
-    max-width: 280px;
+    max-width: 100%;
     background: transparent;
     border: 0;
     box-shadow: none;
     border-radius: 0;
-    padding: var(--space-3) 0 0;
-    margin: var(--space-3) auto 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0;
+    margin: var(--space-4) auto 0;
     overflow: visible;
   }
 
   .hero-ribbon-shine { display: none; }
 
   .hero-ribbon-item {
-    padding: 6px 0;
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.82);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 100px;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   .hero-ribbon-item:not(:last-of-type)::after { display: none; }
+
+  .hero-ribbon-ico {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 /* -------- Background constellation twinkling -------- */
@@ -4270,11 +4285,49 @@ a:hover { text-decoration: underline; }
 @media (max-width: 820px) {
   .footer-fineprint-inner {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
   }
   .footer-badges {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
+  }
+}
+
+/* Mobile (<640px): center everything in the footer — brand, columns,
+   fineprint. Users browsing on phone read center-aligned more
+   comfortably and the vertical stack needs a strong shared axis. */
+@media (max-width: 639px) {
+  .footer-grid {
+    text-align: center;
+  }
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+  }
+  .footer-brand .footer-tagline {
+    text-align: center;
+  }
+  .footer-market-chips,
+  .footer-social {
+    justify-content: center;
+  }
+  .footer-col h4 {
+    text-align: center;
+  }
+  .footer-col ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .footer-col-hours {
+    text-align: center;
+  }
+  /* Soon badges next to link labels — make sure they stay centered */
+  .footer-col-link-soon {
+    justify-content: center;
   }
 }
 
