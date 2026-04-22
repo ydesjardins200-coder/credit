@@ -292,7 +292,7 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
   top: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%) translateY(-8px);
-  min-width: 640px;
+  min-width: 860px;
   background: #fff;
   border-radius: 14px;
   box-shadow:
@@ -301,7 +301,7 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
     0 0 0 1px rgba(10, 37, 64, 0.05);
   padding: 20px;
   display: grid;
-  grid-template-columns: 1fr 260px;
+  grid-template-columns: 1fr;
   gap: 20px;
   opacity: 0;
   visibility: hidden;
@@ -342,6 +342,14 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+}
+
+/* 3-column variant — used when a menu needs 3 categories side-by-side.
+   This is the default for all 4 top-level menus since the blue featured
+   card was removed. The 2-column .site-mega-cols default is kept for
+   backward-compat with any future 2-col menu. */
+.iboost-mm .site-mega-cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .iboost-mm .site-mega-col-full {
@@ -437,87 +445,6 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
   text-transform: uppercase;
 }
 
-/* Featured panel (right column) */
-.iboost-mm .site-mega-feat {
-  background: linear-gradient(135deg, #0A2540 0%, #143a62 100%);
-  border-radius: 10px;
-  padding: 16px 18px;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.iboost-mm .site-mega-feat::after {
-  content: '';
-  position: absolute;
-  top: -20%;
-  right: -20%;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(46, 204, 113, 0.3), transparent 60%);
-  pointer-events: none;
-}
-
-.iboost-mm .site-mega-feat-eye {
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6ee7a8;
-  margin-bottom: 4px;
-  position: relative;
-  z-index: 1;
-}
-
-.iboost-mm .site-mega-feat-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 6px;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-  position: relative;
-  z-index: 1;
-}
-
-.iboost-mm .site-mega-feat-desc {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.72);
-  margin: 0 0 12px;
-  line-height: 1.45;
-  position: relative;
-  z-index: 1;
-  flex: 1;
-}
-
-.iboost-mm .site-mega-feat-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  color: #6ee7a8;
-  font-weight: 700;
-  text-decoration: none;
-  position: relative;
-  z-index: 1;
-  align-self: flex-start;
-}
-
-.iboost-mm .site-mega-feat-cta:hover {
-  color: #fff;
-}
-
-.iboost-mm .site-mega-feat-cta svg {
-  width: 11px;
-  height: 11px;
-  transition: transform 0.15s;
-}
-
-.iboost-mm .site-mega-feat-cta:hover svg {
-  transform: translateX(2px);
-}
 
 /* ---------- HAMBURGER (mobile) ---------- */
 
