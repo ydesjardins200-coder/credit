@@ -46,6 +46,24 @@ Last updated: 2026-04-21
         - "Not a lender, credit repair org, or financial advisor" language
         - Per-footnote legal language (1: +92 pts projection basis,
           2: star rating target, 3: billing terms, 4: reported credit line)
+- [ ] **Offers tab — affiliate partnerships & accuracy**
+      The Offers tab currently shows fake bank logos (RBC, TD, BMO, Scotia,
+      CIBC, Tangerine, Koho, Borrowell, Fairstone, Square One, Ladder) with
+      fake APRs, fees, and min-score requirements. Before this tab can be
+      shown to real users:
+        - Sign affiliate partnerships with each lender shown (direct or
+          via networks like Ratehub, Rakuten, Commission Junction)
+        - Replace static card data with feed-driven real-time rates
+          (misrepresenting an APR is a federal Truth-in-Lending violation
+          in the US and Consumer Protection Act violation in CA)
+        - Replace placeholder logos with licensed assets
+        - Add jurisdictional filtering (some lenders operate only in
+          select provinces/states)
+        - Verify min-score thresholds with each lender (incorrect
+          thresholds that lead to denials could expose iBoost to
+          "false representation" claims)
+      Until all of the above is done, the Offers tab must remain behind
+      the dev-mode banner or be hidden from production users entirely.
 - [ ] **Cookie banner / consent** — evaluate if Quebec Law 25 / GDPR /
       CCPA apply given the CA+US market. If yes, implement a compliant
       banner.
@@ -112,9 +130,20 @@ Last updated: 2026-04-21
         - Wire webhooks to update Supabase `subscriptions` table
         - Remove the amber `.checkout-dev-banner` from checkout.html
         - Remove the amber `.dash-dev-banner` from account.html
-        - Replace all fake dashboard data (score 678, +14 pts, Visa 4242,
-          activity dates, etc.) with real bureau + Stripe data once
-          those integrations are live
+        - Replace all fake dashboard data across ALL 6 tabs:
+          - Welcome: streak counter, milestones, onboarding completion
+          - Credit: score 678, +14 pts, Visa 4242, bureau scores,
+            graph data points, AI tip, action items, activity feed
+          - Offers: bank logos & names, APRs, min scores, cash-back
+            percentages (ALL offers must come from real affiliate
+            feeds before launch to avoid misrepresentation liability)
+          - Budget: income, expenses, categories, transactions,
+            goals, savings rate
+          - Education: lesson titles, durations, progress, curriculum
+          - Profile: name, phone, address, DOB, SIN masked, invoice
+            history, payment method
+          (The only REAL data today is: email + initials + plan pill
+          if arriving from checkout ?plan= param)
         - Remove the `#checkout-fill-dummy` button from checkout.html
           and its handler + CSS from checkout.js / main.css
         - Replace the `setTimeout` mock in checkout.js with real

@@ -8433,3 +8433,1011 @@ body.auth-page .site-footer .container {
   }
   .dash-edu-lesson-arrow { display: none; }
 }
+
+
+/* =======================================================================
+   OFFERS TAB — affiliate marketplace with soft-pull pre-approval
+   ----------------------------------------------------------------------
+   Philosophy: make the matching feel personalized (profile-match card
+   at top), show 3 strong featured offers, then let the user browse
+   by category for exploration. Legal disclosure always visible at
+   the bottom. Bank logos are solid-color placeholders with initials —
+   real prod will use licensed logos from affiliate partners.
+   ======================================================================= */
+
+/* Profile match (dark navy hero — same pattern as AI tip / streak / edu progress) */
+.dash-offer-match {
+  padding: 20px 22px;
+  background: linear-gradient(135deg, #0A2540 0%, #143a62 100%);
+  border-radius: 14px;
+  color: #fff;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.dash-offer-match::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -10%;
+  width: 40%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(46,204,113,0.15), transparent 60%);
+  pointer-events: none;
+}
+
+.dash-offer-match-ico {
+  width: 44px;
+  height: 44px;
+  background: rgba(46, 204, 113, 0.25);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6ee7a8;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.dash-offer-match-ico svg { width: 22px; height: 22px; }
+
+.dash-offer-match-body {
+  position: relative;
+  z-index: 1;
+}
+
+.dash-offer-match-eye {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6ee7a8;
+  margin-bottom: 3px;
+}
+
+.dash-offer-match-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.dash-offer-match-body p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.dash-offer-match-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.dash-offer-match-tag {
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 100px;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+/* Section header for Offers tab */
+.dash-offer-sect {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 6px 0 12px;
+}
+
+.dash-offer-sect h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.dash-offer-sect-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+/* Featured offers row (3 cards) */
+.dash-offer-feat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.dash-offer {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s, transform 0.15s;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-height: 250px;
+  position: relative;
+}
+
+.dash-offer:hover {
+  border-color: #2ECC71;
+  transform: translateY(-1px);
+}
+
+.dash-offer-featured {
+  border-color: rgba(46, 204, 113, 0.4);
+}
+
+.dash-offer-featured::before {
+  content: 'Best match for your score';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  padding: 4px 10px;
+  background: #2ECC71;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 12px 0 8px 0;
+}
+
+.dash-offer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dash-offer-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.dash-offer-logo-rbc    { background: #005daa; }
+.dash-offer-logo-td     { background: #0d7c4a; }
+.dash-offer-logo-bmo    { background: #0079c1; }
+.dash-offer-logo-scotia { background: #ed1c24; }
+.dash-offer-logo-cibc   { background: #c41b22; }
+.dash-offer-logo-tang   { background: #ff6c00; }
+
+.dash-offer-lender {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dash-offer-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 1px 0 0;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+}
+
+.dash-offer-highlight {
+  background: #e7f7ee;
+  color: #16a34a;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.dash-offer-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dash-offer-spec {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+}
+
+.dash-offer-spec-label { color: #64748b; }
+
+.dash-offer-spec-val {
+  color: #0A2540;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-offer-cta {
+  margin-top: auto;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  color: #0A2540;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dash-offer-cta svg { width: 12px; height: 12px; }
+
+.dash-offer:hover .dash-offer-cta {
+  background: #0A2540;
+  color: #fff;
+  border-color: #0A2540;
+}
+
+/* Browse by category */
+.dash-offer-cat-block {
+  margin-bottom: 20px;
+}
+
+.dash-offer-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dash-offer-cat-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e7f7ee;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-offer-cat-ico svg { width: 16px; height: 16px; }
+
+.dash-offer-cat-ico-loans { background: #dbeafe; color: #0891b2; }
+.dash-offer-cat-ico-banks { background: #fef3c7; color: #b45309; }
+.dash-offer-cat-ico-ins   { background: #fce7f3; color: #ec4899; }
+
+.dash-offer-cat-header h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+.dash-offer-cat-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.dash-offer-cat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Compact offer for category browse */
+.dash-offer-mini {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  text-align: left;
+}
+
+.dash-offer-mini:hover { border-color: #2ECC71; }
+
+.dash-offer-mini .dash-offer-logo {
+  width: 36px;
+  height: 36px;
+  font-size: 0.62rem;
+}
+
+.dash-offer-mini-body {
+  min-width: 0;
+}
+
+.dash-offer-mini-lender {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dash-offer-mini-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 1px 0 0;
+  line-height: 1.25;
+}
+
+.dash-offer-mini-hook {
+  font-size: 0.72rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+
+.dash-offer-mini-arrow {
+  color: #94a3b8;
+  display: flex;
+}
+
+.dash-offer-mini-arrow svg { width: 14px; height: 14px; }
+
+.dash-offer-mini:hover .dash-offer-mini-arrow { color: #16a34a; }
+
+/* Affiliate disclosure footer */
+.dash-offer-disclosure {
+  margin-top: 28px;
+  padding: 14px 18px;
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.55;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.dash-offer-disclosure svg {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dash-offer-disclosure strong {
+  color: #0A2540;
+  font-weight: 700;
+}
+
+/* =======================================================================
+   PROFILE TAB — account management
+   ----------------------------------------------------------------------
+   Standard SaaS account page: identity, plan, personal info, payment,
+   invoices, notifications, danger zone. Emerald accents on "active"
+   and "verified" states. Red (dashed border) for danger zone.
+   ======================================================================= */
+
+/* Identity hero card */
+.dash-identity {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+.dash-identity-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e7f7ee, #d1fae5);
+  border: 2px solid rgba(46, 204, 113, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.dash-identity-body h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0 0 2px;
+  letter-spacing: -0.01em;
+}
+
+.dash-identity-body p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.dash-identity-member {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.dash-identity-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2ECC71;
+  flex-shrink: 0;
+}
+
+.dash-identity-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #e7f7ee;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 100px;
+  color: #16a34a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.dash-identity-verified svg { width: 12px; height: 12px; }
+
+/* Plan card */
+.dash-plan-card {
+  background: linear-gradient(180deg, #fff, #fafbfc);
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.dash-plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dash-plan-eye {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #16a34a;
+  margin-bottom: 3px;
+}
+
+.dash-plan-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0A2540;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.dash-plan-price {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.dash-plan-price strong {
+  color: #0A2540;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dash-plan-badge {
+  padding: 5px 12px;
+  background: #e7f7ee;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 100px;
+  color: #16a34a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dash-plan-perks {
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.dash-plan-perk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #0A2540;
+}
+
+.dash-plan-perk svg {
+  width: 14px;
+  height: 14px;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.dash-plan-cta-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.dash-plan-cta {
+  flex: 1;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+  color: #0A2540;
+  font-size: 0.84rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.dash-plan-cta:hover {
+  border-color: #2ECC71;
+  color: #16a34a;
+}
+
+.dash-plan-cta-primary {
+  background: #2ECC71;
+  border-color: #2ECC71;
+  color: #fff;
+}
+
+.dash-plan-cta-primary:hover {
+  background: #22a85d;
+  border-color: #22a85d;
+  color: #fff;
+}
+
+/* Card head */
+.dash-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.dash-card-head h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+.dash-card-head-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.dash-card-edit {
+  padding: 6px 11px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dash-card-edit:hover {
+  border-color: #2ECC71;
+  color: #16a34a;
+}
+
+/* Info rows (key/value table-like layout) */
+.dash-info-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-info-row {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dash-info-row:last-child { border-bottom: 0; }
+
+.dash-info-label {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.dash-info-val {
+  font-size: 0.9rem;
+  color: #0A2540;
+  font-weight: 600;
+}
+
+.dash-info-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 0;
+  color: #16a34a;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dash-info-btn:hover { text-decoration: underline; }
+
+/* Payment method row */
+.dash-pm {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.dash-pm-logo {
+  width: 44px;
+  height: 28px;
+  background: #1434cb;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.dash-pm-body { min-width: 0; }
+
+.dash-pm-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0;
+}
+
+.dash-pm-sub {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.dash-pm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Invoice history */
+.dash-invoices {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-invoice {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dash-invoice:last-child { border-bottom: 0; }
+
+.dash-invoice-date {
+  font-size: 0.8rem;
+  color: #64748b;
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.dash-invoice-desc {
+  min-width: 0;
+}
+
+.dash-invoice-desc-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0A2540;
+  margin: 0;
+}
+
+.dash-invoice-desc-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin: 1px 0 0;
+}
+
+.dash-invoice-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0A2540;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-invoice-dl {
+  padding: 7px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dash-invoice-dl:hover {
+  border-color: #2ECC71;
+  color: #16a34a;
+}
+
+.dash-invoice-dl svg { width: 14px; height: 14px; }
+
+/* Notifications preferences */
+.dash-prefs {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-pref {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dash-pref:last-child { border-bottom: 0; }
+
+.dash-pref-body h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0 0 3px;
+  letter-spacing: -0.005em;
+}
+
+.dash-pref-body p {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Toggle switch */
+.dash-toggle {
+  width: 42px;
+  height: 24px;
+  background: #e5e7eb;
+  border: 0;
+  border-radius: 100px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.dash-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: left 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.dash-toggle-on { background: #2ECC71; }
+
+.dash-toggle-on::after { left: 20px; }
+
+.dash-toggle:focus-visible {
+  outline: 2px solid #2ECC71;
+  outline-offset: 2px;
+}
+
+/* Danger zone */
+.dash-danger {
+  background: #fff;
+  border: 1px dashed #fca5a5;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.dash-danger h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #b91c1c;
+  margin: 0 0 3px;
+  letter-spacing: -0.005em;
+}
+
+.dash-danger p {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.dash-danger-btn {
+  padding: 9px 14px;
+  background: #fff;
+  border: 1px solid #fca5a5;
+  border-radius: 7px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dash-danger-btn:hover {
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+/* =======================================================================
+   RESPONSIVE — OFFERS + PROFILE
+   ======================================================================= */
+
+@media (max-width: 960px) {
+  .dash-offer-feat-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .dash-offer-feat-row > *:last-child {
+    grid-column: 1 / -1;
+  }
+  .dash-offer-cat-row {
+    grid-template-columns: 1fr;
+  }
+  .dash-identity {
+    grid-template-columns: auto 1fr;
+  }
+  .dash-identity-verified {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-offer-match {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .dash-offer-feat-row { grid-template-columns: 1fr; }
+  .dash-offer-feat-row > *:last-child { grid-column: auto; }
+  .dash-offer-cat-header h3 { font-size: 0.92rem; }
+  .dash-identity {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .dash-identity-avatar { margin: 0 auto; }
+  .dash-identity-verified {
+    grid-column: auto;
+    justify-self: center;
+  }
+  .dash-identity-member { justify-content: center; }
+  .dash-plan-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dash-plan-cta-row {
+    flex-direction: column;
+  }
+  .dash-info-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    align-items: flex-start;
+    padding: 14px 0;
+  }
+  .dash-info-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+  .dash-invoice {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .dash-invoice-date {
+    grid-column: 1 / -1;
+    margin-bottom: -4px;
+  }
+  .dash-invoice-desc { grid-column: 1; }
+  .dash-invoice-amount { grid-column: 2; grid-row: 2; }
+  .dash-invoice-dl {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .dash-danger {
+    grid-template-columns: 1fr;
+  }
+  .dash-danger-btn { justify-self: start; }
+}

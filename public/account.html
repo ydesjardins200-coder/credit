@@ -53,8 +53,10 @@
   <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
     <button class="dash-tab is-active" role="tab" data-tab="welcome" aria-selected="true" aria-controls="panel-welcome">Welcome</button>
     <button class="dash-tab" role="tab" data-tab="credit" aria-selected="false" aria-controls="panel-credit">Credit</button>
+    <button class="dash-tab" role="tab" data-tab="offers" aria-selected="false" aria-controls="panel-offers">Offers</button>
     <button class="dash-tab" role="tab" data-tab="budget" aria-selected="false" aria-controls="panel-budget">Budget</button>
     <button class="dash-tab" role="tab" data-tab="education" aria-selected="false" aria-controls="panel-education">Education</button>
+    <button class="dash-tab" role="tab" data-tab="profile" aria-selected="false" aria-controls="panel-profile">Profile</button>
   </nav>
 
   <main class="dash-main">
@@ -428,7 +430,294 @@
 
     </section>
 
-    <!-- ===================== TAB 3: BUDGET ===================== -->
+    <!-- ===================== TAB 3: OFFERS ===================== -->
+    <section class="dash-panel" id="panel-offers" role="tabpanel" aria-labelledby="tab-offers" data-tab-panel="offers" hidden>
+
+      <div class="dash-panel-head">
+        <h1>Offers for you</h1>
+        <p class="dash-panel-sub">Financial products matched to your profile. No spam, no hidden fees.</p>
+      </div>
+
+      <!-- Profile match summary (dark navy — same pattern as Credit AI tip + Welcome streak) -->
+      <article class="dash-offer-match">
+        <div class="dash-offer-match-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+          </svg>
+        </div>
+        <div class="dash-offer-match-body">
+          <div class="dash-offer-match-eye">Matched to your profile</div>
+          <h2 class="dash-offer-match-title">Score 678 · Good tier · 22% utilization</h2>
+          <p>We only show you offers where you have a strong approval likelihood based on your current profile. Pre-approval checks are soft pulls — they won't affect your score.</p>
+          <div class="dash-offer-match-tags">
+            <span class="dash-offer-match-tag">Good credit (670–739)</span>
+            <span class="dash-offer-match-tag">Low utilization</span>
+            <span class="dash-offer-match-tag">3 mo. reported history</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Featured offers section -->
+      <div class="dash-offer-sect">
+        <h2>Best matches right now</h2>
+        <span class="dash-offer-sect-sub">Soft-pull pre-approval · No impact on score</span>
+      </div>
+      <div class="dash-offer-feat-row">
+
+        <button type="button" class="dash-offer dash-offer-featured">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-rbc">RBC</div>
+            <div>
+              <p class="dash-offer-lender">Royal Bank</p>
+              <p class="dash-offer-name">Cash Back Mastercard</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">2% cash back on groceries, 1% on everything else</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$0</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">20.99%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">660</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+        <button type="button" class="dash-offer">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-tang">TANG</div>
+            <div>
+              <p class="dash-offer-lender">Tangerine</p>
+              <p class="dash-offer-name">Money-Back Credit Card</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">2% cash back in up to 3 categories you choose</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$0</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">19.95%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">650</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+        <button type="button" class="dash-offer">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-td">TD</div>
+            <div>
+              <p class="dash-offer-lender">TD Bank</p>
+              <p class="dash-offer-name">Cash Back Visa Infinite</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">3% cash back on grocery + recurring bills</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$120</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">20.99%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">675</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Browse by category -->
+      <div class="dash-offer-sect">
+        <h2>Browse by category</h2>
+        <span class="dash-offer-sect-sub">Explore all available offers</span>
+      </div>
+
+      <!-- Credit cards -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <h3>Credit cards</h3>
+          <span class="dash-offer-cat-sub">12 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-scotia">SCO</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Scotiabank</p>
+              <p class="dash-offer-mini-name">Scene+ Visa</p>
+              <p class="dash-offer-mini-hook">5x points on grocery, $0 annual fee</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-bmo">BMO</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">BMO</p>
+              <p class="dash-offer-mini-name">CashBack Mastercard</p>
+              <p class="dash-offer-mini-hook">5% welcome cash back for 3 months</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Personal loans -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-loans">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h3>Personal loans</h3>
+          <span class="dash-offer-cat-sub">6 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#6b21a8">BRS</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Borrowell</p>
+              <p class="dash-offer-mini-name">Personal loan up to $35,000</p>
+              <p class="dash-offer-mini-hook">Rates from 5.99% · Check in 3 min</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#059669">FAIR</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Fairstone</p>
+              <p class="dash-offer-mini-name">Debt consolidation loan</p>
+              <p class="dash-offer-mini-hook">Consolidate up to 10 balances into one</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Bank accounts -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-banks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+            </svg>
+          </div>
+          <h3>Bank accounts</h3>
+          <span class="dash-offer-cat-sub">4 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#000">KOH</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Koho</p>
+              <p class="dash-offer-mini-name">Spending account</p>
+              <p class="dash-offer-mini-hook">No-fee banking · 1% cash back</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-cibc">CIBC</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">CIBC</p>
+              <p class="dash-offer-mini-name">Smart Plus Chequing</p>
+              <p class="dash-offer-mini-hook">$450 welcome bonus · Unlimited transactions</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-ins">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s-8-4-8-12V5l8-3 8 3v5c0 8-8 12-8 12z"/>
+            </svg>
+          </div>
+          <h3>Insurance</h3>
+          <span class="dash-offer-cat-sub">5 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#dc2626">SQU</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Square One</p>
+              <p class="dash-offer-mini-name">Tenant insurance</p>
+              <p class="dash-offer-mini-hook">From $12/month · Pay-as-you-go</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#1e40af">LAD</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Ladder</p>
+              <p class="dash-offer-mini-name">Term life insurance</p>
+              <p class="dash-offer-mini-hook">100% online · Decision in minutes</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Affiliate disclosure -->
+      <div class="dash-offer-disclosure">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div>
+          <strong>Affiliate disclosure:</strong> iBoost may earn a referral fee when you apply for a product we recommend. This does not affect our recommendations or the rates you receive. Pre-approval checks are soft pulls that do not affect your credit score. All terms, rates, and conditions are subject to the issuer's approval and may change without notice.
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== TAB 4: BUDGET ===================== -->
     <section class="dash-panel" id="panel-budget" role="tabpanel" aria-labelledby="tab-budget" data-tab-panel="budget" hidden>
 
       <div class="dash-panel-head dash-panel-head-row">
@@ -695,7 +984,7 @@
 
     </section>
 
-    <!-- ===================== TAB 4: EDUCATION ===================== -->
+    <!-- ===================== TAB 5: EDUCATION ===================== -->
     <section class="dash-panel" id="panel-education" role="tabpanel" aria-labelledby="tab-education" data-tab-panel="education" hidden>
 
       <div class="dash-panel-head dash-panel-head-row">
@@ -987,6 +1276,241 @@
           Reach a score of 700 to unlock this chapter. You're currently at 678 — only 22 points away.
         </div>
       </article>
+
+    </section>
+
+    <!-- ===================== TAB 6: PROFILE ===================== -->
+    <section class="dash-panel" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile" data-tab-panel="profile" hidden>
+
+      <div class="dash-panel-head">
+        <h1>Your profile</h1>
+        <p class="dash-panel-sub">Manage your account, plan, billing, and preferences.</p>
+      </div>
+
+      <!-- Identity hero: avatar + name + email + verified pill -->
+      <article class="dash-identity">
+        <div class="dash-identity-avatar" id="profile-avatar" aria-hidden="true">MR</div>
+        <div class="dash-identity-body">
+          <h2 id="profile-full-name">Marcus Reynolds</h2>
+          <p id="profile-email-display">marcus.reynolds@email.com</p>
+          <div class="dash-identity-member">
+            <span class="dash-identity-dot" aria-hidden="true"></span>
+            Member since March 10, 2026 · 47 days
+          </div>
+        </div>
+        <div class="dash-identity-verified">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Verified
+        </div>
+      </article>
+
+      <!-- Plan & billing -->
+      <article class="dash-plan-card">
+        <div class="dash-plan-head">
+          <div>
+            <div class="dash-plan-eye">Current plan</div>
+            <h3 class="dash-plan-title">iBoost Essential</h3>
+            <div class="dash-plan-price"><strong>$15/month</strong> · Next charge May 12, 2026</div>
+          </div>
+          <div class="dash-plan-badge">Active</div>
+        </div>
+        <ul class="dash-plan-perks">
+          <li class="dash-plan-perk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            $750 monthly reporting line to all 3 bureaus
+          </li>
+          <li class="dash-plan-perk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            AI action items every month
+          </li>
+          <li class="dash-plan-perk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Full education library access
+          </li>
+        </ul>
+        <div class="dash-plan-cta-row">
+          <button type="button" class="dash-plan-cta dash-plan-cta-primary">Upgrade to Complete →</button>
+          <button type="button" class="dash-plan-cta">Manage subscription</button>
+        </div>
+      </article>
+
+      <!-- Personal information -->
+      <article class="dash-card">
+        <div class="dash-card-head">
+          <h3>Personal information</h3>
+          <button type="button" class="dash-card-edit">Edit</button>
+        </div>
+        <div class="dash-info-rows">
+          <div class="dash-info-row">
+            <div class="dash-info-label">Full name</div>
+            <div class="dash-info-val">Marcus Reynolds</div>
+            <div></div>
+          </div>
+          <div class="dash-info-row">
+            <div class="dash-info-label">Email</div>
+            <div class="dash-info-val" id="profile-email-detail">marcus.reynolds@email.com</div>
+            <div></div>
+          </div>
+          <div class="dash-info-row">
+            <div class="dash-info-label">Phone</div>
+            <div class="dash-info-val">+1 (514) 555-0142</div>
+            <div></div>
+          </div>
+          <div class="dash-info-row">
+            <div class="dash-info-label">Address</div>
+            <div class="dash-info-val">1234 Rue Saint-Laurent, Montréal, QC H2X 2S5</div>
+            <div></div>
+          </div>
+          <div class="dash-info-row">
+            <div class="dash-info-label">Date of birth</div>
+            <div class="dash-info-val">March 18, 1989</div>
+            <div></div>
+          </div>
+          <div class="dash-info-row">
+            <div class="dash-info-label">SIN / SSN</div>
+            <div class="dash-info-val">••• ••• 142</div>
+            <button type="button" class="dash-info-btn">Show</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Payment method -->
+      <article class="dash-card">
+        <div class="dash-card-head">
+          <h3>Payment method</h3>
+          <button type="button" class="dash-card-edit">Update card</button>
+        </div>
+        <div class="dash-pm">
+          <div class="dash-pm-logo">VISA</div>
+          <div class="dash-pm-body">
+            <p class="dash-pm-name">Visa ending in 4242</p>
+            <p class="dash-pm-sub">Expires 08/2028 · Default payment method</p>
+          </div>
+          <div class="dash-pm-actions">
+            <button type="button" class="dash-card-edit">Default</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Invoice history -->
+      <article class="dash-card">
+        <div class="dash-card-head">
+          <h3>Invoice history</h3>
+          <span class="dash-card-head-sub">Last 4 months</span>
+        </div>
+        <div class="dash-invoices">
+
+          <div class="dash-invoice">
+            <div class="dash-invoice-date">Apr 12, 2026</div>
+            <div class="dash-invoice-desc">
+              <p class="dash-invoice-desc-title">iBoost Essential — April</p>
+              <p class="dash-invoice-desc-sub">Monthly subscription</p>
+            </div>
+            <div class="dash-invoice-amount">$15.00</div>
+            <button type="button" class="dash-invoice-dl" aria-label="Download April invoice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="dash-invoice">
+            <div class="dash-invoice-date">Mar 12, 2026</div>
+            <div class="dash-invoice-desc">
+              <p class="dash-invoice-desc-title">iBoost Essential — March</p>
+              <p class="dash-invoice-desc-sub">Monthly subscription</p>
+            </div>
+            <div class="dash-invoice-amount">$15.00</div>
+            <button type="button" class="dash-invoice-dl" aria-label="Download March invoice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="dash-invoice">
+            <div class="dash-invoice-date">Mar 10, 2026</div>
+            <div class="dash-invoice-desc">
+              <p class="dash-invoice-desc-title">Account activation</p>
+              <p class="dash-invoice-desc-sub">Initial setup</p>
+            </div>
+            <div class="dash-invoice-amount">$0.00</div>
+            <button type="button" class="dash-invoice-dl" aria-label="Download activation receipt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </article>
+
+      <!-- Notifications preferences -->
+      <article class="dash-card">
+        <div class="dash-card-head">
+          <h3>Notifications</h3>
+        </div>
+        <div class="dash-prefs">
+          <div class="dash-pref">
+            <div class="dash-pref-body">
+              <h4>Monthly report emails</h4>
+              <p>Receive an email when your monthly report is filed with the bureaus.</p>
+            </div>
+            <button type="button" class="dash-toggle dash-toggle-on" aria-pressed="true" aria-label="On"></button>
+          </div>
+          <div class="dash-pref">
+            <div class="dash-pref-body">
+              <h4>Score change alerts</h4>
+              <p>Get notified when your score changes by more than 5 points.</p>
+            </div>
+            <button type="button" class="dash-toggle dash-toggle-on" aria-pressed="true" aria-label="On"></button>
+          </div>
+          <div class="dash-pref">
+            <div class="dash-pref-body">
+              <h4>AI tips and action items</h4>
+              <p>Weekly summaries of what to focus on to grow your score faster.</p>
+            </div>
+            <button type="button" class="dash-toggle dash-toggle-on" aria-pressed="true" aria-label="On"></button>
+          </div>
+          <div class="dash-pref">
+            <div class="dash-pref-body">
+              <h4>Offers and recommendations</h4>
+              <p>Alerts when new financial products match your profile.</p>
+            </div>
+            <button type="button" class="dash-toggle" aria-pressed="false" aria-label="Off"></button>
+          </div>
+          <div class="dash-pref">
+            <div class="dash-pref-body">
+              <h4>Marketing emails</h4>
+              <p>Tips, product updates, and occasional promotions.</p>
+            </div>
+            <button type="button" class="dash-toggle" aria-pressed="false" aria-label="Off"></button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Danger zone -->
+      <div class="dash-danger">
+        <div>
+          <h4>Delete your account</h4>
+          <p>Permanently remove your iBoost account. We'll stop all bureau reporting within 30 days.</p>
+        </div>
+        <button type="button" class="dash-danger-btn">Delete account</button>
+      </div>
 
     </section>
 

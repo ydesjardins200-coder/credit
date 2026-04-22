@@ -16,7 +16,7 @@
   // Tab list: keep in sync with HTML data-tab attributes. "welcome" is
   // the default when no tab or an unknown tab is specified in the URL.
   // ---------------------------------------------------------------------
-  const VALID_TABS = ['welcome', 'credit', 'budget', 'education'];
+  const VALID_TABS = ['welcome', 'credit', 'offers', 'budget', 'education', 'profile'];
   const DEFAULT_TAB = 'welcome';
 
   // ---------------------------------------------------------------------
@@ -209,6 +209,27 @@
     // Avatar initials
     const avatarEl = document.getElementById('user-avatar');
     if (avatarEl) avatarEl.textContent = initials;
+
+    // Profile tab: populate the big identity avatar, full name, and email
+    // so the Profile view reflects the real logged-in user — the other
+    // data (phone, address, SIN) stays as mockup placeholders for now.
+    const profileAvatarEl = document.getElementById('profile-avatar');
+    if (profileAvatarEl) profileAvatarEl.textContent = initials;
+
+    const profileFullNameEl = document.getElementById('profile-full-name');
+    if (profileFullNameEl) {
+      var m = user.user_metadata || {};
+      var fullName = m.full_name || m.name ||
+        ((m.first_name || '') + ' ' + (m.last_name || '')).trim() ||
+        firstName;
+      profileFullNameEl.textContent = fullName;
+    }
+
+    const profileEmailDisplay = document.getElementById('profile-email-display');
+    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || '(no email)';
+
+    const profileEmailDetail = document.getElementById('profile-email-detail');
+    if (profileEmailDetail) profileEmailDetail.textContent = user.email || '(no email)';
 
     // Personalize the Welcome tab greeting.
     // The inline script in account.html already set "Welcome back." —
