@@ -565,25 +565,67 @@ a:hover { text-decoration: underline; }
 }
 
 .hub-junction-1 { animation-delay: 0s; }
-.hub-junction-2 { animation-delay: 0.4s; }
-.hub-junction-3 { animation-delay: 0.8s; }
-.hub-junction-4 { animation-delay: 1.2s; }
-.hub-junction-5 { animation-delay: 1.6s; }
-.hub-junction-6 { animation-delay: 2.0s; }
+.hub-junction-2 { animation-delay: 0.35s; }
+.hub-junction-3 { animation-delay: 0.7s; }
+.hub-junction-4 { animation-delay: 1.05s; }
+.hub-junction-5 { animation-delay: 1.4s; }
+.hub-junction-6 { animation-delay: 1.75s; }
+.hub-junction-7 { animation-delay: 2.1s; }
 
-/* Data packets traveling along the connector paths */
-@keyframes hub-packet-travel {
-  0%   { offset-distance: 0%; opacity: 0; }
-  10%  { opacity: 1; }
-  90%  { opacity: 1; }
-  100% { offset-distance: 100%; opacity: 0; }
+/* Data packets bouncing back and forth along the curves.
+   The packet travels from card (0%) to hub (100%) in ~3s with
+   ease-out deceleration, "impacts" the hub, then returns back
+   to the card (100% → 0%) in another ~3s. Total round trip: 6s
+   per packet. Stagger per packet ensures at least 2 visible at
+   any moment. */
+@keyframes hub-packet-bounce {
+  0%   { offset-distance: 0%;   opacity: 0; }
+  8%   { opacity: 1; }
+  /* Approach to hub — ease-out pacing is handled by timing-function below */
+  48%  { offset-distance: 95%;  opacity: 1; }
+  /* Brief "impact" moment at the hub */
+  50%  { offset-distance: 100%; opacity: 1; }
+  52%  { offset-distance: 95%;  opacity: 1; }
+  /* Return trip back to origin */
+  92%  { opacity: 1; }
+  100% { offset-distance: 0%;   opacity: 0; }
 }
 
 .hub-packet {
-  animation: hub-packet-travel 5s linear infinite;
-  animation-duration: 5s !important;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  animation: hub-packet-bounce 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-duration: 6s !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
 }
+
+/* Hub flash pulse rings — a subtle green ring that expands and
+   fades out at the center of the hub to mark each packet's arrival.
+   One ring per packet, staggered to match.
+
+   Uses transform:scale instead of SVG `r` attribute animation because
+   `r` animation via CSS has inconsistent browser support (especially
+   older Safari). transform:scale is bulletproof. */
+@keyframes hub-flash-pulse {
+  /* Packet arrives at hub at 48-52% of its 6s cycle (~2.88-3.12s in).
+     Flash fires between 45% and 55% (2.7s-3.3s). */
+  0%, 45%  { opacity: 0; transform: scale(1); }
+  48%      { opacity: 0.85; transform: scale(1); }
+  55%      { opacity: 0; transform: scale(1.4); }
+  100%     { opacity: 0; transform: scale(1); }
+}
+
+.hub-flash {
+  animation: hub-flash-pulse 6s ease-out infinite;
+  animation-duration: 6s !important;
+  transform-origin: 600px 230px;  /* SVG user-space center of the hub */
+  transform-box: view-box;
+  pointer-events: none;
+}
+
+/* Stagger the flash rings to match the packets that trigger them */
+.hub-flash-1 { animation-delay: 0s; }
+.hub-flash-2 { animation-delay: 0.85s; }
+.hub-flash-3 { animation-delay: 1.7s; }
+.hub-flash-4 { animation-delay: 2.55s; }
 
 /* -------- Central glass-3D logo hub -------- */
 
@@ -862,7 +904,7 @@ a:hover { text-decoration: underline; }
 .hub-pos-stat30d    { bottom: 80px; right: 40px; }
 .hub-pos-flagca     { top: 175px;  left: 10%; }
 .hub-pos-flagus     { top: 240px;  right: 8%; }
-.hub-pos-experian   { top: 45%; left: 78%; transform: translateY(-50%); }
+.hub-pos-experian   { bottom: -8px; left: 50%; transform: translateX(-50%); }
 
 /* -------- Core-attributes ribbon below the hub --------
    Single glassy-3D pill that contains 4 trust attributes
