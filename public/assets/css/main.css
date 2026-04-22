@@ -1635,6 +1635,615 @@ a:hover { text-decoration: underline; }
   }
 }
 
+/* =======================================================================
+   FEATURE-VISUAL-NOTE — Visible disclaimer inside the dark feature-visual
+   container, styled as a subtle info badge instead of italic fine print.
+   Used on /how-it-works.html below the journey-showcase.
+   ======================================================================= */
+
+.feature-visual-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 1rem 0 0;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.feature-visual-note svg {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.feature-visual-note a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.feature-visual-note a:hover {
+  color: var(--color-accent);
+}
+
+/* =======================================================================
+   STEPS SHOWCASE — White passive card with 3 vertically-connected steps.
+   Used on /how-it-works.html Feature 2 (Three steps).
+   The connecting line runs between the 3 markers for visual continuity.
+   ======================================================================= */
+
+.steps-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1.1rem 1.2rem 1rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.steps-showcase-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.steps-showcase-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  line-height: 1.2;
+}
+
+.steps-showcase-subtitle {
+  font-size: 0.73rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.steps-showcase-meta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.steps-flow {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* Connecting line drawn behind the markers. Starts at the first marker
+   and ends at the last marker. Animated via stroke-dasharray on
+   .is-visible. */
+.steps-flow::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom,
+    var(--color-accent) 0%,
+    var(--color-accent) 100%);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
+}
+
+.steps-showcase.is-visible .steps-flow::before {
+  transform: scaleY(1);
+}
+
+.steps-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 0.6rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.steps-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.4s ease, background 0.4s ease;
+}
+
+.steps-marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition: opacity 0.3s ease;
+}
+
+.steps-marker-check {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.steps-marker-check svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* When visible: markers turn emerald one-by-one with stagger. */
+.steps-showcase.is-visible .steps-item:nth-child(1) .steps-marker {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transition-delay: 0.4s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(1) .steps-marker-dot {
+  opacity: 0;
+  transition-delay: 0.4s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(1) .steps-marker-check {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 0.5s;
+}
+
+.steps-showcase.is-visible .steps-item:nth-child(2) .steps-marker {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transition-delay: 0.9s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(2) .steps-marker-dot {
+  opacity: 0;
+  transition-delay: 0.9s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(2) .steps-marker-check {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 1.0s;
+}
+
+.steps-showcase.is-visible .steps-item:nth-child(3) .steps-marker {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transition-delay: 1.4s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(3) .steps-marker-dot {
+  opacity: 0;
+  transition-delay: 1.4s;
+}
+.steps-showcase.is-visible .steps-item:nth-child(3) .steps-marker-check {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 1.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steps-flow::before,
+  .steps-showcase.is-visible .steps-flow::before {
+    transform: scaleY(1);
+    transition: none;
+  }
+  .steps-marker,
+  .steps-marker-dot,
+  .steps-marker-check {
+    transition: none;
+  }
+  .steps-marker {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .steps-marker-dot { opacity: 0; }
+  .steps-marker-check { opacity: 1; transform: scale(1); }
+}
+
+.steps-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.steps-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 2px;
+}
+
+.steps-item-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  letter-spacing: -0.01em;
+}
+
+.steps-item-time {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+  padding: 2px 7px;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.steps-item-desc {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-fg-soft);
+  margin: 0;
+}
+
+/* =======================================================================
+   FACTORS SHOWCASE — White passive card with 4 horizontal bars showing
+   FICO score factor breakdown (35% / 30% / 15% / 20%).
+   Bars fill in on scroll-into-view via CSS transition.
+   Used on /how-it-works.html Feature 3 (What moves your score).
+   ======================================================================= */
+
+.factors-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1.1rem 1.2rem 1rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.factors-showcase-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.factors-showcase-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  line-height: 1.2;
+}
+
+.factors-showcase-subtitle {
+  font-size: 0.73rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.factors-showcase-source {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-decoration: none;
+  flex-shrink: 0;
+  padding-top: 2px;
+  letter-spacing: 0.03em;
+  transition: color 0.15s ease;
+}
+
+.factors-showcase-source:hover {
+  color: var(--color-accent-hover);
+}
+
+.factors-showcase-source .ext {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.factors-bars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.factors-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 6px;
+}
+
+.factors-bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.factors-bar-primary .factors-bar-label {
+  font-weight: 700;
+}
+
+.factors-bar-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.factors-bar-primary .factors-bar-pct {
+  color: var(--color-accent-hover);
+}
+
+.factors-bar-track {
+  height: 8px;
+  background: var(--color-surface);
+  border-radius: 100px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.factors-bar-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-border-strong);
+  border-radius: 100px;
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.factors-bar-primary .factors-bar-fill {
+  background: var(--color-accent);
+}
+
+/* On scroll-into-view: fill each bar to its target width with stagger. */
+.factors-showcase.is-visible .factors-bar:nth-child(1) .factors-bar-fill {
+  width: var(--factor-target);
+  transition-delay: 0.2s;
+}
+.factors-showcase.is-visible .factors-bar:nth-child(2) .factors-bar-fill {
+  width: var(--factor-target);
+  transition-delay: 0.4s;
+}
+.factors-showcase.is-visible .factors-bar:nth-child(3) .factors-bar-fill {
+  width: var(--factor-target);
+  transition-delay: 0.6s;
+}
+.factors-showcase.is-visible .factors-bar:nth-child(4) .factors-bar-fill {
+  width: var(--factor-target);
+  transition-delay: 0.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .factors-bar-fill {
+    width: var(--factor-target);
+    transition: none;
+  }
+}
+
+.factors-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-fg-soft);
+  line-height: 1.4;
+}
+
+.factors-showcase-footer svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.factors-showcase-footer strong {
+  color: var(--color-fg);
+  font-weight: 700;
+}
+
+/* =======================================================================
+   MONTHLY SHOWCASE — White passive card with a mini chart showing
+   4 milestone dots (M1, M3, M6, M12) and the path drawing between them.
+   Visually echoes the hero's score trajectory, in miniature.
+   Used on /how-it-works.html Feature 4 (Month-by-month).
+   ======================================================================= */
+
+.monthly-showcase {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
+              0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1.1rem 1.2rem 1rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.monthly-showcase-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.monthly-showcase-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  line-height: 1.2;
+}
+
+.monthly-showcase-subtitle {
+  font-size: 0.73rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.monthly-chart {
+  width: 100%;
+  height: 140px;
+  overflow: visible;
+}
+
+.monthly-path {
+  stroke-dasharray: 350;
+  stroke-dashoffset: 350;
+}
+
+.monthly-dot {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.monthly-value {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.monthly-showcase.is-visible .monthly-path {
+  animation: monthly-draw 2.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+
+.monthly-showcase.is-visible .monthly-dot-1 {
+  animation: monthly-dot-pop 0.4s ease-out 0.6s forwards;
+}
+
+.monthly-showcase.is-visible .monthly-dot-2 {
+  animation: monthly-dot-pop 0.4s ease-out 1.3s forwards;
+}
+
+.monthly-showcase.is-visible .monthly-dot-3 {
+  animation: monthly-dot-pop 0.4s ease-out 2.0s forwards;
+}
+
+.monthly-showcase.is-visible .monthly-dot-4 {
+  animation: monthly-dot-pop 0.4s ease-out 2.7s forwards;
+}
+
+.monthly-showcase.is-visible .monthly-dot-4-pulse {
+  animation:
+    monthly-dot-pop 0.4s ease-out 2.7s forwards,
+    monthly-pulse 1.8s ease-out 3.2s infinite;
+}
+
+.monthly-showcase.is-visible .monthly-value-1 { opacity: 1; transition-delay: 0.7s; }
+.monthly-showcase.is-visible .monthly-value-2 { opacity: 1; transition-delay: 1.4s; }
+.monthly-showcase.is-visible .monthly-value-3 { opacity: 1; transition-delay: 2.1s; }
+.monthly-showcase.is-visible .monthly-value-4 { opacity: 1; transition-delay: 2.8s; }
+
+@keyframes monthly-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes monthly-dot-pop {
+  0%   { opacity: 0; transform: scale(0.3); }
+  70%  { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes monthly-pulse {
+  0%   { r: 7; opacity: 0.45; }
+  100% { r: 18; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monthly-path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+  .monthly-dot,
+  .monthly-value {
+    opacity: 1;
+    transform: scale(1);
+    animation: none;
+  }
+}
+
+.monthly-showcase-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-fg-soft);
+  line-height: 1.4;
+}
+
+.monthly-showcase-footer svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Mobile tightening for the 3 new showcases */
+@media (max-width: 520px) {
+  .steps-showcase,
+  .factors-showcase,
+  .monthly-showcase {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+}
+
 /* Supporting mini-stats row beneath the scorecard — 3 peer proof cards.
    Each card: icon in a rounded square + short label + subtitle.
    Emerald micro-gradient gives them presence without competing with
@@ -1799,716 +2408,6 @@ a:hover { text-decoration: underline; }
   color: var(--color-fg-soft);
   font-size: 1.1rem;
   margin-top: var(--space-2);
-}
-
-/* ---------- Pillars — YMYL 2x2 dark cards on white background ----------
-   Redesigned Apr 2026: cards are now solid dark navy tiles (same palette
-   as the hero's bureau cards) floating on a white section background.
-   Visual continuity with the hero via:
-     - Same navy gradient (#143a62 → #0c2a47) used for bureau nodes
-     - Emerald accent borders and inner glows
-     - Icon treatment matching .hub-node-ico style
-     - Receipt panel nested darker (navy 60%) for hierarchy
-   No glass/backdrop-blur here (fond blanc, rien à flouter) — instead
-   solid tiles with glossy finish: inset top highlight + gradient + shadow. */
-
-.pillars-section .section-header {
-  max-width: 740px;
-  margin: 0 auto var(--space-5);
-  text-align: center;
-}
-
-.pillars-section .section-header h2 {
-  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  color: var(--color-primary);
-}
-
-.pillars-section .section-header h2 .pillar-accent {
-  font-style: normal;
-  background: linear-gradient(90deg, #2ECC71 0%, #0891b2 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.pillars-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-@media (min-width: 900px) {
-  .pillars-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-  }
-}
-
-/* The dark-navy solid card with glossy finish */
-.pillar {
-  position: relative;
-  padding: 1.6rem 1.5rem;
-  background: linear-gradient(180deg, #143a62 0%, #0c2a47 100%);
-  border: 1px solid rgba(46, 204, 113, 0.25);
-  border-radius: var(--radius-lg);
-  box-shadow:
-    0 12px 32px rgba(10, 37, 64, 0.15),
-    0 4px 10px rgba(10, 37, 64, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Subtle radial glow top-left — simulates 'light from above-left' */
-.pillar::after {
-  content: '';
-  position: absolute;
-  top: -30%;
-  left: -15%;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(46, 204, 113, 0.08) 0%, transparent 65%);
-  pointer-events: none;
-}
-
-.pillar:hover {
-  transform: translateY(-4px);
-  border-color: rgba(46, 204, 113, 0.55);
-  box-shadow:
-    0 20px 50px rgba(10, 37, 64, 0.25),
-    0 0 0 3px rgba(46, 204, 113, 0.08),
-    0 0 30px rgba(46, 204, 113, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.pillar-head {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 0.85rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Bigger icon tile with emerald gradient + glossy highlights (matches
-   the hero's hub-node-ico and ribbon icon styles) */
-.pillar-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(160deg,
-    rgba(46, 204, 113, 0.32),
-    rgba(46, 204, 113, 0.14));
-  border: 1px solid rgba(46, 204, 113, 0.5);
-  border-radius: 12px;
-  color: #6ee7a8;
-  flex-shrink: 0;
-  box-shadow:
-    0 4px 12px rgba(46, 204, 113, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.pillar-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.pillar-kicker {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #6ee7a8;
-}
-
-.pillar h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  margin: 0 0 0.55rem;
-  letter-spacing: -0.01em;
-  position: relative;
-  z-index: 1;
-}
-
-.pillar > p {
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.78);
-  margin: 0 0 var(--space-2);
-  flex-grow: 1;
-  position: relative;
-  z-index: 1;
-}
-
-/* Receipt — darker nested panel for internal hierarchy */
-.pillar-receipt {
-  position: relative;
-  padding: 0.75rem 0.9rem 0.75rem 1rem;
-  background: linear-gradient(180deg,
-    rgba(4, 20, 38, 0.6) 0%,
-    rgba(4, 20, 38, 0.4) 100%);
-  border: 1px solid rgba(46, 204, 113, 0.22);
-  border-left: 3px solid #2ECC71;
-  border-radius: var(--radius);
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: auto;
-  z-index: 1;
-}
-
-.pillar-receipt strong {
-  color: #6ee7a8;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.pillar-receipt a {
-  color: #6ee7a8;
-  text-decoration: underline;
-  text-decoration-color: rgba(110, 231, 168, 0.4);
-  text-underline-offset: 2px;
-  white-space: nowrap;
-  margin-left: 0.2rem;
-}
-
-.pillar-receipt a:hover {
-  color: #a7f3d0;
-  text-decoration-color: rgba(167, 243, 208, 0.7);
-}
-
-/* =======================================================================
-   HERO — PRICING (transparent ladder direction)
-   Compact hero for the pricing page. Uses hero-pricing.jpg (blueprint
-   skyline generated via Nano Banana Pro) heavily overlaid with a
-   centered radial glow to keep the gaze on the H1 and match the
-   symmetry of the pricing cards that follow.
-   ======================================================================= */
-
-.hero-pricing {
-  position: relative;
-  padding: var(--space-9) 0 var(--space-10);
-  min-height: clamp(440px, 55vh, 560px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    /* Centered emerald halo — matches the 'Essential' card below sitting center */
-    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.32) 0%, transparent 60%),
-    /* Subtle cyan accent behind the title */
-    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
-    /* Bottom vignette — smooths the transition into the pricing cards */
-    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
-    /* Dark navy overlay — 78-82% alpha so the blueprint shows through ~20% */
-    linear-gradient(165deg, rgba(10, 37, 64, 0.8) 0%, rgba(14, 45, 77, 0.74) 50%, rgba(4, 20, 38, 0.85) 100%),
-    /* Blueprint skyline image (Nano Banana Pro) */
-    url('/assets/img/brand/hero-pricing.jpg') center bottom / cover no-repeat,
-    /* Fallback solid navy if image fails to load */
-    #0A2540;
-  color: #fff;
-  overflow: hidden;
-}
-
-/* Decorative geometric shapes overlay — cover the whole hero.
-   Shapes are positioned in corners / edges where they don't compete
-   with the H1 in the center. Very low opacity (set inline) for
-   subtle depth. */
-.hero-pricing-shapes {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.hero-pricing .container {
-  position: relative;
-  z-index: 2;
-}
-
-/* Text column — centered */
-.hero-pricing-copy {
-  text-align: center;
-  max-width: 680px;
-  margin: 0 auto;
-}
-
-.hero-pricing-copy .hero-eyebrow {
-  margin-bottom: var(--space-2);
-}
-
-.hero-pricing h1 {
-  font-size: clamp(2rem, 4.2vw, 3rem);
-  line-height: 1.1;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0 0 var(--space-2);
-  color: #fff;
-}
-
-.hero-pricing .lead {
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-  max-width: 540px;
-  margin: 0 auto var(--space-3);
-}
-
-.hero-pricing .hero-microtrust {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.62);
-  letter-spacing: 0.01em;
-  margin: 0;
-}
-
-/* Mobile: smaller vertical padding, less min-height */
-@media (max-width: 640px) {
-  .hero-pricing {
-    padding: var(--space-7) 0 var(--space-8);
-    min-height: 360px;
-  }
-  .hero-pricing .lead {
-    font-size: 0.95rem;
-  }
-  .hero-pricing .hero-microtrust {
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-}
-
-/* =======================================================================
-   HERO — HOW IT WORKS (pedagogical / score trajectory direction)
-   Same compact dark-hero pattern as .hero-pricing, with:
-     - hero-how-it-works.jpg (ascending trajectory, Nano Banana Pro)
-     - Centered glow (matches the H1 + aligns with the pedagogical theme)
-     - Subtle geometric shapes overlay
-   ======================================================================= */
-
-.hero-how-it-works {
-  position: relative;
-  padding: var(--space-9) 0 var(--space-10);
-  min-height: clamp(440px, 55vh, 560px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    /* Centered emerald halo */
-    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.3) 0%, transparent 60%),
-    /* Subtle cyan accent behind the title */
-    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
-    /* Bottom vignette */
-    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
-    /* Dark navy overlay — slightly lighter than pricing (78%) so the
-       beautiful trajectory curve shows through a bit more */
-    linear-gradient(165deg, rgba(10, 37, 64, 0.78) 0%, rgba(14, 45, 77, 0.72) 50%, rgba(4, 20, 38, 0.82) 100%),
-    /* Score trajectory image (Nano Banana Pro) */
-    url('/assets/img/brand/hero-how-it-works.jpg') center bottom / cover no-repeat,
-    /* Fallback */
-    #0A2540;
-  color: #fff;
-  overflow: hidden;
-}
-
-.hero-how-shapes {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.hero-how-it-works .container {
-  position: relative;
-  z-index: 2;
-}
-
-.hero-how-copy {
-  text-align: center;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.hero-how-copy .hero-eyebrow {
-  margin-bottom: var(--space-2);
-}
-
-.hero-how-it-works h1 {
-  font-size: clamp(2rem, 4.2vw, 3rem);
-  line-height: 1.1;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0 0 var(--space-2);
-  color: #fff;
-}
-
-.hero-how-it-works .lead {
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-  max-width: 580px;
-  margin: 0 auto var(--space-3);
-}
-
-.hero-how-it-works .hero-microtrust {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.62);
-  letter-spacing: 0.01em;
-  margin: 0;
-}
-
-/* Mobile: smaller vertical padding */
-@media (max-width: 640px) {
-  .hero-how-it-works {
-    padding: var(--space-7) 0 var(--space-8);
-    min-height: 360px;
-  }
-  .hero-how-it-works .lead {
-    font-size: 0.95rem;
-  }
-  .hero-how-it-works .hero-microtrust {
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-}
-
-/* =======================================================================
-   HOW IT WORKS — dark-hero-matching section
-   Mirrors the hero's visual grammar: navy base + emerald mesh gradient +
-   upward-curve motif + translucent white cards. Tells the 3-step process
-   with a visual connector, time pills, and one-line 'fact' receipts.
-   ======================================================================= */
-
-.how-dark {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  /* Same mesh gradient as the hero: diagonal navy base + emerald bottom-left
-     + cool cyan top-right. */
-  background:
-    radial-gradient(ellipse 75% 55% at 5% 120%, rgba(46, 204, 113, 0.28), transparent 55%),
-    radial-gradient(ellipse 60% 50% at 95% -10%, rgba(56, 189, 248, 0.18), transparent 55%),
-    linear-gradient(135deg, #0A2540 0%, #0f2e4d 50%, #0A2540 100%);
-  color: #fff;
-  padding: var(--space-8) 0;
-}
-
-.how-motif {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  opacity: 0.9;
-  pointer-events: none;
-}
-
-.how-dark .container {
-  position: relative;
-  max-width: 1200px;
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
-}
-
-/* ---------- Section header (dark variant) ---------- */
-
-.how-header {
-  max-width: 720px;
-  margin: 0 auto var(--space-6);
-  text-align: center;
-}
-
-.how-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.8rem;
-  background: rgba(46, 204, 113, 0.15);
-  border: 1px solid rgba(46, 204, 113, 0.4);
-  border-radius: 100px;
-  color: #6ee7a8;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 0.75rem;
-}
-
-.how-eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #2ECC71;
-  box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
-  animation: how-eyebrow-pulse 2s ease-out infinite;
-}
-
-@keyframes how-eyebrow-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0.7); }
-  70%  { box-shadow: 0 0 0 8px rgba(46, 204, 113, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(46, 204, 113, 0); }
-}
-
-.how-header h2 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  color: #fff;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
-  margin: 0 0 0.75rem;
-}
-
-.how-header p {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.75);
-  margin: 0;
-}
-
-/* ---------- Steps grid ---------- */
-
-.steps-grid {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
-  max-width: 1100px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-3);
-  counter-reset: step;
-  position: relative;
-}
-
-@media (min-width: 900px) {
-  .steps-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-3);
-  }
-
-  /* Connecting emerald line between the 3 step numbers (desktop only).
-     Positioned horizontally across the card tops, dashed, behind the
-     number circles. The circles sit on top to anchor the visual flow. */
-  .steps-grid::before {
-    content: '';
-    position: absolute;
-    top: 36px;                       /* aligns with center of .step-number */
-    left: 16.66%;                    /* under center of 1st card */
-    right: 16.66%;                   /* under center of 3rd card */
-    height: 2px;
-    background-image: linear-gradient(to right,
-      rgba(46, 204, 113, 0.5) 50%, transparent 50%);
-    background-size: 10px 2px;
-    background-repeat: repeat-x;
-    z-index: 0;
-  }
-}
-
-.step {
-  position: relative;
-  padding: 1.3rem 1.3rem 1.1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: border-color 0.25s ease, background 0.25s ease,
-              transform 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  z-index: 1;
-}
-
-.step:hover {
-  border-color: rgba(46, 204, 113, 0.5);
-  background: rgba(255, 255, 255, 0.07);
-  transform: translateY(-2px);
-}
-
-.step-number {
-  /* Solid emerald circle, anchored at top-center of the card. This sits on
-     top of the dashed connector line (desktop) to anchor each stage. */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: #2ECC71;
-  color: #0A2540;
-  border-radius: 50%;
-  font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 0 0 6px rgba(10, 37, 64, 1),
-              0 0 0 8px rgba(46, 204, 113, 0.25);
-  /* The 6px navy ring cuts the dashed connector line cleanly behind the
-     number; the outer emerald ring is a subtle halo. */
-  margin: 0 auto -0.5rem;
-  /* Pull up slightly so the circle visually crosses the card's top edge */
-  margin-top: -0.3rem;
-  position: relative;
-  z-index: 2;
-}
-
-.step-body {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  flex: 1;
-}
-
-.step-head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.step h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1.3;
-  letter-spacing: -0.005em;
-  margin: 0;
-}
-
-.step-time {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.6rem;
-  background: rgba(46, 204, 113, 0.18);
-  border: 1px solid rgba(46, 204, 113, 0.4);
-  border-radius: 100px;
-  color: #6ee7a8;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.step-body > p {
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.78);
-  margin: 0;
-}
-
-.step-fact {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  padding: 0.55rem 0.7rem;
-  background: rgba(46, 204, 113, 0.1);
-  border: 1px solid rgba(46, 204, 113, 0.25);
-  border-radius: var(--radius);
-  font-size: 0.78rem !important;
-  line-height: 1.45;
-  color: #a7f3d0 !important;
-  text-align: left;
-  margin-top: auto !important;
-}
-
-.step-fact svg {
-  width: 14px;
-  height: 14px;
-  color: #2ECC71;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* ---------- Footer CTA row ---------- */
-
-.how-footer-cta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.7rem;
-  margin-top: var(--space-5);
-}
-
-/* Glow button — emerald primary with a soft outer glow to punch on
-   the dark background. The pulse runs at 2.5s to feel like a slow
-   heartbeat rather than a flash.
-
-   Surface uses a subtle vertical gradient (lighter top, darker bottom)
-   to hint at 3D depth — the emerald reads as a lit button, not a flat
-   rectangle. A thin white highlight at the top edge adds the specular
-   'wet' look without going full-on glossy-plastic.
-
-   animation-duration: !important defeats browser UA rules that collapse
-   duration to ~0 when prefers-reduced-motion is set. The pulse is slow
-   and non-flashing — safe to run for all users. */
-.btn-cta-glow {
-  position: relative;
-  background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #26b863 100%);
-  box-shadow:
-    0 0 0 0 rgba(46, 204, 113, 0.6),
-    0 6px 20px rgba(46, 204, 113, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.12);
-  animation: cta-glow-pulse 2.5s ease-in-out infinite;
-  animation-duration: 2.5s !important;
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.btn-cta-glow:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
-.btn-cta-glow:active {
-  transform: translateY(0);
-}
-
-.hero-cta-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.hero-cta-arrow {
-  width: 18px;
-  height: 18px;
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.hero-cta-primary:hover .hero-cta-arrow {
-  transform: translateX(3px);
-}
-
-@keyframes cta-glow-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 0 rgba(46, 204, 113, 0.6),
-      0 6px 20px rgba(46, 204, 113, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25),
-      inset 0 -2px 0 rgba(0, 0, 0, 0.12);
-  }
-  50% {
-    box-shadow:
-      0 0 0 8px rgba(46, 204, 113, 0),
-      0 12px 32px rgba(46, 204, 113, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25),
-      inset 0 -2px 0 rgba(0, 0, 0, 0.12);
-  }
-}
-
-.how-footer-microtrust {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
-  letter-spacing: 0.01em;
 }
 
 /* ---------- Feature rows ---------- */
@@ -4045,172 +3944,6 @@ a:hover { text-decoration: underline; }
   }
   .why-card p {
     font-size: 0.9rem;
-  }
-}
-
-/* =======================================================================
-   MONTHLY TIMELINE — 4 cards (Month 1 / 3 / 6 / 12) showing what to
-   expect at each milestone. Used on /how-it-works.html after the
-   pillars section.
-   ======================================================================= */
-
-.timeline-section {
-  background: #fff;
-}
-
-.timeline-grid {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-3);
-  max-width: 1100px;
-  counter-reset: timeline;
-}
-
-.timeline-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  position: relative;
-  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
-}
-
-.timeline-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-accent);
-  box-shadow: 0 12px 32px rgba(10, 37, 64, 0.08);
-}
-
-/* The 4th card (Month 12) — highlight as the "outcome" */
-.timeline-card-highlight {
-  background: linear-gradient(170deg, rgba(46, 204, 113, 0.06) 0%, var(--color-surface) 70%);
-  border-color: rgba(46, 204, 113, 0.35);
-}
-
-.timeline-card-highlight:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 12px 32px rgba(46, 204, 113, 0.15);
-}
-
-.timeline-card-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.timeline-marker {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-accent-soft);
-  color: var(--color-accent-hover);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.timeline-marker svg {
-  width: 14px;
-  height: 14px;
-}
-
-.timeline-marker-highlight {
-  background: var(--color-accent);
-  color: #fff;
-}
-
-.timeline-when {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-accent-hover);
-}
-
-.timeline-card h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--color-fg);
-  line-height: 1.25;
-  margin: 0;
-}
-
-.timeline-card p {
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--color-fg-soft);
-  margin: 0;
-  flex: 1;
-}
-
-.timeline-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-top: 0.7rem;
-  margin-top: 0.2rem !important;
-  border-top: 1px solid var(--color-border);
-}
-
-.timeline-stat-num {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--color-accent-hover);
-  letter-spacing: -0.02em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.timeline-stat-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-muted);
-  letter-spacing: 0.02em;
-}
-
-.timeline-disclaimer {
-  max-width: 720px;
-  margin: var(--space-4) auto 0;
-  text-align: center;
-  font-size: 0.78rem;
-  color: var(--color-muted);
-  line-height: 1.5;
-}
-
-.timeline-disclaimer a {
-  color: var(--color-muted);
-  text-decoration: underline;
-}
-
-/* Tablet: 2x2 grid */
-@media (max-width: 960px) {
-  .timeline-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
-    max-width: 640px;
-  }
-}
-
-/* Mobile: single column */
-@media (max-width: 520px) {
-  .timeline-grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-  }
-  .timeline-card h3 {
-    font-size: 1rem;
-  }
-  .timeline-card p {
-    font-size: 0.85rem;
   }
 }
 

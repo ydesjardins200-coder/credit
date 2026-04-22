@@ -184,15 +184,17 @@
   }
 
   /* ------------------------------------------------------------------
-     initJourneyShowcase — toggles .is-visible on .journey-showcase
-     elements when they scroll into view, so the SVG path-draw +
-     marker-slide CSS animations fire at the right moment.
+     initJourneyShowcase — toggles .is-visible on .journey-showcase,
+     .steps-showcase, .factors-showcase, and .monthly-showcase elements
+     when they scroll into view, so their scroll-triggered CSS animations
+     fire at the right moment.
      Separate from count-up observer above because the threshold is
-     slightly different (the showcase is a bigger element and we want
-     to fire once ~20% of it is visible).
+     slightly different (showcases are bigger elements and we want to
+     fire once ~20% of them is visible).
      ------------------------------------------------------------------ */
   function initJourneyShowcase() {
-    var showcases = document.querySelectorAll('.journey-showcase');
+    var selector = '.journey-showcase, .steps-showcase, .factors-showcase, .monthly-showcase';
+    var showcases = document.querySelectorAll(selector);
     if (!showcases.length) return;
 
     var observer = new IntersectionObserver(function (entries) {

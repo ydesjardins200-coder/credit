@@ -675,9 +675,20 @@
                 </div>
               </div>
 
-              <p class="sc-disclaimer">
-                Illustrative projection. Your results will vary.
-                See <a href="/disclosures.html">Disclosures</a>.
+              <!-- Illustrative-projection disclaimer, larger and more visible
+                   inside the dark feature-visual container rather than hidden
+                   as italic fine-print below it. -->
+              <p class="feature-visual-note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span>
+                  Illustrative projection. Individual results vary depending on
+                  starting credit profile, payment history, and other tradelines.
+                  See <a href="/disclosures.html">Disclosures</a>.
+                </span>
               </p>
             </div>
           </div>
@@ -685,360 +696,255 @@
       </div>
     </section>
 
-    <!-- ============= HOW IT WORKS ============= -->
-    <section id="how" class="section how-dark" aria-labelledby="how-title">
-      <!-- Simpler motif — the hero already carries the trajectory imagery.
-           Here we use a subtle horizontal grid for structure, without
-           repeating the curve-and-dots pattern from the hero. -->
-      <svg class="how-motif" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-        <g stroke="#fff" stroke-width="1" stroke-opacity="0.04" fill="none">
-          <line x1="0" y1="150" x2="1200" y2="150"/>
-          <line x1="0" y1="300" x2="1200" y2="300"/>
-          <line x1="0" y1="450" x2="1200" y2="450"/>
-        </g>
-        <defs>
-          <radialGradient id="how-glow" cx="80%" cy="100%" r="50%">
-            <stop offset="0%" stop-color="rgba(46, 204, 113, 0.18)"/>
-            <stop offset="100%" stop-color="rgba(46, 204, 113, 0)"/>
-          </radialGradient>
-        </defs>
-        <rect x="0" y="0" width="1200" height="600" fill="url(#how-glow)"/>
-      </svg>
-
+    <!-- ============= FEATURE ROW 2 — Three steps to start ============= -->
+    <section class="section">
       <div class="container">
-        <div class="section-header how-header">
-          <span class="eyebrow how-eyebrow">
-            <span class="how-eyebrow-dot" aria-hidden="true"></span>
-            The process
-          </span>
-          <h2 id="how-title">Three steps from signup to your first report.</h2>
-          <p>
-            No credit check to start. No hidden fees. No interest. The same
-            process, whether you're in Toronto or Tampa.
-          </p>
-        </div>
-
-        <ol class="steps-grid" aria-label="The iBoost signup to score-growth process">
-
-          <li class="step">
-            <div class="step-number" aria-hidden="true">1</div>
-            <div class="step-body">
-              <div class="step-head">
-                <h3>Sign up — no credit check.</h3>
-                <span class="step-time">~ 3 minutes</span>
-              </div>
+        <div class="features-stack">
+          <div class="feature-row feature-row-reverse">
+            <div class="feature-content feature-content-lg">
+              <span class="badge">The process</span>
+              <h3>Three steps from signup to your <span class="feature-accent">first report</span>.</h3>
               <p>
-                Account in under 3 minutes. We ask for the information we
-                need to report to bureaus, and nothing we don't. Your
-                signup doesn't trigger a hard inquiry on your credit report.
+                No credit check to start. No hidden fees. No interest. The same
+                process, whether you're in Toronto or Tampa.
               </p>
-              <p class="step-fact">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-                Soft verification only. Your score is untouched.
-              </p>
+              <ul>
+                <li><strong>Sign up in about 3 minutes</strong> — soft identity verification only; we never trigger a hard inquiry on your credit report.</li>
+                <li><strong>First payment is reported within 30 days</strong> — to all three U.S. bureaus and both Canadian bureaus at the same monthly reporting cycle.</li>
+                <li><strong>Weekly score refresh after that</strong> — with month-by-month guidance based on your actual bureau data.</li>
+              </ul>
             </div>
-          </li>
+            <div class="feature-visual">
+              <div class="steps-showcase" role="region" aria-label="The three iBoost signup steps">
+                <div class="steps-showcase-header">
+                  <div>
+                    <div class="steps-showcase-title">Getting started</div>
+                    <div class="steps-showcase-subtitle">From signup to first report</div>
+                  </div>
+                  <div class="steps-showcase-meta">~30 days</div>
+                </div>
 
-          <li class="step">
-            <div class="step-number" aria-hidden="true">2</div>
-            <div class="step-body">
-              <div class="step-head">
-                <h3>First payment, first report.</h3>
-                <span class="step-time">Within 30 days</span>
+                <ol class="steps-flow" aria-label="Sequence of three onboarding steps">
+                  <li class="steps-item">
+                    <span class="steps-marker" aria-hidden="true">
+                      <span class="steps-marker-dot"></span>
+                      <span class="steps-marker-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </span>
+                    </span>
+                    <div class="steps-item-body">
+                      <div class="steps-item-head">
+                        <span class="steps-item-title">Sign up</span>
+                        <span class="steps-item-time">3 min</span>
+                      </div>
+                      <p class="steps-item-desc">No credit check. Soft verification only.</p>
+                    </div>
+                  </li>
+                  <li class="steps-item">
+                    <span class="steps-marker" aria-hidden="true">
+                      <span class="steps-marker-dot"></span>
+                      <span class="steps-marker-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </span>
+                    </span>
+                    <div class="steps-item-body">
+                      <div class="steps-item-head">
+                        <span class="steps-item-title">First report</span>
+                        <span class="steps-item-time">~30 days</span>
+                      </div>
+                      <p class="steps-item-desc">Reported to every major bureau in both countries.</p>
+                    </div>
+                  </li>
+                  <li class="steps-item">
+                    <span class="steps-marker" aria-hidden="true">
+                      <span class="steps-marker-dot"></span>
+                      <span class="steps-marker-check">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </span>
+                    </span>
+                    <div class="steps-item-body">
+                      <div class="steps-item-head">
+                        <span class="steps-item-title">Watch the curve</span>
+                        <span class="steps-item-time">Weekly</span>
+                      </div>
+                      <p class="steps-item-desc">New score updates and fresh guidance every week.</p>
+                    </div>
+                  </li>
+                </ol>
               </div>
-              <p>
-                Your first on-time iBoost payment is reported to all three
-                U.S. bureaus (Equifax, TransUnion, Experian) and both
-                Canadian bureaus within the standard monthly reporting
-                cycle. You'll see it on your report within 30 days.
-              </p>
-              <p class="step-fact">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-                Full reporting to every major bureau in both countries.
-              </p>
             </div>
-          </li>
-
-          <li class="step">
-            <div class="step-number" aria-hidden="true">3</div>
-            <div class="step-body">
-              <div class="step-head">
-                <h3>Watch the curve.</h3>
-                <span class="step-time">Every week</span>
-              </div>
-              <p>
-                Weekly score updates, month-by-month AI guidance referencing
-                your actual bureau data, and a live projection of where
-                you're headed — the same journey you saw at the top of this
-                page, except it's yours.
-              </p>
-              <p class="step-fact">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M20 6L9 17l-5-5"/>
-                </svg>
-                New tips every month as your profile changes.
-              </p>
-            </div>
-          </li>
-
-        </ol>
-
-        <div class="how-footer-cta">
-          <a href="/pricing.html" class="btn btn-primary btn-lg btn-cta-glow">Start step 1 now</a>
-          <span class="how-footer-microtrust">
-            ~3 minutes · No credit check · Cancel anytime
-          </span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ============= WHY iBOOST (PILLARS) ============= -->
-    <section class="section pillars-section">
+    <!-- ============= FEATURE ROW 3 — What actually moves your score ============= -->
+    <section class="section">
       <div class="container">
-        <div class="section-header">
-          <span class="eyebrow">Credit mechanics</span>
-          <h2>What <span class="feature-accent">actually moves</span> your score.</h2>
-          <p>
-            The four things below are where most people get stuck — and what
-            we built iBoost to fix.
-          </p>
-        </div>
-
-        <div class="pillars-grid">
-
-          <article class="pillar">
-            <div class="pillar-head">
-              <span class="pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 17 9 11 13 15 21 7"/>
-                  <polyline points="14 7 21 7 21 14"/>
-                </svg>
-              </span>
-              <span class="pillar-kicker">Problem → fix</span>
+        <div class="features-stack">
+          <div class="feature-row">
+            <div class="feature-content feature-content-lg">
+              <span class="badge">Credit mechanics</span>
+              <h3>What <span class="feature-accent">actually moves</span> your score.</h3>
+              <p>
+                Your FICO score is a recipe with four ingredients. iBoost is
+                designed to help you move the two biggest ones — the ones worth
+                65% of the formula.
+              </p>
+              <ul>
+                <li><strong>Payment history (35%)</strong> is the single biggest factor. Every on-time iBoost payment feeds directly into it.</li>
+                <li><strong>Utilization (30%)</strong> is how much of your available credit you're using. A bigger reported tradeline lowers it automatically.</li>
+                <li><strong>Credit age (15%)</strong> grows on its own once your tradeline is on file — the longer you stay, the better.</li>
+                <li><strong>Credit mix &amp; new inquiries (20%)</strong> matter less, and we don't trigger hard inquiries to protect that score factor.</li>
+              </ul>
             </div>
-            <h3>On-time payments reported to every major bureau.</h3>
-            <p>
-              Your score is determined by what lenders see on your report.
-              Many credit-builders only report to one bureau — so two-thirds
-              of lenders never see your progress. We report to all three
-              U.S. bureaus (Equifax, TransUnion, Experian) and both Canadian
-              bureaus (Equifax and TransUnion) at the same point in every
-              monthly reporting cycle.
-            </p>
-            <aside class="pillar-receipt">
-              <strong>Receipt:</strong>
-              35% of your FICO score and about 40% of your VantageScore come
-              from payment history. A payment that isn't reported is a
-              payment that doesn't help your score.
-              <a href="https://www.myfico.com/credit-education/whats-in-your-credit-score" target="_blank" rel="noopener noreferrer">myFICO source<span class="ext" aria-hidden="true">↗</span></a>
-            </aside>
-          </article>
+            <div class="feature-visual">
+              <div class="factors-showcase" role="region" aria-label="FICO score factors breakdown">
+                <div class="factors-showcase-header">
+                  <div>
+                    <div class="factors-showcase-title">FICO score factors</div>
+                    <div class="factors-showcase-subtitle">What your score is made of</div>
+                  </div>
+                  <a class="factors-showcase-source" href="https://www.myfico.com/credit-education/whats-in-your-credit-score" target="_blank" rel="noopener noreferrer">myFICO<span class="ext" aria-hidden="true">↗</span></a>
+                </div>
 
-          <article class="pillar">
-            <div class="pillar-head">
-              <span class="pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 6v6l4 2"/>
-                </svg>
-              </span>
-              <span class="pillar-kicker">Credit math</span>
+                <ul class="factors-bars" aria-label="FICO factor breakdown bars">
+                  <li class="factors-bar factors-bar-primary" data-pct="35">
+                    <div class="factors-bar-head">
+                      <span class="factors-bar-label">Payment history</span>
+                      <span class="factors-bar-pct">35%</span>
+                    </div>
+                    <div class="factors-bar-track">
+                      <div class="factors-bar-fill" style="--factor-target: 35%;"></div>
+                    </div>
+                  </li>
+                  <li class="factors-bar factors-bar-primary" data-pct="30">
+                    <div class="factors-bar-head">
+                      <span class="factors-bar-label">Utilization</span>
+                      <span class="factors-bar-pct">30%</span>
+                    </div>
+                    <div class="factors-bar-track">
+                      <div class="factors-bar-fill" style="--factor-target: 30%;"></div>
+                    </div>
+                  </li>
+                  <li class="factors-bar" data-pct="15">
+                    <div class="factors-bar-head">
+                      <span class="factors-bar-label">Credit age</span>
+                      <span class="factors-bar-pct">15%</span>
+                    </div>
+                    <div class="factors-bar-track">
+                      <div class="factors-bar-fill" style="--factor-target: 15%;"></div>
+                    </div>
+                  </li>
+                  <li class="factors-bar" data-pct="20">
+                    <div class="factors-bar-head">
+                      <span class="factors-bar-label">Mix &amp; inquiries</span>
+                      <span class="factors-bar-pct">20%</span>
+                    </div>
+                    <div class="factors-bar-track">
+                      <div class="factors-bar-fill" style="--factor-target: 20%;"></div>
+                    </div>
+                  </li>
+                </ul>
+
+                <div class="factors-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="3 17 9 11 13 15 21 7"/>
+                    <polyline points="14 7 21 7 21 14"/>
+                  </svg>
+                  <span>iBoost helps you move the top two — <strong>65% of the score</strong>.</span>
+                </div>
+              </div>
             </div>
-            <h3>A free budget tool that pairs with your credit journey.</h3>
-            <p>
-              Credit utilization — the percentage of your available credit
-              you're using — drives about 30% of your score. You can't get
-              utilization right if you don't track income against expenses
-              in the first place. Most credit-builders ignore this. We
-              include a full-featured budget app free, forever, because
-              knowing what you can afford is a prerequisite to building
-              credit.
-            </p>
-            <aside class="pillar-receipt">
-              <strong>Receipt:</strong>
-              Utilization under 30% is the generally-accepted threshold;
-              under 10% is where scores start climbing aggressively.
-              Achieving either without tracking spending is a coin flip.
-              <a href="https://www.myfico.com/credit-education/whats-in-your-credit-score" target="_blank" rel="noopener noreferrer">myFICO source<span class="ext" aria-hidden="true">↗</span></a>
-            </aside>
-          </article>
-
-          <article class="pillar">
-            <div class="pillar-head">
-              <span class="pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
-                </svg>
-              </span>
-              <span class="pillar-kicker">Personalized guidance</span>
-            </div>
-            <h3>Month-by-month advice based on your actual profile.</h3>
-            <p>
-              Credit building is sequential, not parallel. The advice that
-              matters in month 1 (set up autopay, avoid new credit) differs
-              from what helps in month 8 (request a limit increase, optimize
-              utilization timing). Most apps show the same three tips
-              forever. Ours references your bureau data, payment history,
-              current utilization, and account tenure — changing
-              recommendations as your profile evolves.
-            </p>
-            <aside class="pillar-receipt">
-              <strong>Receipt:</strong>
-              The five factors in a FICO score have different relative
-              weights at different score ranges. A 580 score improves from
-              different actions than a 680 score. We know the difference.
-              <a href="https://www.myfico.com/credit-education/whats-in-your-credit-score" target="_blank" rel="noopener noreferrer">myFICO source<span class="ext" aria-hidden="true">↗</span></a>
-            </aside>
-          </article>
-
-          <article class="pillar">
-            <div class="pillar-head">
-              <span class="pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                </svg>
-              </span>
-              <span class="pillar-kicker">Transparent education</span>
-            </div>
-            <h3>Plain-language explanations of what bureaus actually score.</h3>
-            <p>
-              Credit scoring is obscured by jargon — "hard pulls,"
-              "tradelines," "derogatory marks," "utilization ratio." Most of
-              it describes simple ideas in complicated ways, and most of it
-              is taught only by people trying to sell you something. Our
-              library explains every scoring factor and every bureau action
-              in plain language, cites the original source when relevant,
-              and stays free forever. No email gate, no course purchase,
-              no upsell path.
-            </p>
-            <aside class="pillar-receipt">
-              <strong>Receipt:</strong>
-              The specific formulas behind FICO and VantageScore are public
-              information published by the scoring agencies themselves. We
-              cite them directly, not through marketing paraphrase.
-              <a href="https://www.myfico.com/credit-education/whats-in-your-credit-score" target="_blank" rel="noopener noreferrer">myFICO source<span class="ext" aria-hidden="true">↗</span></a>
-            </aside>
-          </article>
-
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ============= MONTHLY TIMELINE — what to expect month by month ============= -->
-    <section class="section timeline-section">
+    <!-- ============= FEATURE ROW 4 — Monthly timeline ============= -->
+    <section class="section">
       <div class="container">
-        <div class="section-header">
-          <span class="eyebrow">The path</span>
-          <h2>What to expect, month by month.</h2>
-          <p>
-            Credit building isn't instant — but it's also not a mystery.
-            Here's the real timeline of what happens after you sign up.
-          </p>
+        <div class="features-stack">
+          <div class="feature-row feature-row-reverse">
+            <div class="feature-content feature-content-lg">
+              <span class="badge">The path</span>
+              <h3>What to expect, <span class="feature-accent">month by month</span>.</h3>
+              <p>
+                Credit building isn't instant — but it's also not a mystery.
+                Here's the typical timeline of what happens after you sign up.
+              </p>
+              <ul>
+                <li><strong>Month 1</strong> — iBoost appears on your report. Small bump: +5 to +15 pts.</li>
+                <li><strong>Month 3</strong> — Three consecutive on-time payments compound. Cumulative +20 to +35 pts.</li>
+                <li><strong>Month 6</strong> — Most members cross a tier boundary. Cumulative +45 to +65 pts.</li>
+                <li><strong>Month 12</strong> — Mainstream credit becomes accessible. Cumulative +92 pts average.<sup>1</sup></li>
+              </ul>
+            </div>
+            <div class="feature-visual">
+              <div class="monthly-showcase" role="region" aria-label="Monthly score progression milestones">
+                <div class="monthly-showcase-header">
+                  <div>
+                    <div class="monthly-showcase-title">Score milestones</div>
+                    <div class="monthly-showcase-subtitle">Month 1 through Month 12</div>
+                  </div>
+                  <div class="journey-delta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="6 15 12 9 18 15"/>
+                    </svg>
+                    <span>+92 pts</span>
+                  </div>
+                </div>
+
+                <svg class="monthly-chart" viewBox="0 0 320 140" aria-label="Score milestone chart from month 1 to month 12">
+                  <!-- Baseline -->
+                  <line x1="15" y1="115" x2="305" y2="115" stroke="var(--color-border)" stroke-width="1"/>
+                  <!-- Faint reference grid lines -->
+                  <line x1="15" y1="80" x2="305" y2="80" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2 3"/>
+                  <line x1="15" y1="45" x2="305" y2="45" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2 3"/>
+
+                  <!-- Trajectory path: 4 milestones. M1 at x=30,y=105 (+10); M3 at x=115,y=80 (+28); M6 at x=200,y=55 (+55); M12 at x=290,y=20 (+92) -->
+                  <path class="monthly-path" d="M 30 105 Q 65 100 115 80 T 200 55 T 290 20" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                  <!-- Milestone dots (plotted on top, fade in via CSS with delay) -->
+                  <g class="monthly-dots">
+                    <circle class="monthly-dot monthly-dot-1" cx="30" cy="105" r="5" fill="var(--color-accent)" stroke="#fff" stroke-width="2"/>
+                    <circle class="monthly-dot monthly-dot-2" cx="115" cy="80" r="5" fill="var(--color-accent)" stroke="#fff" stroke-width="2"/>
+                    <circle class="monthly-dot monthly-dot-3" cx="200" cy="55" r="5" fill="var(--color-accent)" stroke="#fff" stroke-width="2"/>
+                    <circle class="monthly-dot monthly-dot-4" cx="290" cy="20" r="7" fill="var(--color-accent)" stroke="#fff" stroke-width="2.5"/>
+                    <circle class="monthly-dot monthly-dot-4-pulse" cx="290" cy="20" r="7" fill="none" stroke="var(--color-accent)" stroke-width="2" opacity="0.45"/>
+                  </g>
+
+                  <!-- Milestone labels above each dot -->
+                  <g class="monthly-labels">
+                    <text class="monthly-value monthly-value-1" x="30" y="95" text-anchor="middle" font-size="10" font-weight="700" fill="var(--color-accent-hover)">+10</text>
+                    <text class="monthly-value monthly-value-2" x="115" y="70" text-anchor="middle" font-size="10" font-weight="700" fill="var(--color-accent-hover)">+28</text>
+                    <text class="monthly-value monthly-value-3" x="200" y="45" text-anchor="middle" font-size="10" font-weight="700" fill="var(--color-accent-hover)">+55</text>
+                    <text class="monthly-value monthly-value-4" x="290" y="10" text-anchor="middle" font-size="12" font-weight="800" fill="var(--color-accent-hover)">+92</text>
+                  </g>
+
+                  <!-- X-axis labels -->
+                  <text x="30" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">M1</text>
+                  <text x="115" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">M3</text>
+                  <text x="200" y="132" text-anchor="middle" font-size="9" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">M6</text>
+                  <text x="290" y="132" text-anchor="middle" font-size="9" font-weight="700" fill="var(--color-accent-hover)" style="letter-spacing: 0.05em">M12</text>
+                </svg>
+
+                <div class="monthly-showcase-footer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span>Typical trajectory · your results may vary<sup>1</sup></span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <ol class="timeline-grid" aria-label="Credit score milestones from month 1 to month 12">
-
-          <li class="timeline-card">
-            <div class="timeline-card-head">
-              <span class="timeline-marker" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </span>
-              <span class="timeline-when">Month 1</span>
-            </div>
-            <h3>First report appears.</h3>
-            <p>
-              Within 30 days of your first on-time payment, iBoost appears
-              as a new tradeline on your credit report at every major
-              bureau. Most members see a small score bump here — often
-              5-15 points.
-            </p>
-            <p class="timeline-stat">
-              <span class="timeline-stat-num">+5 to +15</span>
-              <span class="timeline-stat-label">pts typical</span>
-            </p>
-          </li>
-
-          <li class="timeline-card">
-            <div class="timeline-card-head">
-              <span class="timeline-marker" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </span>
-              <span class="timeline-when">Month 3</span>
-            </div>
-            <h3>Momentum kicks in.</h3>
-            <p>
-              Three consecutive on-time payments = a strengthening payment
-              history, which is 35% of your score. Utilization tracking
-              starts to matter if you're using the budget tool. You'll see
-              your intelligence report refine with actionable tips.
-            </p>
-            <p class="timeline-stat">
-              <span class="timeline-stat-num">+20 to +35</span>
-              <span class="timeline-stat-label">pts typical, cumulative</span>
-            </p>
-          </li>
-
-          <li class="timeline-card">
-            <div class="timeline-card-head">
-              <span class="timeline-marker" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </span>
-              <span class="timeline-when">Month 6</span>
-            </div>
-            <h3>Halfway to a new tier.</h3>
-            <p>
-              Six months of consistent reporting puts most members across
-              one credit-tier boundary — Fair into Good, or Good into
-              Very Good. Your intelligence report now has enough data to
-              spot personal utilization patterns and suggest moves.
-            </p>
-            <p class="timeline-stat">
-              <span class="timeline-stat-num">+45 to +65</span>
-              <span class="timeline-stat-label">pts typical, cumulative</span>
-            </p>
-          </li>
-
-          <li class="timeline-card timeline-card-highlight">
-            <div class="timeline-card-head">
-              <span class="timeline-marker timeline-marker-highlight" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </span>
-              <span class="timeline-when">Month 12</span>
-            </div>
-            <h3>Credit that opens doors.</h3>
-            <p>
-              A full year of reported history typically unlocks access to
-              mainstream credit products — unsecured cards, better rates
-              on loans, mortgage pre-approval. This is where the math
-              starts paying you back.
-            </p>
-            <p class="timeline-stat">
-              <span class="timeline-stat-num">+92</span>
-              <span class="timeline-stat-label">pts average<sup>1</sup></span>
-            </p>
-          </li>
-
-        </ol>
-
-        <p class="timeline-disclaimer">
-          <sup>1</sup> Illustrative ranges based on iBoost beta patterns.
-          Individual results vary depending on your starting credit profile,
-          payment history, utilization, and other tradelines. Late payments
-          may negatively impact your score. See <a href="/disclosures.html">Disclosures</a>.
-        </p>
       </div>
     </section>
 
