@@ -295,10 +295,10 @@ a:hover { text-decoration: underline; }
     radial-gradient(ellipse 35% 30% at 15% 25%, rgba(56, 189, 248, 0.10) 0%, transparent 55%),
     /* Bottom vignette */
     radial-gradient(ellipse 100% 80% at 50% 100%, transparent 50%, rgba(4, 20, 38, 0.55) 100%),
-    /* Dark navy overlay, 70% opacity so the plexus image shows through */
-    linear-gradient(165deg, rgba(10, 37, 64, 0.82) 0%, rgba(14, 45, 77, 0.78) 50%, rgba(4, 20, 38, 0.85) 100%),
-    /* Plexus network background image */
-    url('/assets/img/brand/hero-plexus.jpg') center center / cover no-repeat,
+    /* Dark navy overlay — 75-80% alpha so the skyline shows through at ~20-25% */
+    linear-gradient(165deg, rgba(10, 37, 64, 0.78) 0%, rgba(14, 45, 77, 0.72) 50%, rgba(4, 20, 38, 0.82) 100%),
+    /* City skyline image — bottom-aligned so the reflection sits at the bottom of the hero */
+    url('/assets/img/brand/hero-city.jpg') center bottom / cover no-repeat,
     /* Fallback solid navy if image fails to load */
     #0A2540;
   color: #fff;
