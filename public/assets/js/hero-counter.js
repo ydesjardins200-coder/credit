@@ -108,22 +108,25 @@
 
   function initCountUp() {
     var targets = document.querySelectorAll('[data-count-up]');
+    console.log('[hero-counter] init, found', targets.length, 'targets');
     if (!targets.length) return;
 
     // Track which elements we've animated so the safety timeout doesn't
     // double-fire one that the observer already picked up.
     var animated = new WeakSet();
 
-    function trigger(el) {
+    function trigger(el, reason) {
       if (animated.has(el)) return;
       animated.add(el);
+      console.log('[hero-counter] trigger (' + reason + ') target=' + el.getAttribute('data-count-up'));
       animateElement(el);
     }
 
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
+        console.log('[hero-counter] IO callback', entry.isIntersecting, 'ratio=', entry.intersectionRatio);
         if (entry.isIntersecting) {
-          trigger(entry.target);
+          trigger(entry.target, 'IO');
           observer.unobserve(entry.target);
         }
       });
@@ -144,23 +147,33 @@
       observer.observe(el);
     });
 
-    // Safety fallback: if the observer hasn't fired within 800ms (e.g.
-    // weird viewport math, the card is offscreen at load, or the IO
-    // callback is delayed), force-start any remaining targets that are
-    // in viewport by manual rect check. Prevents users from ever seeing
-    // a stuck '+0 pts'.
+    // First safety fallback (800ms): if the observer hasn't fired and
+    // the card is in the viewport, trigger via manual rect check.
     setTimeout(function () {
       targets.forEach(function (el) {
         if (animated.has(el)) return;
         var rect = el.getBoundingClientRect();
         var vh = window.innerHeight || document.documentElement.clientHeight;
-        // If the card is anywhere in or near the viewport, just trigger.
+        console.log('[hero-counter] 800ms check, rect.top=', rect.top, 'vh=', vh);
         if (rect.top < vh && rect.bottom > 0) {
-          trigger(el);
+          trigger(el, '800ms-fallback');
           observer.unobserve(el);
         }
       });
     }, 800);
+
+    // HARD safety net (2s): if nothing has fired after 2 seconds, just
+    // animate. This protects against weird edge cases — headless IO
+    // environments, browser bugs, layout timing issues — where the user
+    // would otherwise be stuck on '+0 pts' forever. 2s is well past
+    // when a legitimate IO callback would have fired.
+    setTimeout(function () {
+      targets.forEach(function (el) {
+        if (animated.has(el)) return;
+        trigger(el, '2s-hard-fallback');
+        observer.unobserve(el);
+      });
+    }, 2000);
   }
 
   if (document.readyState === 'loading') {
