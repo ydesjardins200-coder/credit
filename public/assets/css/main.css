@@ -2293,6 +2293,14 @@ a:hover { text-decoration: underline; }
 
 .feature-content h3 { font-size: 1.75rem; margin-bottom: var(--space-2); }
 
+/* Accent span inside feature H3 — used to emphasize key words
+   (e.g. "about you" in feature 3). Uses italic + emerald to match
+   the brand accent without relying on the <em> semantic tag. */
+.feature-accent {
+  color: var(--color-accent);
+  font-style: italic;
+}
+
 .feature-content p {
   color: var(--color-fg-soft);
   font-size: 1.05rem;
