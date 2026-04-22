@@ -335,20 +335,36 @@ a:hover { text-decoration: underline; }
   margin: 0 0 0.85rem;
 }
 
-/* Animated gradient on the headline accent */
+/* Animated gradient on the headline accent.
+   Colors accentuated for more visual impact:
+     - Bright lime/mint start (#a7f3d0)
+     - Vibrant iBoost emerald mid (#2ECC71)
+     - Electric cyan/sky end (#06b6d4)
+   Animation: slow sweep that lingers on the accented state.
+   Instead of a symmetric back-and-forth (0→50→100→50→0), the
+   gradient shifts slowly forward and RESETS silently when the
+   cycle completes, giving the impression of a continuous sweep
+   in one direction. The text is 'always activating.'
+   The keyframe uses a linear ease so the color band moves at
+   constant speed — more sophisticated than the old ease-in-out
+   pulse. */
 .hero-headline-gradient {
-  background: linear-gradient(90deg, #6ee7a8 0%, #2ECC71 50%, #38bdf8 100%);
-  background-size: 200% 100%;
+  background: linear-gradient(90deg,
+    #a7f3d0 0%,
+    #2ECC71 40%,
+    #06b6d4 70%,
+    #2ECC71 100%);
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: hero-gradient-shift 8s ease-in-out infinite;
-  animation-duration: 8s !important;
+  animation: hero-gradient-shift 10s linear infinite;
+  animation-duration: 10s !important;
 }
 
 @keyframes hero-gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 .hero-hub .lead {
@@ -572,28 +588,22 @@ a:hover { text-decoration: underline; }
 .hub-junction-6 { animation-delay: 1.75s; }
 .hub-junction-7 { animation-delay: 2.1s; }
 
-/* Data packets bouncing back and forth along the curves.
-   The packet travels from card (0%) to hub (100%) in ~3s with
-   ease-out deceleration, "impacts" the hub, then returns back
-   to the card (100% → 0%) in another ~3s. Total round trip: 6s
-   per packet. Stagger per packet ensures at least 2 visible at
-   any moment. */
+/* Data packets bouncing back and forth along the curves in CONTINUOUS
+   motion. The packet travels from card (0%) to hub (100%) in ~3s with
+   ease-in-out pacing (decelerates at hub, accelerates away), then
+   returns (100% → 0%). No fade in/out — the packet stays visible at
+   all times so the back-and-forth feels uninterrupted. Total round
+   trip: 6s per packet. */
 @keyframes hub-packet-bounce {
-  0%   { offset-distance: 0%;   opacity: 0; }
-  8%   { opacity: 1; }
-  /* Approach to hub — ease-out pacing is handled by timing-function below */
-  48%  { offset-distance: 95%;  opacity: 1; }
-  /* Brief "impact" moment at the hub */
-  50%  { offset-distance: 100%; opacity: 1; }
-  52%  { offset-distance: 95%;  opacity: 1; }
-  /* Return trip back to origin */
-  92%  { opacity: 1; }
-  100% { offset-distance: 0%;   opacity: 0; }
+  0%   { offset-distance: 0%; }
+  50%  { offset-distance: 100%; }
+  100% { offset-distance: 0%; }
 }
 
 .hub-packet {
   animation: hub-packet-bounce 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   animation-duration: 6s !important;
+  opacity: 1;
   filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
 }
 
@@ -687,30 +697,39 @@ a:hover { text-decoration: underline; }
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-/* Specular sweep that traverses the logo every 6s */
+/* Specular sweep that traverses the logo continuously.
+   Cycle: 4s (faster than before for more regular rhythm).
+   Opacity: fades in at 10%, stays visible until 90%, then fades
+   out. This means 80% of the cycle (3.2s out of 4s) has a
+   visible sweep, so it's always 'on camera' when the user looks.
+   Linear timing gives a constant-speed sweep, more refined than
+   the old ease-in-out which accelerated visually.
+
+   Sweep path: starts off-screen left (translateX 0 at left: -40%)
+   and crosses to off-screen right (translateX 800%). */
 .hub-logo-sweep {
   position: absolute;
   top: -20%;
-  left: -30%;
-  width: 40%;
+  left: -40%;
+  width: 45%;
   height: 140%;
   background: linear-gradient(105deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.08) 45%,
-    rgba(255, 255, 255, 0.18) 50%,
-    rgba(255, 255, 255, 0.08) 55%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
     rgba(255, 255, 255, 0) 100%);
-  animation: hub-logo-sweep 6s ease-in-out infinite;
-  animation-duration: 6s !important;
+  animation: hub-logo-sweep 4s linear infinite;
+  animation-duration: 4s !important;
   z-index: 2;
   pointer-events: none;
 }
 
 @keyframes hub-logo-sweep {
   0%   { transform: translateX(0) rotate(15deg); opacity: 0; }
-  35%  { opacity: 1; }
-  65%  { opacity: 1; }
-  100% { transform: translateX(700%) rotate(15deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(800%) rotate(15deg); opacity: 0; }
 }
 
 /* -------- Satellite node cards — 5 style variants -------- */
