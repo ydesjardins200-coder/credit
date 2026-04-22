@@ -32,6 +32,32 @@
     accountPath: document.body.dataset.accountPath || '/account.html',
   };
 
+  // ----- Plan routing -----
+  // Read ?plan= from the URL (coming from /pricing.html). Post-signup we
+  // send the user to /checkout.html?plan=X for the payment step, EXCEPT
+  // for the Free tier which skips checkout and goes straight to the
+  // account page. Defaults to 'essential' if no plan is provided (user
+  // landed on signup without going through pricing).
+  function getUrlParam(name) {
+    try {
+      return new URLSearchParams(window.location.search).get(name);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const pendingPlan = (getUrlParam('plan') || 'essential').toLowerCase();
+
+  // Compute where the user should land after signup succeeds.
+  //   Free -> /account.html (no payment step)
+  //   Paid -> /checkout.html?plan=X (visual payment mockup for now)
+  function getPostSignupPath() {
+    if (pendingPlan === 'free') {
+      return t.accountPath;
+    }
+    return '/checkout.html?plan=' + encodeURIComponent(pendingPlan);
+  }
+
   // ----- Alerts -----
   function showAlert(message, kind) {
     alertEl.className = 'alert ' + (kind === 'success' ? 'alert-success' : 'alert-error');
@@ -199,7 +225,7 @@
     }
 
     if (data && data.session) {
-      window.location.replace(t.accountPath);
+      window.location.replace(getPostSignupPath());
       return;
     }
 

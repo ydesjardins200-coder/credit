@@ -5399,3 +5399,583 @@ body.auth-page .site-footer .container {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* =======================================================================
+   CHECKOUT PAGE — Visual-only Stripe Checkout mockup (DEV MODE)
+   ----------------------------------------------------------------------
+   Styles the payment page at /checkout.html. Matches Stripe's visual
+   grammar (centered narrow layout, order summary left / form right,
+   card input with inline icons, single primary action button) without
+   copying their exact design. Brand applied: iBoost navy + emerald on
+   white background, same typography as the rest of the site.
+
+   When Stripe is integrated for real, the markup may be replaced by
+   Stripe Elements but the outer chrome (header, layout, summary) stays.
+   ======================================================================= */
+
+.checkout-page {
+  background: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* DEV MODE banner — bright, unmissable, sticky at top */
+.checkout-dev-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 1px solid #f59e0b;
+  color: #78350f;
+  font-size: 0.82rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.checkout-dev-banner svg {
+  width: 18px;
+  height: 18px;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.checkout-dev-banner strong {
+  font-weight: 700;
+  color: #78350f;
+}
+
+/* Header — minimal, focused */
+.checkout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.checkout-logo img {
+  display: block;
+  height: 50px;
+  width: auto;
+}
+
+.checkout-secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.checkout-secure svg {
+  width: 14px;
+  height: 14px;
+  color: #16a34a;
+}
+
+/* Main layout — 2-column on desktop, stacked on mobile */
+.checkout-main {
+  flex: 1;
+  padding: 40px 32px 60px;
+}
+
+.checkout-layout {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 900px) {
+  .checkout-layout {
+    grid-template-columns: 1fr 1.2fr;
+    gap: 48px;
+    align-items: flex-start;
+  }
+}
+
+/* ---- LEFT: Order summary ---- */
+.checkout-summary {
+  background: linear-gradient(180deg, #0A2540 0%, #0e2d4d 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(10, 37, 64, 0.15);
+}
+
+.checkout-summary::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(46, 204, 113, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.checkout-summary-plan {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkout-plan-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6ee7a8;
+  margin-bottom: 6px;
+}
+
+.checkout-plan-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.checkout-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.checkout-plan-amount {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.checkout-plan-currency {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.04em;
+}
+
+.checkout-plan-period {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-left: 2px;
+}
+
+.checkout-plan-tagline {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.checkout-plan-includes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkout-plan-includes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.45;
+}
+
+.checkout-plan-includes svg {
+  width: 14px;
+  height: 14px;
+  color: #6ee7a8;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.checkout-summary-meta {
+  position: relative;
+  z-index: 1;
+  padding-top: 18px;
+}
+
+.checkout-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.88rem;
+  color: #fff;
+}
+
+.checkout-summary-row strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #6ee7a8;
+}
+
+.checkout-summary-row-muted {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.checkout-change-plan {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-top: 16px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.checkout-change-plan:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ---- RIGHT: Payment form ---- */
+.checkout-form-wrap {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 4px 16px rgba(10, 37, 64, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.checkout-form-header {
+  margin-bottom: 20px;
+}
+
+.checkout-form-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0A2540;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.checkout-form-header p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.checkout-field {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.checkout-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.checkout-field-hint {
+  display: inline-flex;
+  opacity: 0.5;
+}
+
+.checkout-field-hint svg {
+  width: 12px;
+  height: 12px;
+}
+
+.checkout-field input,
+.checkout-field select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #0A2540;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.checkout-field input:focus,
+.checkout-field select:focus {
+  outline: none;
+  border-color: #2ECC71;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.15);
+}
+
+.checkout-field input:read-only {
+  background: #f9fafb;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.checkout-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Card number input: icons on the right */
+.checkout-card-input-wrap {
+  position: relative;
+}
+
+.checkout-card-input-wrap input {
+  padding-right: 120px;
+}
+
+.checkout-card-logos {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.checkout-card-logos svg {
+  width: 32px;
+  height: 22px;
+  display: block;
+}
+
+/* Alert (error) */
+.checkout-form .alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 14px;
+}
+
+.checkout-form .alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+/* Submit button — the big "Pay" action */
+.checkout-submit-btn {
+  position: relative;
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(180deg, #3ee082 0%, #2ECC71 50%, #22a85d 100%);
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  box-shadow:
+    0 4px 14px rgba(46, 204, 113, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.checkout-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.checkout-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.checkout-submit-txt {
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.15s ease;
+}
+
+.checkout-submit-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: checkout-spin 0.8s linear infinite;
+}
+
+@keyframes checkout-spin {
+  to { transform: rotate(360deg); }
+}
+
+.checkout-submit-btn.is-loading .checkout-submit-txt {
+  opacity: 0;
+}
+
+.checkout-submit-btn.is-loading .checkout-submit-spinner {
+  opacity: 1;
+}
+
+.checkout-submit-legal {
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 14px 0 0;
+  text-align: center;
+}
+
+.checkout-powered-by {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 16px;
+  margin-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.checkout-powered-by svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Footer — slim, legal */
+.checkout-footer {
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+
+.checkout-footer p {
+  margin: 0 0 6px;
+}
+
+.checkout-footer nav {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.checkout-footer nav a {
+  color: #475569;
+  text-decoration: none;
+}
+
+.checkout-footer nav a:hover {
+  color: #0A2540;
+  text-decoration: underline;
+}
+
+/* Mobile: reduce padding a bit */
+@media (max-width: 640px) {
+  .checkout-main {
+    padding: 24px 16px 40px;
+  }
+
+  .checkout-header {
+    padding: 14px 20px;
+  }
+
+  .checkout-logo img {
+    height: 40px;
+  }
+
+  .checkout-summary,
+  .checkout-form-wrap {
+    padding: 22px 18px;
+  }
+
+  .checkout-field-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .checkout-card-input-wrap input {
+    padding-right: 110px;
+  }
+
+  .checkout-card-logos svg {
+    width: 28px;
+    height: 20px;
+  }
+}
+
+
+/* Welcome banner on /account.html after successful checkout.
+   Emerald gradient card with check-circle icon. Appears once per
+   completed checkout; auto-clears from URL on display. */
+.account-welcome-banner {
+  max-width: 520px;
+  margin: 20px auto 16px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(46, 204, 113, 0.14) 0%, rgba(46, 204, 113, 0.06) 100%);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.12);
+}
+
+.account-welcome-banner svg {
+  width: 32px;
+  height: 32px;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.account-welcome-banner div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-welcome-banner strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.account-welcome-banner span {
+  font-size: 0.85rem;
+  color: #047857;
+}

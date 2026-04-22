@@ -29,6 +29,19 @@
   </header>
 
   <main class="auth-wrap">
+    <!-- Welcome banner shown when user lands from /checkout.html?signup=success.
+         Rendered by the inline script below, which reads ?signup= & ?plan= from URL. -->
+    <div class="account-welcome-banner" id="welcome-banner" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <div>
+        <strong>Welcome to iBoost!</strong>
+        <span id="welcome-plan-msg">Your subscription is active.</span>
+      </div>
+    </div>
+
     <div class="auth-card">
       <h1>Your account</h1>
       <p class="muted">Signed in as <strong id="user-email">…</strong>.</p>
@@ -38,6 +51,32 @@
       </p>
     </div>
   </main>
+
+  <script>
+    // Show welcome banner if arriving from checkout success
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('signup') === 'success') {
+          var banner = document.getElementById('welcome-banner');
+          var msg = document.getElementById('welcome-plan-msg');
+          var planKey = (params.get('plan') || '').toLowerCase();
+          var planLabel = {
+            essential: 'iBoost Essential is active.',
+            complete: 'iBoost Complete is active.',
+            free: 'Your Free account is ready.'
+          }[planKey] || 'Your subscription is active.';
+          if (msg) msg.textContent = planLabel;
+          if (banner) banner.hidden = false;
+
+          // Clean up the URL so refresh doesn't reshow the banner
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, '', '/account.html');
+          }
+        }
+      } catch (e) { /* URL parsing failed — non-fatal */ }
+    })();
+  </script>
 
   <script src="/assets/js/config.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>

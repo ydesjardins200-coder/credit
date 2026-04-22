@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Complete your iBoost subscription." />
+  <title>Complete your subscription — iBoost</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
+  <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+
+  <link rel="stylesheet" href="/assets/css/main.css" />
+</head>
+<body class="checkout-page">
+
+  <!-- DEV MODE banner — makes it absolutely unmistakable that this is not a
+       real payment environment. Do not remove this until Stripe is live. -->
+  <div class="checkout-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Development preview</strong>
+    <span>&mdash; no real payment is processed. This page is a visual mockup.</span>
+  </div>
+
+  <header class="checkout-header">
+    <a href="/" class="checkout-logo" aria-label="iBoost home">
+      <img
+        src="/assets/img/brand/logo-horizontal-80.png"
+        srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+        alt="iBoost"
+        width="180"
+        height="62"
+      />
+    </a>
+    <div class="checkout-secure">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>Secure checkout</span>
+    </div>
+  </header>
+
+  <main class="checkout-main">
+    <div class="checkout-layout">
+
+      <!-- LEFT COLUMN — order summary -->
+      <aside class="checkout-summary" aria-label="Order summary">
+        <div class="checkout-summary-plan" id="plan-summary-card">
+          <!-- Content populated by checkout.js based on ?plan= query param -->
+          <div class="checkout-plan-eyebrow">You're subscribing to</div>
+          <h1 class="checkout-plan-name" id="plan-name">iBoost Essential</h1>
+
+          <div class="checkout-plan-price">
+            <span class="checkout-plan-amount" id="plan-amount">$15</span>
+            <span class="checkout-plan-currency" id="plan-currency">USD</span>
+            <span class="checkout-plan-period">/ month</span>
+          </div>
+
+          <p class="checkout-plan-tagline" id="plan-tagline">
+            Real credit work without the premium add-ons.
+          </p>
+
+          <ul class="checkout-plan-includes" id="plan-includes">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <div class="checkout-summary-meta">
+          <div class="checkout-summary-row">
+            <span>Billed today</span>
+            <span><strong id="billed-today-amount">$15.00</strong></span>
+          </div>
+          <div class="checkout-summary-row checkout-summary-row-muted">
+            <span>Renews monthly</span>
+            <span>Cancel anytime</span>
+          </div>
+        </div>
+
+        <a href="/pricing.html" class="checkout-change-plan">← Change plan</a>
+      </aside>
+
+      <!-- RIGHT COLUMN — payment form (mock) -->
+      <section class="checkout-form-wrap" aria-label="Payment details">
+        <div class="checkout-form-header">
+          <h2>Payment method</h2>
+          <p>Enter your card to activate your subscription.</p>
+        </div>
+
+        <form class="checkout-form" id="checkout-form" autocomplete="off" novalidate>
+
+          <!-- Email (read-only, prefilled from signup) -->
+          <div class="checkout-field">
+            <label for="checkout-email">Email</label>
+            <input type="email" id="checkout-email" name="email" readonly value="signup@example.com" />
+          </div>
+
+          <!-- Card number -->
+          <div class="checkout-field">
+            <label for="checkout-card-number">Card number</label>
+            <div class="checkout-card-input-wrap">
+              <input
+                type="text"
+                id="checkout-card-number"
+                name="card_number"
+                inputmode="numeric"
+                autocomplete="cc-number"
+                placeholder="1234 1234 1234 1234"
+                maxlength="19"
+              />
+              <div class="checkout-card-logos" aria-hidden="true">
+                <!-- Visa -->
+                <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="38" height="24" rx="3" fill="#1434cb"/>
+                  <text x="19" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" font-style="italic" fill="#fff">VISA</text>
+                </svg>
+                <!-- Mastercard -->
+                <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="38" height="24" rx="3" fill="#fff" stroke="#e5e7eb"/>
+                  <circle cx="15" cy="12" r="6" fill="#eb001b"/>
+                  <circle cx="23" cy="12" r="6" fill="#f79e1b" fill-opacity="0.9"/>
+                </svg>
+                <!-- Amex -->
+                <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="38" height="24" rx="3" fill="#2557d6"/>
+                  <text x="19" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="7" fill="#fff">AMEX</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expiry + CVC on one row -->
+          <div class="checkout-field-row">
+            <div class="checkout-field">
+              <label for="checkout-expiry">Expiration</label>
+              <input
+                type="text"
+                id="checkout-expiry"
+                name="expiry"
+                inputmode="numeric"
+                autocomplete="cc-exp"
+                placeholder="MM / YY"
+                maxlength="7"
+              />
+            </div>
+            <div class="checkout-field">
+              <label for="checkout-cvc">
+                CVC
+                <span class="checkout-field-hint" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </span>
+              </label>
+              <input
+                type="text"
+                id="checkout-cvc"
+                name="cvc"
+                inputmode="numeric"
+                autocomplete="cc-csc"
+                placeholder="CVC"
+                maxlength="4"
+              />
+            </div>
+          </div>
+
+          <!-- Name on card -->
+          <div class="checkout-field">
+            <label for="checkout-cardholder">Name on card</label>
+            <input
+              type="text"
+              id="checkout-cardholder"
+              name="cardholder"
+              autocomplete="cc-name"
+              placeholder="Full name as shown on card"
+            />
+          </div>
+
+          <!-- Country + postal -->
+          <div class="checkout-field-row">
+            <div class="checkout-field">
+              <label for="checkout-country">Country</label>
+              <select id="checkout-country" name="country">
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+              </select>
+            </div>
+            <div class="checkout-field">
+              <label for="checkout-postal">ZIP / Postal code</label>
+              <input
+                type="text"
+                id="checkout-postal"
+                name="postal"
+                autocomplete="postal-code"
+                placeholder="12345"
+              />
+            </div>
+          </div>
+
+          <!-- Alert area for errors -->
+          <div id="checkout-alert" class="alert alert-error" hidden></div>
+
+          <!-- Submit button — mocks Stripe's "Pay" button -->
+          <button type="submit" class="checkout-submit-btn" id="checkout-submit">
+            <span class="checkout-submit-txt">Pay <span id="pay-amount">$15.00</span></span>
+            <span class="checkout-submit-spinner" aria-hidden="true"></span>
+          </button>
+
+          <!-- Trust & legal micro-text below submit -->
+          <p class="checkout-submit-legal">
+            By confirming your subscription, you authorize iBoost to charge your
+            card monthly until you cancel. Cancel anytime from your account
+            dashboard.
+          </p>
+
+          <div class="checkout-powered-by" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Secured by Stripe (placeholder &mdash; dev mode)
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="checkout-footer">
+    <p>&copy; <span id="year">2026</span> iBoost. All rights reserved.</p>
+    <nav aria-label="Legal">
+      <a href="/terms.html">Terms</a>
+      <span aria-hidden="true">·</span>
+      <a href="/privacy.html">Privacy</a>
+      <span aria-hidden="true">·</span>
+      <a href="/disclosures.html">Disclosures</a>
+    </nav>
+  </footer>
+
+  <script src="/assets/js/checkout.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var y = document.getElementById('year');
+      if (y) y.textContent = String(new Date().getFullYear());
+    });
+  </script>
+</body>
+</html>
