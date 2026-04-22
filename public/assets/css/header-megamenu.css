@@ -871,14 +871,19 @@ body.iboost-mm.has-dark-hero {
 /* ---------- RESPONSIVE ---------- */
 
 @media (max-width: 900px) {
+  /* Hide the desktop nav entirely — nav rule uses !important in its
+     base (from the debug saga), so the media query override also
+     needs !important to win. The hamburger takes over for mobile. */
   .iboost-mm .site-nav {
-    display: none;
+    display: none !important;
   }
   .iboost-mm .site-hamburger {
-    display: flex;
+    display: flex !important;
   }
-  .iboost-mm .site-logo img {
-    height: 36px;
+  /* Logo uses .site-logo-img class in current markup (both SVG variants),
+     slightly smaller on mobile for better spacing balance */
+  .iboost-mm .site-logo-img {
+    height: 34px;
   }
   .iboost-mm .site-mega {
     display: none;
@@ -887,6 +892,6 @@ body.iboost-mm.has-dark-hero {
 
 @media (min-width: 901px) {
   .iboost-mm .site-hamburger {
-    display: none;
+    display: none !important;
   }
 }
