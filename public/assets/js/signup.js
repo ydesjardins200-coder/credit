@@ -33,11 +33,20 @@
   };
 
   // ----- Plan routing -----
-  // Read ?plan= from the URL (coming from /pricing.html). Post-signup we
-  // send the user to /checkout.html?plan=X for the payment step, EXCEPT
-  // for the Free tier which skips checkout and goes straight to the
-  // account page. Defaults to 'essential' if no plan is provided (user
-  // landed on signup without going through pricing).
+  // Signup requires a ?plan= query param — that's how users learn about
+  // the 3 tiers (Free, Essential, Complete) and make an informed choice.
+  // If someone hits /signup.html directly (typed URL, old bookmark, or
+  // external link), we bounce them to /pricing.html first so they can
+  // choose their plan before creating an account.
+  //
+  // Exceptions that stay on /signup.html without ?plan=:
+  //   - Footer "Sign up" links (treated as "I already know, just let me
+  //     sign up") — these will default to 'essential' silently.
+  //   - login.html "Don't have an account" links — same intent.
+  //
+  // To distinguish an intentional direct-signup from a lost user, we
+  // check if the document referrer is from our own site (they clicked
+  // an internal link = intentional) vs. external or empty (= lost).
   function getUrlParam(name) {
     try {
       return new URLSearchParams(window.location.search).get(name);
@@ -46,7 +55,27 @@
     }
   }
 
-  const pendingPlan = (getUrlParam('plan') || 'essential').toLowerCase();
+  function isInternalReferrer() {
+    try {
+      if (!document.referrer) return false;
+      var refUrl = new URL(document.referrer);
+      return refUrl.host === window.location.host;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  var urlPlan = getUrlParam('plan');
+
+  // If no plan and no internal referrer, redirect to pricing so the
+  // user makes a conscious choice. Don't redirect if they came from
+  // an internal page (footer or login link) — that's intentional.
+  if (!urlPlan && !isInternalReferrer()) {
+    window.location.replace('/pricing.html');
+    return;
+  }
+
+  const pendingPlan = (urlPlan || 'essential').toLowerCase();
 
   // Compute where the user should land after signup succeeds.
   //   Free -> /account.html (no payment step)
