@@ -92,10 +92,13 @@ a:hover { text-decoration: underline; }
 .muted { color: var(--color-muted); }
 
 /* ---------- Header ---------- */
-/* Old header (used by legal pages + auth pages) — only applies to
-   pages WITHOUT [data-header]. The new mega-menu header completely
-   redefines these properties further down in the file. */
-.site-header:not([data-header]) {
+/* LEGACY HEADER — used by legal pages (privacy/terms/disclosures)
+   and auth pages (signup/login) via <body class="legacy-header">.
+   These pages keep the old simple logo-only-or-logo-plus-CTA header,
+   while marketing pages use the new mega-menu header defined further
+   down in the file. */
+
+body.legacy-header .site-header {
   border-bottom: 1px solid var(--color-border);
   padding: var(--space-2) 0;
   position: sticky;
@@ -105,14 +108,32 @@ a:hover { text-decoration: underline; }
   background: rgba(255, 255, 255, 0.92);
 }
 
-.site-header:not([data-header]) .container {
+body.legacy-header .site-header .container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
-/* Kept global — used by signup/login intros outside of the header too */
+body.legacy-header .site-nav {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+body.legacy-header .site-nav a {
+  color: var(--color-fg);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+body.legacy-header .site-nav a:hover { color: var(--color-primary); }
+
+@media (max-width: 680px) {
+  body.legacy-header .site-nav .nav-link-secondary { display: none; }
+}
+
+/* Logo — used globally by legacy header + signup/login intro columns */
 .logo {
   display: inline-flex;
   align-items: center;
@@ -121,26 +142,7 @@ a:hover { text-decoration: underline; }
 
 .logo img { display: block; height: 36px; width: auto; }
 
-/* Old simple nav — only applies to pages WITHOUT [data-header] (legal/auth).
-   Pages with the new mega-menu header use .site-nav-trigger etc. and
-   the nav styling is defined further down in the mega-menu section. */
-
-.site-header:not([data-header]) .site-nav {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.site-header:not([data-header]) .site-nav a {
-  color: var(--color-fg);
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.site-header:not([data-header]) .site-nav a:hover { color: var(--color-primary); }
-
 @media (max-width: 680px) {
-  .site-header:not([data-header]) .site-nav .nav-link-secondary { display: none; }
   .logo img { height: 28px; }
 }
 
@@ -9469,11 +9471,11 @@ body.auth-page .site-footer .container {
        stays identical across states. It's the brand handshake.
    ======================================================================= */
 
-/* The new header completely replaces the old .site-header styles above
-   for pages that opt in via [data-header] attribute. Legal pages and
-   auth pages keep the OLD .site-header styles (solid white, simple). */
+/* Main site header — default state is the new mega-menu header (transparent,
+   flips to solid on scroll). Legacy pages (legal + auth) override these
+   properties via body.legacy-header rules near the top of this file. */
 
-.site-header[data-header] {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -9490,7 +9492,7 @@ body.auth-page .site-footer .container {
 }
 
 /* Scrolled state — solid white with backdrop blur + subtle shadow */
-.site-header[data-header].is-scrolled {
+.site-header.is-scrolled {
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
@@ -9501,7 +9503,7 @@ body.auth-page .site-footer .container {
 
 /* Also solid on pages that don't have a dark hero (e.g. pricing, faq) —
    when body lacks .has-dark-hero, keep the header solid all the time. */
-body:not(.has-dark-hero) .site-header[data-header] {
+body:not(.has-dark-hero):not(.legacy-header) .site-header {
   background: rgba(255, 255, 255, 0.88);
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
@@ -9650,7 +9652,6 @@ body:not(.has-dark-hero) .site-nav-sep {
 }
 
 /* Sign in ghost button */
-.site-header[data-header] .site-nav-ghost,
 .site-nav-ghost {
   padding: 9px 16px;
   color: rgba(255, 255, 255, 0.9);
@@ -9664,27 +9665,25 @@ body:not(.has-dark-hero) .site-nav-sep {
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
-.site-header[data-header] .site-nav-ghost:hover,
 .site-nav-ghost:hover {
   border-color: rgba(255, 255, 255, 0.45);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
-.site-header[data-header].is-scrolled .site-nav-ghost,
-body:not(.has-dark-hero) .site-header[data-header] .site-nav-ghost {
+.site-header.is-scrolled .site-nav-ghost,
+body:not(.has-dark-hero):not(.legacy-header) .site-nav-ghost {
   color: #0A2540;
   border-color: #e5e7eb;
 }
 
-.site-header[data-header].is-scrolled .site-nav-ghost:hover,
-body:not(.has-dark-hero) .site-header[data-header] .site-nav-ghost:hover {
+.site-header.is-scrolled .site-nav-ghost:hover,
+body:not(.has-dark-hero):not(.legacy-header) .site-nav-ghost:hover {
   border-color: #cbd5e1;
   background: #f8fafc;
 }
 
 /* Get started gradient CTA — identical in both states (brand anchor) */
-.site-header[data-header] .site-nav-cta,
 .site-nav-cta {
   padding: 9px 18px;
   color: #fff;
@@ -9702,7 +9701,6 @@ body:not(.has-dark-hero) .site-header[data-header] .site-nav-ghost:hover {
   transition: transform 0.15s, filter 0.15s, box-shadow 0.2s;
 }
 
-.site-header[data-header] .site-nav-cta:hover,
 .site-nav-cta:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
@@ -10316,75 +10314,3 @@ body.auth-page .site-logo-glow {
   }
 }
 
-
-/* =======================================================================
-   FIX: force nav items to display properly
-   ----------------------------------------------------------------------
-   Debugging session 2026-04-22: .site-nav-item children were rendering
-   invisibly despite having correct HTML. This force-override block
-   ensures they're explicitly laid out. If this fixes the issue, the
-   root cause was a cascade problem that these explicit rules resolve.
-   ======================================================================= */
-
-.site-header[data-header] .site-nav {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-.site-header[data-header] .site-nav-item {
-  display: inline-flex !important;
-  align-items: center !important;
-  position: relative;
-}
-
-.site-header[data-header] .site-nav-trigger {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.site-header[data-header] .site-nav-sep {
-  display: inline-block !important;
-  flex-shrink: 0;
-}
-
-.site-header[data-header] .site-nav-ghost,
-.site-header[data-header] .site-nav-cta {
-  display: inline-flex !important;
-  align-items: center !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-
-/* =======================================================================
-   DEBUG: temporary bright-colored backgrounds to locate nav items
-   ----------------------------------------------------------------------
-   DELETE this block once the header layout is confirmed working.
-   ======================================================================= */
-.site-header[data-header] .site-nav {
-  outline: 2px solid red !important;
-}
-.site-header[data-header] .site-nav-item {
-  outline: 2px solid yellow !important;
-  background: rgba(255, 0, 255, 0.3) !important;
-  min-width: 80px !important;
-  min-height: 30px !important;
-}
-.site-header[data-header] .site-nav-trigger {
-  outline: 2px solid cyan !important;
-  background: rgba(0, 255, 255, 0.3) !important;
-  color: #fff !important;
-  min-width: 80px !important;
-  min-height: 30px !important;
-}
-.site-header[data-header] .site-nav-ghost {
-  outline: 2px solid orange !important;
-}
-.site-header[data-header] .site-nav-cta {
-  outline: 2px solid lime !important;
-}
