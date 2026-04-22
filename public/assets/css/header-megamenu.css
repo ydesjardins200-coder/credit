@@ -826,6 +826,14 @@ body.iboost-mm.site-drawer-open {
   overflow: hidden;
 }
 
+/* On pages with a dark hero, the body itself needs a dark background
+   at the top so the transparent header doesn't show the white body
+   bleeding through. The hero section extends its own dark navy
+   below that, creating a continuous dark backdrop. */
+body.iboost-mm.has-dark-hero {
+  background: #0A2540 !important;
+}
+
 /* ---------- RESPONSIVE ---------- */
 
 @media (max-width: 900px) {
