@@ -77,6 +77,21 @@ Last updated: 2026-04-21
 ## Conversion / product
 
 - [ ] Stripe subscriptions wired up (currently no billing integration).
+      **Current state:** visual-only mockup exists at `/checkout.html`
+      with a clear "Development preview" banner. Users can walk the
+      full signup -> checkout -> account flow but no real payment is
+      processed. Before launch:
+        - Create Stripe account (business info required)
+        - Configure 6 prices: Essential USD/CAD, Complete USD/CAD
+          (Free tier bypasses Stripe entirely)
+        - Deploy Railway backend (currently scaffolded but not deployed)
+        - Replace `checkout.js` mock logic with real Stripe.js
+          (either Stripe Elements or redirect to Stripe Checkout hosted)
+        - Wire webhooks to update Supabase `subscriptions` table
+        - Remove the amber `.checkout-dev-banner` from checkout.html
+        - Test the full flow with Stripe test cards (4242 4242 4242 4242)
+        - Submit for Stripe account activation review (requires live
+          legal pages + business registration)
 - [ ] `/account.html` dashboard — currently placeholder.
 - [ ] `signup.js` plan preselection — read `?plan=` query param and
       pre-select the plan on the signup form.
