@@ -66,6 +66,18 @@ Last updated: 2026-04-21
 
 - [ ] Run `supabase/migrations/0002_profile_metadata.sql` in the Supabase
       SQL editor to enable country persistence on signup.
+- [ ] **Google OAuth consent screen branding** — currently the Google
+      sign-in dialog shows `wwsnywzeorisuvolvbjh.supabase.co` as the
+      app name, which looks unprofessional. Fix in Google Cloud Console:
+        - OAuth consent screen -> App name: "iBoost"
+        - Upload 120×120 iBoost logo
+        - Set Home page, Privacy policy, and Terms URLs to iboost.com
+          (or iboostcredit.netlify.app for pre-launch testing)
+        - Add authorized domain
+        - For pre-launch demos: add partner/tester emails to Test users
+          (avoids waiting for Google verification)
+        - Before public launch: submit to Google verification — takes
+          2-6 weeks, requires live privacy/terms pages + domain proof
 - [ ] Backend Railway deployment (`server/` folder is scaffolded but not
       deployed). Decide if launch requires it or if Netlify Functions +
       Supabase Edge Functions cover the MVP.
