@@ -845,12 +845,27 @@ body.iboost-mm.site-drawer-open {
   overflow: hidden;
 }
 
-/* On pages with a dark hero, the body itself needs a dark background
-   at the top so the transparent header doesn't show the white body
-   bleeding through. The hero section extends its own dark navy
-   below that, creating a continuous dark backdrop. */
+/* On pages with a dark hero, the transparent header needs a dark
+   background to reveal. We paint a thin dark-navy strip at the very
+   top of the body (80px tall — covers the sticky header area),
+   then the rest of the body stays white for sections below the hero.
+
+   How it works:
+   - At scrollY=0 (header transparent): the strip is visible behind
+     the header, giving it a dark backdrop.
+   - When scrolled (>60px), the header gets .is-scrolled and its own
+     solid white bg, so the strip underneath becomes irrelevant.
+   - Sections after the hero (like 'Everything you get') render on
+     the white portion of the gradient — no color bleeding. */
 body.iboost-mm.has-dark-hero {
-  background: #0A2540 !important;
+  background: linear-gradient(
+    to bottom,
+    #0A2540 0,
+    #0A2540 80px,
+    #ffffff 80px
+  ) !important;
+  background-repeat: no-repeat !important;
+  background-color: #ffffff !important;
 }
 
 /* ---------- RESPONSIVE ---------- */
