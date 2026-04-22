@@ -4267,25 +4267,6 @@ a:hover { text-decoration: underline; }
   height: 11px;
 }
 
-/* Footnotes (bottom row) */
-.footer-footnotes {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.45);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.footer-footnotes sup {
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
-  margin-right: 2px;
-}
-
-.footer-footnote-sep {
-  margin: 0 0.3rem;
-  color: rgba(255, 255, 255, 0.15);
-}
-
 @media (max-width: 820px) {
   .footer-fineprint-inner {
     flex-direction: column;
