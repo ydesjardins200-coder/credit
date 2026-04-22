@@ -10325,3 +10325,113 @@ body.auth-page .site-logo-glow {
   }
 }
 
+
+
+/* =======================================================================
+   FINAL FIX — force the header to actually work
+   ----------------------------------------------------------------------
+   After multiple debugging attempts with cascade-based specificity
+   tweaks, the header was still rendering incorrectly. This final block
+   uses !important as a pragmatic escape hatch to lock in the expected
+   behavior across all states. We can audit the root cascade issue
+   later, but for now this ensures the header always renders correctly.
+   ======================================================================= */
+
+/* On pages with a dark hero, the header starts fully transparent.
+   When scrolled past 60px, the .is-scrolled class is added by JS
+   and overrides to solid white. */
+body.has-dark-hero .site-header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+body.has-dark-hero .site-header.is-scrolled {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: saturate(180%) blur(14px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(14px) !important;
+  border-bottom: 1px solid rgba(10, 37, 64, 0.08) !important;
+  box-shadow: 0 4px 24px rgba(10, 37, 64, 0.04) !important;
+}
+
+/* On dark-hero pages, nav items + auth buttons must be white/translucent.
+   These !important rules override any inherited body color. */
+body.has-dark-hero .site-nav-trigger {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.has-dark-hero .site-nav-trigger:hover,
+body.has-dark-hero .site-nav-trigger[aria-expanded="true"] {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.has-dark-hero .site-nav-ghost {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+body.has-dark-hero .site-nav-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #fff !important;
+}
+
+body.has-dark-hero .site-nav-sep {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* When scrolled on a dark-hero page, flip colors to dark text */
+body.has-dark-hero .site-header.is-scrolled .site-nav-trigger {
+  color: #475569 !important;
+}
+
+body.has-dark-hero .site-header.is-scrolled .site-nav-trigger:hover,
+body.has-dark-hero .site-header.is-scrolled .site-nav-trigger[aria-expanded="true"] {
+  color: #0A2540 !important;
+  background: rgba(10, 37, 64, 0.04) !important;
+}
+
+body.has-dark-hero .site-header.is-scrolled .site-nav-ghost {
+  color: #0A2540 !important;
+  border-color: #e5e7eb !important;
+}
+
+body.has-dark-hero .site-header.is-scrolled .site-nav-sep {
+  background: rgba(10, 37, 64, 0.1) !important;
+}
+
+/* Force .site-nav-item + trigger + ghost display properly
+   (belt and suspenders — prior attempts at this without !important
+   seemed to not stick for reasons we don't fully understand) */
+body.has-dark-hero .site-nav,
+body:not(.legacy-header) .site-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+body.has-dark-hero .site-nav-item,
+body:not(.legacy-header) .site-nav-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  position: relative !important;
+}
+
+body.has-dark-hero .site-nav-trigger,
+body:not(.legacy-header) .site-nav-trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px 14px !important;
+  white-space: nowrap !important;
+}
+
+body.has-dark-hero .site-nav-ghost,
+body:not(.legacy-header) .site-nav-ghost {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 9px 16px !important;
+  white-space: nowrap !important;
+}
