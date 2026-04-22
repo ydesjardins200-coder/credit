@@ -3641,7 +3641,12 @@ a:hover { text-decoration: underline; }
   isolation: isolate;
   overflow: hidden;
   text-align: center;
-  padding: var(--space-8) var(--space-3) var(--space-9);
+  /* Matches the standard .section padding (var(--space-10) vertical)
+     so this final CTA has the same visual rhythm as the rest of the
+     page. Previous value had a typo: var(--space-9) doesn't exist in
+     the scale, which silently fell back to 0 — that's why the text
+     felt cramped at the bottom. */
+  padding: var(--space-10) var(--space-3);
   /* Same mesh-gradient grammar as the hero + how-it-works, slightly
      calmer so it reads as a close, not a second hero. */
   background:
