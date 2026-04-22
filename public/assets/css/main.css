@@ -92,7 +92,10 @@ a:hover { text-decoration: underline; }
 .muted { color: var(--color-muted); }
 
 /* ---------- Header ---------- */
-.site-header {
+/* Old header (used by legal pages + auth pages) — only applies to
+   pages WITHOUT [data-header]. The new mega-menu header completely
+   redefines these properties further down in the file. */
+.site-header:not([data-header]) {
   border-bottom: 1px solid var(--color-border);
   padding: var(--space-2) 0;
   position: sticky;
@@ -102,13 +105,14 @@ a:hover { text-decoration: underline; }
   background: rgba(255, 255, 255, 0.92);
 }
 
-.site-header .container {
+.site-header:not([data-header]) .container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
+/* Kept global — used by signup/login intros outside of the header too */
 .logo {
   display: inline-flex;
   align-items: center;
@@ -117,22 +121,26 @@ a:hover { text-decoration: underline; }
 
 .logo img { display: block; height: 36px; width: auto; }
 
-.site-nav {
+/* Old simple nav — only applies to pages WITHOUT [data-header] (legal/auth).
+   Pages with the new mega-menu header use .site-nav-trigger etc. and
+   the nav styling is defined further down in the mega-menu section. */
+
+.site-header:not([data-header]) .site-nav {
   display: flex;
   gap: var(--space-3);
   align-items: center;
 }
 
-.site-nav a {
+.site-header:not([data-header]) .site-nav a {
   color: var(--color-fg);
   font-weight: 500;
   font-size: 0.95rem;
 }
 
-.site-nav a:hover { color: var(--color-primary); }
+.site-header:not([data-header]) .site-nav a:hover { color: var(--color-primary); }
 
 @media (max-width: 680px) {
-  .site-nav .nav-link-secondary { display: none; }
+  .site-header:not([data-header]) .site-nav .nav-link-secondary { display: none; }
   .logo img { height: 28px; }
 }
 
@@ -9642,6 +9650,7 @@ body:not(.has-dark-hero) .site-nav-sep {
 }
 
 /* Sign in ghost button */
+.site-header[data-header] .site-nav-ghost,
 .site-nav-ghost {
   padding: 9px 16px;
   color: rgba(255, 255, 255, 0.9);
@@ -9655,25 +9664,27 @@ body:not(.has-dark-hero) .site-nav-sep {
   transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
+.site-header[data-header] .site-nav-ghost:hover,
 .site-nav-ghost:hover {
   border-color: rgba(255, 255, 255, 0.45);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
-.site-header.is-scrolled .site-nav-ghost,
-body:not(.has-dark-hero) .site-nav-ghost {
+.site-header[data-header].is-scrolled .site-nav-ghost,
+body:not(.has-dark-hero) .site-header[data-header] .site-nav-ghost {
   color: #0A2540;
   border-color: #e5e7eb;
 }
 
-.site-header.is-scrolled .site-nav-ghost:hover,
-body:not(.has-dark-hero) .site-nav-ghost:hover {
+.site-header[data-header].is-scrolled .site-nav-ghost:hover,
+body:not(.has-dark-hero) .site-header[data-header] .site-nav-ghost:hover {
   border-color: #cbd5e1;
   background: #f8fafc;
 }
 
 /* Get started gradient CTA — identical in both states (brand anchor) */
+.site-header[data-header] .site-nav-cta,
 .site-nav-cta {
   padding: 9px 18px;
   color: #fff;
@@ -9691,9 +9702,11 @@ body:not(.has-dark-hero) .site-nav-ghost:hover {
   transition: transform 0.15s, filter 0.15s, box-shadow 0.2s;
 }
 
+.site-header[data-header] .site-nav-cta:hover,
 .site-nav-cta:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
+  color: #fff;
   box-shadow:
     0 8px 22px rgba(46, 204, 113, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
