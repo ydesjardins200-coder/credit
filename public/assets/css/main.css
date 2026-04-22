@@ -5688,6 +5688,42 @@ body.auth-page .site-footer .container {
   margin: 0;
 }
 
+/* DEV-MODE "Fill with dummy data" button — dashed border + amber accent
+   to signal it's a test shortcut, not a production feature. Matches the
+   amber banner at the top of the page visually. */
+.checkout-fill-dummy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 12px;
+  background: #fef3c7;
+  border: 1px dashed #d97706;
+  border-radius: 6px;
+  color: #78350f;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.checkout-fill-dummy-btn:hover {
+  background: #fde68a;
+  border-color: #b45309;
+}
+
+.checkout-fill-dummy-btn:active {
+  transform: translateY(1px);
+}
+
+.checkout-fill-dummy-btn svg {
+  width: 13px;
+  height: 13px;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
 .checkout-field {
   margin-bottom: 14px;
   display: flex;

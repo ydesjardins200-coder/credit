@@ -176,6 +176,37 @@
     });
   }
 
+  // -------- DEV-MODE: "Fill with dummy data" button --------
+  // Populates every form field with placeholder values so partners /
+  // testers don't have to type anything to complete the demo flow.
+  // Uses the canonical Stripe test card 4242 4242 4242 4242 which
+  // makes the demo feel authentic without risking a real charge.
+  var fillDummyBtn = document.getElementById('checkout-fill-dummy');
+  if (fillDummyBtn) {
+    fillDummyBtn.addEventListener('click', function () {
+      // Use the input event path so the existing formatters (space every 4,
+      // auto-slash on expiry, etc.) run naturally rather than us hardcoding
+      // already-formatted strings that might drift from the formatter.
+      function setAndFire(el, value) {
+        if (!el) return;
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      setAndFire(cardNumInput, '4242424242424242');
+      setAndFire(expiryInput, '1230');      // becomes "12 / 30"
+      setAndFire(cvcInput, '123');
+      var cardholderInput = document.getElementById('checkout-cardholder');
+      if (cardholderInput) cardholderInput.value = 'Demo User';
+      var countrySelect = document.getElementById('checkout-country');
+      if (countrySelect) countrySelect.value = 'US';
+      setAndFire(postalInput, '10001');
+
+      // Clear any prior error so the form looks clean after fill
+      clearAlert();
+    });
+  }
+
   // -------- Form submit: show spinner, then redirect --------
   // In the real implementation this will call Stripe.js to tokenize the
   // card and POST to the backend. For the mockup we just simulate the

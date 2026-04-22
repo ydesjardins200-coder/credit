@@ -92,6 +92,16 @@
         <div class="checkout-form-header">
           <h2>Payment method</h2>
           <p>Enter your card to activate your subscription.</p>
+          <!-- DEV-MODE shortcut: fills all fields with placeholder values.
+               Visible because .checkout-dev-banner above makes it clear the
+               page is not production. Delete this button when Stripe goes
+               live (or gate it behind a NODE_ENV check). -->
+          <button type="button" class="checkout-fill-dummy-btn" id="checkout-fill-dummy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Fill with dummy data
+          </button>
         </div>
 
         <form class="checkout-form" id="checkout-form" autocomplete="off" novalidate>
