@@ -231,7 +231,23 @@ Last updated: 2026-04-21
 
 ## Trust / compliance
 
-- [ ] Lawyer review of the `#trust` section on the homepage
+- [ ] **Create dedicated `/trust.html` page** — the Trust & Compliance
+      section was removed from the homepage on 2026-04-22 (it was
+      crowding the homepage). The full content was preserved:
+        - HTML template: `docs/trust-section-template.html` (253 lines)
+        - CSS stylesheet: `public/assets/css/trust-section.css` (270 lines,
+          not loaded anywhere yet)
+      All footer links across 7 pages (index, how-it-works, pricing,
+      faq, privacy, terms, disclosures) now point to `/trust.html`
+      which doesn't exist yet — it will 404 until the page is built.
+      Priority: create this page BEFORE the footer goes live with
+      links to it (or remove the footer link until then).
+
+- [ ] **Lawyer review of the Trust & Compliance page content** — three
+      sections (Laws, Encryption/Infrastructure, Privacy/Incident
+      Response) with 9 accordion items total. All are currently
+      populated with plausible framing but need legal validation
+      before launch.
 - [ ] Lawyer review of `/privacy.html`, `/terms.html`, `/disclosures.html`
 - [ ] Lawyer review of any marketing claims ("+92 pts in 12 months",
       "reports to all 3 bureaus", etc.) — ensure they match what the
