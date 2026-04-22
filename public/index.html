@@ -140,8 +140,8 @@
               <path d="M 200 60 C 500 60, 300 230, 525 225"/>
               <path d="M 1000 60 C 700 60, 900 230, 675 225"/>
               <!-- Banks: straight lines -->
-              <path d="M 210 230 L 475 230"/>
-              <path d="M 990 230 L 725 230"/>
+              <path d="M 290 225 L 475 225"/>
+              <path d="M 910 225 L 725 225"/>
               <!-- Stats: pronounced arcs (cubic curves) -->
               <path d="M 170 400 C 170 270, 370 250, 525 235"/>
               <path d="M 1030 340 C 1030 250, 830 240, 675 235"/>
@@ -154,8 +154,8 @@
               <path class="hub-conn-flow" d="M 200 60 C 500 60, 300 230, 525 225"/>
               <path class="hub-conn-flow" d="M 1000 60 C 700 60, 900 230, 675 225"/>
               <!-- Banks: straight lines -->
-              <path class="hub-conn-flow" d="M 210 230 L 475 230"/>
-              <path class="hub-conn-flow" d="M 990 230 L 725 230"/>
+              <path class="hub-conn-flow" d="M 290 225 L 475 225"/>
+              <path class="hub-conn-flow" d="M 910 225 L 725 225"/>
               <!-- Stats: pronounced arcs -->
               <path class="hub-conn-flow" d="M 170 400 C 170 270, 370 250, 525 235"/>
               <path class="hub-conn-flow" d="M 1030 340 C 1030 250, 830 240, 675 235"/>
@@ -165,8 +165,8 @@
             <!-- Junction dots at cards (emerald, pulsing) -->
             <circle class="hub-junction hub-junction-1" cx="200" cy="60" r="4" fill="#6ee7a8"/>
             <circle class="hub-junction hub-junction-2" cx="1000" cy="60" r="4" fill="#6ee7a8"/>
-            <circle class="hub-junction hub-junction-3" cx="210" cy="230" r="3" fill="#6ee7a8"/>
-            <circle class="hub-junction hub-junction-4" cx="990" cy="230" r="3" fill="#6ee7a8"/>
+            <circle class="hub-junction hub-junction-3" cx="290" cy="225" r="3" fill="#6ee7a8"/>
+            <circle class="hub-junction hub-junction-4" cx="910" cy="225" r="3" fill="#6ee7a8"/>
             <circle class="hub-junction hub-junction-5" cx="170" cy="400" r="4" fill="#6ee7a8"/>
             <circle class="hub-junction hub-junction-6" cx="1030" cy="340" r="4" fill="#6ee7a8"/>
             <circle class="hub-junction hub-junction-7" cx="600" cy="440" r="3" fill="#6ee7a8"/>
@@ -185,8 +185,8 @@
             <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 1000 60 C 700 60, 900 230, 675 225'); animation-delay: 0.85s;"/>
             <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 170 400 C 170 270, 370 250, 525 235'); animation-delay: 1.7s;"/>
             <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 1030 340 C 1030 250, 830 240, 675 235'); animation-delay: 2.55s;"/>
-            <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 210 230 L 475 230'); animation-delay: 3.4s;"/>
-            <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 990 230 L 725 230'); animation-delay: 4.25s;"/>
+            <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 290 225 L 475 225'); animation-delay: 3.4s;"/>
+            <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 910 225 L 725 225'); animation-delay: 4.25s;"/>
             <circle class="hub-packet" r="3" fill="#fff" style="offset-path: path('M 600 440 C 600 370, 500 310, 600 285'); animation-delay: 5.1s;"/>
           </svg>
 
@@ -233,7 +233,7 @@
                still sees the complete value. -->
           <div class="hub-node hub-node-stat-hero hub-pos-stat92">
             <div class="hub-node-k-light">Average gain<sup>1</sup></div>
-            <div class="hub-node-m-big" data-count-up="92" data-count-prefix="+" data-count-suffix=" pts">+92 pts</div>
+            <div class="hub-node-m-big" data-count-up="92" data-count-prefix="+" data-count-suffix=" pts" data-count-duration="3500">+92 pts</div>
             <div class="hub-node-s-light">in 12 months</div>
           </div>
 
@@ -1779,7 +1779,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/landing.js" defer></script>
-  <script src="/assets/js/hero-counter.js?v=3" defer></script>
+  <script src="/assets/js/hero-counter.js?v=4" defer></script>
   <script>
     // Footer year (kept inline so we don't need main.js on landing)
     document.addEventListener('DOMContentLoaded', function () {

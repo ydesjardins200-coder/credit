@@ -902,8 +902,8 @@ a:hover { text-decoration: underline; }
 .hub-pos-transunion { top: 30px;   right: 60px; }
 .hub-pos-stat92     { bottom: 30px; left: 40px; }
 .hub-pos-stat30d    { bottom: 80px; right: 40px; }
-.hub-pos-flagca     { top: 175px;  left: 10%; }
-.hub-pos-flagus     { top: 240px;  right: 8%; }
+.hub-pos-flagca     { top: 205px;  left: 10%; }
+.hub-pos-flagus     { top: 205px;  right: 8%; }
 .hub-pos-experian   { bottom: -8px; left: 50%; transform: translateX(-50%); }
 
 /* -------- Core-attributes ribbon below the hub --------

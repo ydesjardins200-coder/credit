@@ -32,11 +32,11 @@
   var reduceMotion = window.matchMedia &&
                      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // easeOutQuart — fast at first, smooth deceleration.
-  // Feels more 'celebratory' than linear: the number races up then
-  // gently settles on the target.
-  function easeOutQuart(t) {
-    return 1 - Math.pow(1 - t, 4);
+  // easeOutCubic — smooth deceleration without being too aggressive at
+  // the start. Previously easeOutQuart made low numbers flash by too
+  // fast to read; easeOutCubic keeps the progression visible end-to-end.
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
   }
 
   function formatNumber(value, target) {
@@ -70,7 +70,7 @@
       if (startTime === null) startTime = now;
       var elapsed = now - startTime;
       var progress = Math.min(elapsed / duration, 1);
-      var eased = easeOutQuart(progress);
+      var eased = easeOutCubic(progress);
       var current = eased * target;
 
       el.textContent = prefix + formatNumber(current, target) + suffix;
@@ -108,7 +108,6 @@
 
   function initCountUp() {
     var targets = document.querySelectorAll('[data-count-up]');
-    console.log('[hero-counter] init, found', targets.length, 'targets');
     if (!targets.length) return;
 
     // Track which elements we've animated so the safety timeout doesn't
@@ -118,13 +117,11 @@
     function trigger(el, reason) {
       if (animated.has(el)) return;
       animated.add(el);
-      console.log('[hero-counter] trigger (' + reason + ') target=' + el.getAttribute('data-count-up'));
       animateElement(el);
     }
 
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        console.log('[hero-counter] IO callback', entry.isIntersecting, 'ratio=', entry.intersectionRatio);
         if (entry.isIntersecting) {
           trigger(entry.target, 'IO');
           observer.unobserve(entry.target);
@@ -154,7 +151,6 @@
         if (animated.has(el)) return;
         var rect = el.getBoundingClientRect();
         var vh = window.innerHeight || document.documentElement.clientHeight;
-        console.log('[hero-counter] 800ms check, rect.top=', rect.top, 'vh=', vh);
         if (rect.top < vh && rect.bottom > 0) {
           trigger(el, '800ms-fallback');
           observer.unobserve(el);
