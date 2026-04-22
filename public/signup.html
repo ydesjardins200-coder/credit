@@ -197,6 +197,16 @@
       <div class="signup-form-card">
         <div class="signup-form-header">
           <h2>Create an account</h2>
+          <!-- DEV-MODE shortcut: fills all signup fields for quick demo/
+               testing. Same visual language as the checkout fill-dummy
+               button (amber dashed, matches the checkout DEV banner).
+               Remove before public launch. -->
+          <button type="button" class="checkout-fill-dummy-btn" id="signup-fill-dummy" style="margin-top:12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Fill with dummy data
+          </button>
         </div>
 
         <!-- YMYL above-fold reassurance -->

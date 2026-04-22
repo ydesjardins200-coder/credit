@@ -162,6 +162,45 @@
   // Set initial state
   updateSubmitState();
 
+  // ----- DEV-MODE: "Fill with dummy data" button -----
+  // Populates every signup field with placeholder values. The email gets
+  // a timestamp suffix so each click produces a unique email — avoids
+  // Supabase "user already exists" errors on repeated demo runs.
+  //
+  // After fill we also trigger the password criteria update + submit
+  // state check so the form is immediately submittable without the user
+  // having to touch it.
+  var fillDummyBtn = document.getElementById('signup-fill-dummy');
+  if (fillDummyBtn) {
+    fillDummyBtn.addEventListener('click', function () {
+      var ts = Date.now().toString(36); // base36 timestamp, shortish
+
+      if (firstNameInput) firstNameInput.value = 'Demo';
+      if (lastNameInput) lastNameInput.value = 'User';
+      if (emailInput) emailInput.value = 'demo+' + ts + '@iboost.test';
+
+      // US is already the default checked radio — make sure it stays
+      var usRadio = document.getElementById('country-us');
+      if (usRadio) usRadio.checked = true;
+
+      // Password that passes all 5 criteria: 8+ chars, uppercase,
+      // lowercase, number, special char
+      if (pwInput) {
+        pwInput.value = 'Demo123!';
+        // Fire input event so the live criteria checker + submit
+        // enablement logic both see the new value
+        pwInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      // Tick the consent box
+      if (consentBox) consentBox.checked = true;
+
+      // Update submit state since we bypassed the 'input' listeners
+      // on the text fields
+      updateSubmitState();
+    });
+  }
+
   // ----- If already signed in, bounce forward.
   // If they came with ?plan=X from /pricing.html, honor that and send
   // them to checkout (or account for Free). Otherwise, plain account
