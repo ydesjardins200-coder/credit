@@ -10359,3 +10359,32 @@ body.auth-page .site-logo-glow {
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+
+/* =======================================================================
+   DEBUG: temporary bright-colored backgrounds to locate nav items
+   ----------------------------------------------------------------------
+   DELETE this block once the header layout is confirmed working.
+   ======================================================================= */
+.site-header[data-header] .site-nav {
+  outline: 2px solid red !important;
+}
+.site-header[data-header] .site-nav-item {
+  outline: 2px solid yellow !important;
+  background: rgba(255, 0, 255, 0.3) !important;
+  min-width: 80px !important;
+  min-height: 30px !important;
+}
+.site-header[data-header] .site-nav-trigger {
+  outline: 2px solid cyan !important;
+  background: rgba(0, 255, 255, 0.3) !important;
+  color: #fff !important;
+  min-width: 80px !important;
+  min-height: 30px !important;
+}
+.site-header[data-header] .site-nav-ghost {
+  outline: 2px solid orange !important;
+}
+.site-header[data-header] .site-nav-cta {
+  outline: 2px solid lime !important;
+}
