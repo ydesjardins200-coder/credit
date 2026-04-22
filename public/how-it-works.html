@@ -587,91 +587,111 @@
       </div>
     </section>
 
-    <!-- ============= FEATURE ROW — Interactive journey score-card ============= -->
-    <!-- This was formerly the scorecard inside the hero — moved here as a
-         feature-row component so the hero stays compact and the scorecard
-         becomes a standalone interactive illustration. -->
+    <!-- ============= FEATURE ROW 1 — Reporting to every major bureau ============= -->
     <section class="section">
       <div class="container">
         <div class="features-stack">
           <div class="feature-row">
             <div class="feature-content feature-content-lg">
-              <span class="badge">Live projection</span>
-              <h3>Twelve months of credit building, <span class="feature-accent">visualized</span>.</h3>
+              <span class="badge">Bureau reporting</span>
+              <h3>Reported to <span class="feature-accent">every major bureau</span>, every month.</h3>
               <p>
-                On the right is the average journey of an iBoost member — the
-                one who will be you. Starting at Fair, finishing at Good,
-                with every month on report.
+                Most credit-builder products report to just one bureau. That means
+                lenders using the other bureaus never see your progress. iBoost
+                reports to every major bureau in both countries — so the work you
+                do always counts.
               </p>
               <ul>
-                <li>Starting point: Fair (580)<sup>1</sup></li>
-                <li>End point: Good (672) — past the mortgage threshold</li>
-                <li>+92 points in 12 months (iBoost member average)</li>
-                <li>Weekly score refresh on paid plans</li>
+                <li><strong>3 U.S. bureaus</strong> — Equifax, TransUnion, Experian.</li>
+                <li><strong>2 Canadian bureaus</strong> — Equifax Canada and TransUnion Canada.</li>
+                <li><strong>Same day cycle</strong> — your payment is reported to every bureau at the same monthly point.</li>
+                <li><strong>Visible within 30 days</strong> — the new tradeline shows up on your report after the first payment.</li>
               </ul>
             </div>
             <div class="feature-visual">
-              <div class="journey-showcase" role="region" aria-label="12-month credit score journey projection">
-
-                <div class="journey-showcase-header">
+              <div class="reporting-showcase" role="region" aria-label="Monthly report sent to 5 credit bureaus">
+                <div class="reporting-showcase-header">
                   <div>
-                    <div class="journey-showcase-title">Credit score journey</div>
-                    <div class="journey-showcase-subtitle">12-month projection</div>
+                    <div class="reporting-showcase-title">This month's report</div>
+                    <div class="reporting-showcase-subtitle">Sent to every bureau</div>
                   </div>
-                  <div class="journey-delta">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <polyline points="6 15 12 9 18 15"/>
+                  <div class="reporting-counter">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"/>
                     </svg>
-                    <span>+92 pts</span>
+                    <span class="reporting-counter-num" data-count-up="5" data-count-duration="1400">5</span>
+                    <span class="reporting-counter-total">/ 5</span>
                   </div>
                 </div>
 
-                <div class="journey-dial">
-                  <div class="journey-number" data-count-up="672" data-count-from="580" data-count-duration="2800">580</div>
-                  <div class="journey-label">
-                    <span class="journey-label-from">Fair</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <line x1="5" y1="12" x2="19" y2="12"/>
-                      <polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                    <span class="journey-label-to">Good</span>
+                <div class="reporting-market">
+                  <div class="reporting-market-label">
+                    <span class="reporting-market-flag" aria-hidden="true">🇺🇸</span>
+                    <span>United States</span>
                   </div>
+                  <ul class="reporting-tiles reporting-tiles-3">
+                    <li class="reporting-tile">
+                      <span class="reporting-tile-name">Equifax</span>
+                      <span class="reporting-tile-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Reported</span>
+                      </span>
+                    </li>
+                    <li class="reporting-tile">
+                      <span class="reporting-tile-name">TransUnion</span>
+                      <span class="reporting-tile-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Reported</span>
+                      </span>
+                    </li>
+                    <li class="reporting-tile">
+                      <span class="reporting-tile-name">Experian</span>
+                      <span class="reporting-tile-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Reported</span>
+                      </span>
+                    </li>
+                  </ul>
                 </div>
 
-                <svg class="journey-trajectory" viewBox="0 0 300 90" aria-label="Score trajectory over 12 months">
-                  <!-- Dashed tier guides -->
-                  <line x1="0" y1="50" x2="300" y2="50" stroke="var(--color-border)" stroke-width="1" stroke-dasharray="3 3"/>
-                  <line x1="0" y1="28" x2="300" y2="28" stroke="var(--color-border)" stroke-width="1" stroke-dasharray="3 3"/>
-                  <!-- Tier labels on the right -->
-                  <text x="296" y="47" text-anchor="end" font-size="8" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">GOOD</text>
-                  <text x="296" y="25" text-anchor="end" font-size="8" font-weight="600" fill="var(--color-muted)" style="letter-spacing: 0.05em">VERY GOOD</text>
-                  <!-- The actual trajectory path: starts bottom-left, ends upper-right -->
-                  <path class="journey-path" d="M 5 78 Q 50 74 80 68 T 155 52 T 230 38 T 290 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <!-- Endpoint circle -->
-                  <circle class="journey-endpoint" cx="290" cy="24" r="5" fill="var(--color-accent)" stroke="#fff" stroke-width="2.5"/>
-                  <circle class="journey-endpoint-pulse" cx="290" cy="24" r="5" fill="none" stroke="var(--color-accent)" stroke-width="2" opacity="0.5"/>
-                </svg>
-
-                <div class="journey-range">
-                  <div class="journey-range-bar" aria-hidden="true">
-                    <span class="journey-range-seg journey-range-seg-1"></span>
-                    <span class="journey-range-seg journey-range-seg-2"></span>
-                    <span class="journey-range-seg journey-range-seg-3"></span>
-                    <span class="journey-range-seg journey-range-seg-4"></span>
-                    <span class="journey-range-seg journey-range-seg-5"></span>
-                    <span class="journey-range-marker"></span>
+                <div class="reporting-market">
+                  <div class="reporting-market-label">
+                    <span class="reporting-market-flag" aria-hidden="true">🇨🇦</span>
+                    <span>Canada</span>
                   </div>
-                  <div class="journey-range-labels">
-                    <span>300</span>
-                    <span>900</span>
-                  </div>
+                  <ul class="reporting-tiles reporting-tiles-2">
+                    <li class="reporting-tile">
+                      <span class="reporting-tile-name">Equifax</span>
+                      <span class="reporting-tile-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Reported</span>
+                      </span>
+                    </li>
+                    <li class="reporting-tile">
+                      <span class="reporting-tile-name">TransUnion</span>
+                      <span class="reporting-tile-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Reported</span>
+                      </span>
+                    </li>
+                  </ul>
                 </div>
 
-                <div class="journey-showcase-footer">
+                <div class="reporting-showcase-footer">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  <span>Fair → Good crossover · 12 months · reported monthly</span>
+                  <span>Every bureau. Every month. Same day cycle.</span>
                 </div>
               </div>
             </div>
@@ -877,7 +897,7 @@
                     <div class="monthly-showcase-title">Score milestones</div>
                     <div class="monthly-showcase-subtitle">Month 1 through Month 12</div>
                   </div>
-                  <div class="journey-delta">
+                  <div class="monthly-delta">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="6 15 12 9 18 15"/>
                     </svg>

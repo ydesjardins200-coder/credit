@@ -184,7 +184,7 @@
   }
 
   /* ------------------------------------------------------------------
-     initJourneyShowcase — toggles .is-visible on .journey-showcase,
+     initJourneyShowcase — toggles .is-visible on .reporting-showcase,
      .steps-showcase, .factors-showcase, and .monthly-showcase elements
      when they scroll into view, so their scroll-triggered CSS animations
      fire at the right moment.
@@ -193,7 +193,7 @@
      fire once ~20% of them is visible).
      ------------------------------------------------------------------ */
   function initJourneyShowcase() {
-    var selector = '.journey-showcase, .steps-showcase, .factors-showcase, .monthly-showcase';
+    var selector = '.reporting-showcase, .steps-showcase, .factors-showcase, .monthly-showcase';
     var showcases = document.querySelectorAll(selector);
     if (!showcases.length) return;
 

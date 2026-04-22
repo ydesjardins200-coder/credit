@@ -1534,29 +1534,14 @@ a:hover { text-decoration: underline; }
 }
 
 
-.sc-disclaimer {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  font-style: italic;
-  text-align: center;
-  margin: 0.5rem auto 0;
-  max-width: 420px;
-}
-
-.sc-disclaimer a {
-  color: var(--color-muted);
-  text-decoration: underline;
-}
-
 /* =======================================================================
-   JOURNEY SHOWCASE — white passive card matching the homepage showcases
-   (.payment-showcase, .bureaus-showcase, .ai-tip-showcase pattern).
-   Replaces the old interactive .score-card with a scroll-triggered
-   auto-animated version that fits the site-wide design system.
-   Used inside .feature-visual on /how-it-works.html.
+   REPORTING SHOWCASE — white passive card showing iBoost's monthly
+   report to all 5 major credit bureaus (3 U.S. + 2 Canada).
+   Each tile gets a staggered check-mark animation on scroll-into-view.
+   Used inside .feature-visual on /how-it-works.html Feature 1.
    ======================================================================= */
 
-.journey-showcase {
+.reporting-showcase {
   background: #fff;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08),
@@ -1571,9 +1556,7 @@ a:hover { text-decoration: underline; }
   gap: 0.9rem;
 }
 
-/* ----- Header ----- */
-
-.journey-showcase-header {
+.reporting-showcase-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1582,14 +1565,14 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--color-border);
 }
 
-.journey-showcase-title {
+.reporting-showcase-title {
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--color-fg);
   line-height: 1.2;
 }
 
-.journey-showcase-subtitle {
+.reporting-showcase-subtitle {
   font-size: 0.73rem;
   color: var(--color-muted);
   font-weight: 500;
@@ -1597,240 +1580,213 @@ a:hover { text-decoration: underline; }
   letter-spacing: 0.01em;
 }
 
-.journey-delta {
+/* Counter chip: "✓ 5 / 5" — the check is emerald, the number counts up. */
+.reporting-counter {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-accent-hover);
   background: var(--color-accent-soft);
-  padding: 4px 8px;
+  padding: 4px 9px;
   border-radius: 100px;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-.journey-delta svg {
+.reporting-counter svg {
   width: 12px;
   height: 12px;
 }
 
-/* ----- Dial (the big number) ----- */
+.reporting-counter-num {
+  font-weight: 800;
+}
 
-.journey-dial {
+.reporting-counter-total {
+  opacity: 0.75;
+}
+
+/* ---------- Market group (U.S. or Canada) ---------- */
+
+.reporting-market {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0 0.2rem;
+  gap: 6px;
 }
 
-.journey-number {
-  font-size: 3rem;
-  font-weight: 800;
-  color: var(--color-fg);
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.journey-label {
+.reporting-market-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.78rem;
+  gap: 6px;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--color-muted);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.journey-label svg {
-  width: 14px;
-  height: 14px;
-  color: var(--color-accent);
-  flex-shrink: 0;
+.reporting-market-flag {
+  font-size: 0.9rem;
+  line-height: 1;
+  /* Keep emoji renderable as-is; no filter */
 }
 
-.journey-label-from {
-  color: var(--color-muted);
+/* ---------- Tiles grid ---------- */
+
+.reporting-tiles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
 }
 
-.journey-label-to {
-  color: var(--color-accent-hover);
+.reporting-tiles-3 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
-/* ----- Trajectory SVG ----- */
-
-.journey-trajectory {
-  width: 100%;
-  height: 90px;
-  overflow: visible;
+.reporting-tiles-2 {
+  grid-template-columns: repeat(2, 1fr);
 }
 
-/* Path drawing animation: the line draws itself from left-to-right
-   when the showcase is in view (.is-visible class toggled by JS).
-   Uses stroke-dasharray + stroke-dashoffset trick. */
-.journey-path {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-}
-
-.journey-endpoint,
-.journey-endpoint-pulse {
-  opacity: 0;
-}
-
-.journey-showcase.is-visible .journey-path {
-  animation: journey-draw 2.8s ease-out 0.2s forwards;
-}
-
-.journey-showcase.is-visible .journey-endpoint {
-  animation: journey-endpoint-appear 0.4s ease-out 2.8s forwards;
-}
-
-.journey-showcase.is-visible .journey-endpoint-pulse {
-  animation:
-    journey-endpoint-appear 0.4s ease-out 2.9s forwards,
-    journey-pulse 1.8s ease-out 3.3s infinite;
-}
-
-@keyframes journey-draw {
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes journey-endpoint-appear {
-  to { opacity: 1; }
-}
-
-@keyframes journey-pulse {
-  0%   { r: 5; opacity: 0.5; }
-  100% { r: 14; opacity: 0; }
-}
-
-/* Reduced-motion: disable the drawing animation, show the final state. */
-@media (prefers-reduced-motion: reduce) {
-  .journey-path {
-    stroke-dashoffset: 0;
-    animation: none;
-  }
-  .journey-endpoint,
-  .journey-endpoint-pulse {
-    opacity: 1;
-    animation: none;
-  }
-}
-
-/* ----- Range bar (Poor -> Excellent) with position marker ----- */
-
-.journey-range {
+.reporting-tile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  transition: border-color 0.4s ease, background 0.4s ease;
 }
 
-.journey-range-bar {
-  display: flex;
-  gap: 2px;
-  height: 8px;
-  position: relative;
-  border-radius: 4px;
-  overflow: visible;
+.reporting-tile-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
 }
 
-.journey-range-seg {
-  flex: 1;
-  border-radius: 2px;
+.reporting-tile-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  transition: color 0.4s ease;
 }
 
-/* Color segments: Poor / Fair / Good / Very Good / Excellent */
-.journey-range-seg-1 { background: #ef4444; } /* Poor */
-.journey-range-seg-2 { background: #f59e0b; } /* Fair */
-.journey-range-seg-3 { background: #10b981; } /* Good */
-.journey-range-seg-4 { background: #0ea5e9; } /* Very Good */
-.journey-range-seg-5 { background: #6366f1; } /* Excellent */
-
-/* Marker that positions at 672/900 ≈ 62% along the bar, minus the start offset at 300.
-   Actually range 300-900 = 600 total. 672-300 = 372. 372/600 ≈ 62%.
-   So we use left: 62% */
-.journey-range-marker {
-  position: absolute;
-  top: -4px;
-  left: 0;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border: 2.5px solid var(--color-accent);
-  border-radius: 50%;
-  transform: translateX(-50%);
-  box-shadow: 0 2px 6px rgba(10, 37, 64, 0.15);
+.reporting-tile-status svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transform: scale(0.5);
+  transform-origin: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.journey-showcase.is-visible .journey-range-marker {
-  animation: journey-marker-slide 2.8s ease-out 0.2s forwards;
+/* ---------- Scroll-into-view animations ----------
+   Each of the 5 tiles lights up sequentially (emerald border/background
+   on the tile, emerald text on the status, checkmark fades in and pops).
+   Total sequence time: ~1.8s. */
+
+.reporting-showcase.is-visible .reporting-tile {
+  border-color: rgba(46, 204, 113, 0.4);
+  background: var(--color-accent-soft);
 }
 
-@keyframes journey-marker-slide {
-  from { left: 0; }
-  to   { left: 62%; }
+.reporting-showcase.is-visible .reporting-tile-status {
+  color: var(--color-accent-hover);
+}
+
+.reporting-showcase.is-visible .reporting-tile-status svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Stagger: U.S. bureaus first (0.3s, 0.55s, 0.8s), then Canada (1.05s, 1.3s).
+   Selectors target the tiles-3 group (U.S.) and tiles-2 group (Canada). */
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(1),
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(1) .reporting-tile-status,
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(1) .reporting-tile-status svg {
+  transition-delay: 0.3s;
+}
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(2),
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(2) .reporting-tile-status,
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(2) .reporting-tile-status svg {
+  transition-delay: 0.55s;
+}
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(3),
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(3) .reporting-tile-status,
+.reporting-showcase.is-visible .reporting-tiles-3 .reporting-tile:nth-child(3) .reporting-tile-status svg {
+  transition-delay: 0.8s;
+}
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(1),
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(1) .reporting-tile-status,
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(1) .reporting-tile-status svg {
+  transition-delay: 1.05s;
+}
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(2),
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(2) .reporting-tile-status,
+.reporting-showcase.is-visible .reporting-tiles-2 .reporting-tile:nth-child(2) .reporting-tile-status svg {
+  transition-delay: 1.3s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .journey-range-marker {
-    left: 62%;
-    animation: none;
+  .reporting-tile,
+  .reporting-tile-status,
+  .reporting-tile-status svg {
+    transition: none;
+  }
+  .reporting-tile {
+    border-color: rgba(46, 204, 113, 0.4);
+    background: var(--color-accent-soft);
+  }
+  .reporting-tile-status {
+    color: var(--color-accent-hover);
+  }
+  .reporting-tile-status svg {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.journey-range-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
+/* ---------- Footer ---------- */
 
-/* ----- Footer ----- */
-
-.journey-showcase-footer {
+.reporting-showcase-footer {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding-top: 0.7rem;
   border-top: 1px solid var(--color-border);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--color-fg-soft);
   line-height: 1.4;
 }
 
-.journey-showcase-footer svg {
+.reporting-showcase-footer svg {
   width: 14px;
   height: 14px;
   color: var(--color-accent);
   flex-shrink: 0;
 }
 
-/* Mobile: tighten the padding */
 @media (max-width: 520px) {
-  .journey-showcase {
+  .reporting-showcase {
     padding: 1rem;
     gap: 0.75rem;
   }
-  .journey-number {
-    font-size: 2.5rem;
-  }
-  .journey-label {
-    font-size: 0.72rem;
-    gap: 0.5rem;
-  }
-  .journey-delta {
-    font-size: 0.72rem;
-    padding: 3px 7px;
-  }
 }
+
 
 /* =======================================================================
    STEPS SHOWCASE — White passive card with 3 vertically-connected steps.
@@ -2292,6 +2248,26 @@ a:hover { text-decoration: underline; }
   letter-spacing: 0.01em;
 }
 
+/* Delta chip in the header: "↗ +92 pts" — same visual language as
+   .reporting-counter (emerald-soft pill with check icon). */
+.monthly-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+  padding: 4px 8px;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+.monthly-delta svg {
+  width: 12px;
+  height: 12px;
+}
+
 .monthly-chart {
   width: 100%;
   height: 140px;
@@ -2524,7 +2500,7 @@ a:hover { text-decoration: underline; }
 /* Mobile tweaks */
 @media (max-width: 899px) {
   .hero-visual { margin-top: var(--space-3); }
-  .journey-showcase, .sc-disclaimer, .hero-mini-stats {
+  .reporting-showcase, .steps-showcase, .factors-showcase, .monthly-showcase, .hero-mini-stats {
     margin-left: auto;
     margin-right: auto;
   }
