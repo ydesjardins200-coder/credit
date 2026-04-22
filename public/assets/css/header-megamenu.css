@@ -352,10 +352,6 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-.iboost-mm .site-mega-col-full {
-  grid-column: 1 / -1;
-}
-
 .iboost-mm .site-mega-col-title {
   font-size: 0.65rem;
   font-weight: 700;
@@ -552,12 +548,6 @@ body.iboost-mm:not(.has-dark-hero) .site-hamburger span {
   padding: 16px;
   border-bottom: 1px solid #f1f5f9;
   flex-shrink: 0;
-}
-
-.iboost-mm .site-drawer-logo img {
-  display: block;
-  height: 36px;
-  width: auto;
 }
 
 .iboost-mm .site-drawer-close {
