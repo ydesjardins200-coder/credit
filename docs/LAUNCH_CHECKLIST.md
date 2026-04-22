@@ -195,6 +195,23 @@ Last updated: 2026-04-21
 
 ## Monitoring / ops
 
+- [ ] **Cache strategy before launch** — `netlify.toml` currently
+      disables ALL caching (`Cache-Control: no-store`) across the whole
+      site because we were iterating heavily and hard-refresh was
+      getting annoying for Yan. Before public launch, replace the
+      wholesale `no-cache` headers in `netlify.toml` with per-asset-type
+      caching:
+        - HTML (`/*.html` or default): short cache (`max-age=0` or
+          `must-revalidate`) so new deploys are seen quickly
+        - Versioned assets (`/assets/*` if we start using cache-busted
+          filenames): long cache (`max-age=31536000, immutable`)
+        - Un-versioned assets (current state — plain filenames like
+          `/assets/css/main.css`): medium cache (`max-age=3600` or
+          similar) OR add cache-busting query strings/hashes during build
+        - Images: `max-age=31536000` is fine since they rarely change
+      Without this, production will re-download the full CSS/JS bundle
+      on every page view, inflating bandwidth and slowing first-contentful
+      paint.
 - [ ] Error tracking (Sentry, or equivalent)
 - [ ] Basic analytics (Plausible, Fathom, or Umami — privacy-friendly
       option given the YMYL context)
