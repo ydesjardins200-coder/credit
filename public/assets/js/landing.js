@@ -307,7 +307,19 @@
     initCurrency();
     initFaq();
     initScoreCard();
+    initBackToTop();
   });
+
+  // Footer "Back to top" button
+  function initBackToTop() {
+    const buttons = document.querySelectorAll('[data-footer-totop]');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      });
+    });
+  }
 
   // If Supabase is loaded via defer, iboostAuth may not exist yet at DOMContentLoaded.
   // Poll briefly, then give up.

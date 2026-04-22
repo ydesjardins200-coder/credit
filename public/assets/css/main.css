@@ -3918,30 +3918,57 @@ a:hover { text-decoration: underline; }
    FOOTER — brand column + 3 link columns + two-line bottom bar
    ======================================================================= */
 
+/* =======================================================================
+   SITE FOOTER — polished 2-section layout
+   ----------------------------------------------------------------------
+   Section 1 (main): light surface, 5-column links grid, brand with
+     social icons, emerald top border as the brand tie to the rest of
+     the site (matches the emerald throughout CTAs, pills, etc.)
+   Section 2 (fine print): dark navy bar, copyright + compliance
+     badges + back-to-top, footnotes in small text.
+   Responsive: 5 cols → 2 cols (640-980px) → 1 col stack (<640px).
+   ======================================================================= */
+
 .site-footer {
   position: relative;
-  padding: var(--space-6) 0 var(--space-4);
-  background: var(--color-surface);
   color: var(--color-fg-soft);
   font-size: 0.9rem;
+  margin-top: auto; /* sticky footer pattern on short pages (if body is flex) */
+}
+
+/* ---------- SECTION 1: Main footer (light surface) ---------- */
+
+.footer-main {
+  background: var(--color-surface);
   border-top: 3px solid var(--color-accent);
-  /* The emerald top border is the visual tie to the rest of the design
-     system — same emerald as pills, CTAs, receipts throughout the page. */
+  padding: var(--space-6) 0 var(--space-5);
 }
 
 .footer-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-5);
 }
 
-@media (min-width: 680px) {
+/* Tablet: 2 columns (brand full-width on top, then 4 link cols in 2x2) */
+@media (min-width: 640px) {
   .footer-grid {
-    grid-template-columns: 2.2fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5) var(--space-4);
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Desktop: 5 columns (brand takes ~2.4x, then 4 link cols) */
+@media (min-width: 980px) {
+  .footer-grid {
+    grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr;
     gap: var(--space-5);
+  }
+  .footer-brand {
+    grid-column: auto;
   }
 }
 
@@ -3949,6 +3976,7 @@ a:hover { text-decoration: underline; }
 
 .footer-brand {
   min-width: 0;
+  max-width: 380px;
 }
 
 .footer-logo {
@@ -3956,7 +3984,7 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 0.6rem;
   text-decoration: none;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
   transition: opacity 0.15s ease;
 }
 
@@ -3978,20 +4006,19 @@ a:hover { text-decoration: underline; }
 }
 
 .footer-tagline {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.55;
   color: var(--color-muted);
-  max-width: 320px;
-  margin: 0 0 0.75rem;
+  margin: 0 0 1rem;
 }
 
-/* ---------- Market chips row ---------- */
-
+/* Market chips row */
 .footer-market-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 .footer-chip {
@@ -3999,7 +4026,7 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 5px;
   padding: 3px 9px;
-  background: var(--color-surface-2);
+  background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 100px;
   font-size: 0.7rem;
@@ -4039,6 +4066,39 @@ a:hover { text-decoration: underline; }
   100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
 }
 
+/* Social icons row */
+.footer-social {
+  display: flex;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+
+.footer-social a {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.footer-social a:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.footer-social svg {
+  width: 15px;
+  height: 15px;
+}
+
 /* ---------- Link columns ---------- */
 
 .footer-col {
@@ -4046,10 +4106,10 @@ a:hover { text-decoration: underline; }
 }
 
 .footer-col h4 {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
   margin: 0 0 var(--space-2);
   font-weight: 700;
 }
@@ -4061,8 +4121,13 @@ a:hover { text-decoration: underline; }
 }
 
 .footer-col li {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.6rem;
   font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.footer-col li:last-child {
+  margin-bottom: 0;
 }
 
 .footer-col a {
@@ -4086,61 +4151,149 @@ a:hover { text-decoration: underline; }
   color: var(--color-primary) !important;
 }
 
-/* ---------- Bottom bar ---------- */
+/* "Coming soon" link variant — visually muted, not-yet-active */
+.footer-col-link-soon {
+  color: var(--color-muted) !important;
+  cursor: default;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  font-size: 0.78rem;
+.footer-col-link-soon::after {
+  content: 'Soon';
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  background: var(--color-surface-2);
   color: var(--color-muted);
+  border-radius: 100px;
+}
+
+/* Support column: hours line */
+.footer-col-hours {
+  font-size: 0.74rem;
+  color: var(--color-muted);
+  margin-top: 0.3rem;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* ---------- SECTION 2: Fine print bar (dark navy) ---------- */
+
+.footer-fineprint {
+  background: #0A2540;
+  color: rgba(255, 255, 255, 0.58);
+  padding: var(--space-3) 0;
+  font-size: 0.78rem;
   line-height: 1.55;
 }
 
+.footer-fineprint-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: 0.6rem;
+}
+
 .footer-copyright {
+  margin: 0;
   flex-shrink: 0;
 }
 
 .footer-copyright-sep {
   margin: 0 0.4rem;
-  color: var(--color-border-strong);
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .footer-copyright-tag {
-  color: var(--color-accent-hover);
+  color: #6ee7a8;
   font-weight: 600;
 }
 
-.footer-footnotes {
-  flex: 1;
-  text-align: right;
-  max-width: 720px;
+/* Compliance badges + back to top */
+.footer-badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.72rem;
-  color: var(--color-muted);
-  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.footer-badge svg {
+  width: 13px;
+  height: 13px;
+  color: #6ee7a8;
+}
+
+.footer-totop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.footer-totop:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.footer-totop svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Footnotes (bottom row) */
+.footer-footnotes {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.5;
+  margin: 0;
 }
 
 .footer-footnotes sup {
   font-weight: 700;
-  color: var(--color-fg-soft);
-  margin-right: 1px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-right: 2px;
 }
 
 .footer-footnote-sep {
   margin: 0 0.3rem;
-  color: var(--color-border-strong);
+  color: rgba(255, 255, 255, 0.15);
 }
 
-/* On narrow screens stack the bottom bar and left-align the footnotes */
 @media (max-width: 820px) {
-  .footer-bottom {
+  .footer-fineprint-inner {
     flex-direction: column;
     align-items: flex-start;
   }
-  .footer-footnotes {
-    text-align: left;
+  .footer-badges {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

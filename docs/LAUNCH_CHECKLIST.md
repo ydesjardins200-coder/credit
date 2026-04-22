@@ -54,6 +54,32 @@ Last updated: 2026-04-21
         - "Not a lender, credit repair org, or financial advisor" language
         - Per-footnote legal language (1: +92 pts projection basis,
           2: star rating target, 3: billing terms, 4: reported credit line)
+
+- [ ] **Footer "Coming soon" pages** — the footer Company column links
+      to 4 pages marked "Soon" that don't exist yet:
+        - `/about.html` — About us (founder story, mission, why-now)
+        - `/contact.html` — Contact form + email + hours + optional phone
+        - `/careers.html` — Job listings (or "we'll be hiring" landing)
+        - `/press.html` — Press kit (logos, screenshots, fact sheet)
+      Create these before launch, or decide which to keep as "Soon"
+      badges and remove the rest. The `.footer-col-link-soon` CSS
+      class shows the "Soon" badge automatically — when a page
+      becomes real, just remove that class from the `<a>` tag in
+      the footer of all 7 pages (index, how-it-works, pricing, faq,
+      privacy, terms, disclosures).
+
+- [ ] **Footer social media URLs** — currently 4 social icons in the
+      footer (X/Twitter, Instagram, LinkedIn, Facebook) all have
+      `href="#"` as placeholders. Before launch, either:
+        - Create the accounts and replace with real URLs, OR
+        - Remove the icons of accounts you don't plan to maintain.
+      Better to have 1 active social than 4 dead links.
+
+- [ ] **Footer support hours** — the footer shows "Mon–Fri, 9 am – 5 pm ET"
+      as support hours. These are placeholder — either:
+        - Staff a real support window that matches those hours, OR
+        - Update to your actual hours before launch, OR
+        - Remove the hours line entirely (`.footer-col-hours`).
 - [ ] **Offers tab — affiliate partnerships & accuracy**
       The Offers tab currently shows fake bank logos (RBC, TD, BMO, Scotia,
       CIBC, Tangerine, Koho, Borrowell, Fairstone, Square One, Ladder) with
