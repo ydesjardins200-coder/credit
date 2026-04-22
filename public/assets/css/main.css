@@ -991,49 +991,68 @@ a:hover { text-decoration: underline; }
   animation-duration: 4s !important;
 }
 
-/* -------- Mobile: collapse the hub to a simpler, stacked layout -------- */
+/* -------- Mobile: clean grid-based layout --------
+
+   Strategy on mobile:
+   - .hub-stage becomes a 2-column CSS grid
+   - Row 1: logo + blob (logo spans both columns, centered)
+   - Row 2: 4 cards arranged 2x2 (one per grid cell)
+   - Flag pills, Experian pill, and connector SVG are hidden —
+     they don't survive without the spatial layout
+   - All desktop absolute positioning on .hub-pos-* classes is
+     nullified so the cards can be auto-placed by the grid. */
 
 @media (max-width: 899px) {
   .hero-hub {
     padding: var(--space-6) 0 var(--space-6);
   }
 
+  /* Hub-stage becomes a 2x2 grid, with row 1 spanning both columns
+     for the logo block, and row 2 holding the 4 cards (one per cell). */
   .hub-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
     height: auto;
     min-height: 0;
-    padding: 0 0.5rem;
-    margin-top: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
+    padding: 0;
+    max-width: 360px;
+    margin: var(--space-4) auto 0;
   }
 
-  /* Logo moves from absolute-centered desktop to relative-stacked mobile */
+  /* Logo block spans both columns in row 1 */
   .hub-logo {
     width: 140px;
     height: 140px;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: center;
     position: relative;
     left: auto;
     top: auto;
     transform: none;
-    margin: 20px 0 0;
-    order: 2;
+    margin: 0 0 12px;
+    z-index: 10;
   }
 
   .hub-logo svg { width: 72px; height: 72px; }
 
+  /* Blob is absolute within the grid container, centered behind the
+     logo. z-index: 0 puts it behind the logo (which has z:10). */
   .hub-blob-wrap {
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: 70px;
     transform: translate(-50%, -50%);
-    width: 280px;
-    height: 280px;
-    order: 1;
+    width: 260px;
+    height: 260px;
+    z-index: 0;
+    pointer-events: none;
   }
 
-  /* Hide elements that don't make sense without the spatial layout */
+  /* Hide elements that don't survive without the spatial hub layout */
   .hub-connectors,
   .hub-pos-flagca,
   .hub-pos-flagus,
@@ -1041,30 +1060,42 @@ a:hover { text-decoration: underline; }
     display: none;
   }
 
-  /* The 4 main cards become a simple 2x2 grid below the logo */
+  /* Reset all desktop absolute positioning on the 4 primary cards.
+     They'll be auto-placed by the grid into row 2. */
   .hub-node {
     position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
     transform: none;
-    order: 3;
+    margin: 0;
+    z-index: 6;
   }
 
-  .hub-stage > .hub-node {
-    align-self: stretch;
-    max-width: 340px;
-    width: 100%;
-  }
-
-  /* Wrap the 4 primary cards into a 2x2 using flex + width trick */
   .hub-pos-equifax,
   .hub-pos-transunion,
   .hub-pos-stat92,
   .hub-pos-stat30d {
-    flex-basis: calc(50% - 5px);
-    max-width: 200px;
-    min-width: 140px;
-    order: 3;
+    grid-column: span 1;
+    min-width: 0;
+    width: 100%;
   }
 
+  /* Compress card padding a bit to fit the mobile grid cell */
+  .hub-node-stat-hero {
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .hub-node-m-big { font-size: 1.3rem; }
+
+  .hub-node-bureau,
+  .hub-node-stat-blue {
+    padding: 9px 11px;
+    min-width: 0;
+  }
+
+  /* CTA row stacks vertically on mobile */
   .btn-cta-hero,
   .btn-ghost-hero {
     padding: 13px 22px;
