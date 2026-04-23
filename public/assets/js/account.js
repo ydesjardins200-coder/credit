@@ -252,11 +252,11 @@
     const successBlock = document.getElementById('profile-complete-success');
     if (!formEl || !incompleteBlock || !successBlock) return;
 
-    // 1. Fetch profile
+    // 1. Fetch profile. getProfile() returns the row directly (or null),
+    // NOT a {data, error} envelope. This was bug in the first pass.
     var profile = null;
     try {
-      const res = await window.iboostAuth.getProfile();
-      profile = res && res.data ? res.data : null;
+      profile = await window.iboostAuth.getProfile();
     } catch (e) {
       console.error('[account] getProfile error:', e);
     }
