@@ -6078,6 +6078,113 @@ body.auth-page .site-footer .container {
   }
 }
 
+/* =======================================================================
+   LOGIN PAGE OVERRIDES — scoped to body.auth-page .login-split /
+   .login-intro, so signup.html stays byte-identical.
+
+   Three goals, all driven by team feedback that login felt cluttered and
+   hard to read:
+     1. Kill the decorative SVG curve on .signup-intro::before (ascending
+        growth motif) — useful for signup's conversion context, pure noise
+        for returning users.
+     2. Compact the column: shift grid from 50/50 -> 40/60 so the form
+        gets more room; tighten padding and gap.
+     3. Replace the SVG decoration with a subtle, bottom-anchored
+        hero-city.jpg — same image as index.html hero, ties login visually
+        to the homepage. Masked to fade to transparent above ~55% height
+        so it never overlaps the headline, intro, benefit list, or
+        security block.
+   ======================================================================= */
+
+/* Shift the split from 50/50 to 40/60 on desktop — more room for the form */
+@media (min-width: 900px) {
+  .signup-split.login-split {
+    grid-template-columns: 2fr 3fr;
+  }
+}
+@media (min-width: 1600px) {
+  .signup-split.login-split {
+    grid-template-columns: minmax(0, 560px) minmax(0, 720px);
+  }
+}
+
+/* Tighten the left column on login */
+.signup-intro.login-intro {
+  gap: var(--space-2);                /* was var(--space-3) */
+  padding: var(--space-4) var(--space-4);
+}
+
+/* Swap the decorative SVG for hero-city.jpg, anchored to the bottom.
+   Use a high-specificity selector to reliably override the base
+   .signup-intro::before declaration (.signup-intro already sets a
+   background-image there; we replace ALL the relevant properties). */
+body.auth-page .signup-intro.login-intro::before {
+  /* Image */
+  background-image: url('/assets/img/brand/hero-city.jpg');
+  background-size: 100% auto;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+  /* Keep it in the lower portion — 55% is enough to show the skyline
+     without bleeding into the security-block / benefit-list zone */
+  height: 55%;
+  opacity: 0.22;
+  /* Fade the image to transparent in its upper region so the edge where
+     it meets the text zone is soft, not a hard crop line */
+  mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 15%,
+    rgba(0, 0, 0, 0.7) 55%,
+    #000 100%);
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 15%,
+    rgba(0, 0, 0, 0.7) 55%,
+    #000 100%);
+}
+
+/* Slightly tighten the h1 on login — no decorative pressure, so the
+   headline can sit closer to the intro paragraph */
+.signup-intro.login-intro h1 {
+  margin-bottom: 0.25rem;
+}
+
+/* Compact support line — replaces the former mini-FAQ accordion.
+   Small, unobtrusive, sits at the bottom of the column above the
+   decorative city silhouette. */
+.login-support-line {
+  margin-top: auto;                   /* push to the bottom of the flex column */
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.login-support-line a {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  text-underline-offset: 2px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+
+.login-support-line a:hover {
+  color: #fff;
+  text-decoration-color: #fff;
+}
+
+/* Mobile: drop the image entirely on the collapsed single-column layout
+   (it would otherwise fight the text at narrow widths where there's no
+   breathing room) */
+@media (max-width: 899px) {
+  body.auth-page .signup-intro.login-intro::before {
+    display: none;
+  }
+  .login-support-line {
+    margin-top: var(--space-2);
+  }
+}
+
 /* ---------- Country selector (two radio cards) ---------- */
 .country-select {
   display: grid;

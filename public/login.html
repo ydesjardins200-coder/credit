@@ -39,19 +39,9 @@
     </div>
   </header>
 
-  <main class="signup-split">
+  <main class="signup-split login-split">
     <!-- ===== LEFT: brand + security + support ===== -->
-    <aside class="signup-intro" aria-labelledby="login-intro-title">
-      <div class="logo" aria-hidden="true">
-        <img
-          src="/assets/img/brand/logo-horizontal-80.png"
-          srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
-          alt=""
-          width="232"
-          height="80"
-        />
-      </div>
-
+    <aside class="signup-intro login-intro" aria-labelledby="login-intro-title">
       <h1 id="login-intro-title">Welcome back.</h1>
       <p class="intro-lead">
         Sign in to check your latest credit report, review your score
@@ -103,48 +93,14 @@
         </span>
       </div>
 
-      <!-- Mini-FAQ — scoped to sign-in issues -->
-      <div class="faq-mini" aria-labelledby="faqmini-title">
-        <p class="faq-mini-title" id="faqmini-title">Having trouble signing in?</p>
-        <div class="faq-mini-item">
-          <button class="faq-mini-question" aria-expanded="false">
-            I forgot my password.
-          </button>
-          <div class="faq-mini-answer">
-            <p>
-              Password reset is coming soon. Until then, email
-              <a href="mailto:support@iboost.com" style="color:rgba(255,255,255,0.85);text-decoration:underline">support@iboost.com</a>
-              from the address on your account and we'll help you reset
-              within a business day.
-            </p>
-          </div>
-        </div>
-        <div class="faq-mini-item">
-          <button class="faq-mini-question" aria-expanded="false">
-            I didn't get the verification email.
-          </button>
-          <div class="faq-mini-answer">
-            <p>
-              Check your spam and promotions folders first. If it's not
-              there after 10 minutes, email
-              <a href="mailto:support@iboost.com" style="color:rgba(255,255,255,0.85);text-decoration:underline">support@iboost.com</a>
-              and we'll resend it.
-            </p>
-          </div>
-        </div>
-        <div class="faq-mini-item">
-          <button class="faq-mini-question" aria-expanded="false">
-            My account seems locked.
-          </button>
-          <div class="faq-mini-answer">
-            <p>
-              For your security, we temporarily lock accounts after
-              several failed attempts. Wait 15 minutes and try again. If
-              the issue persists, contact support.
-            </p>
-          </div>
-        </div>
-      </div>
+      <!-- Compact support line — replaces the former mini-FAQ (3 items)
+           since this is login, not signup. Returning users don't need a
+           full accordion before typing their password. -->
+      <p class="login-support-line">
+        Trouble signing in? Email
+        <a href="mailto:support@iboost.com">support@iboost.com</a>
+        — we reply within a business day.
+      </p>
     </aside>
 
     <!-- ===== RIGHT: login form ===== -->
