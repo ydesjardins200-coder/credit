@@ -1622,6 +1622,364 @@ a:hover { text-decoration: underline; }
   }
 }
 
+/* =======================================================================
+   HERO — ABOUT (calm, foundational — experience + horizon)
+   Same compact dark-hero pattern as .hero-pricing / .hero-how-it-works /
+   .hero-faq. Image: hero-about.jpg (light-trail + foundation plane,
+   Creatify). Overlay opacity matches FAQ (74-80%) to let the trail and
+   horizon cluster read through clearly.
+   ======================================================================= */
+
+.hero-about {
+  position: relative;
+  padding: var(--space-9) 0 var(--space-10);
+  min-height: clamp(440px, 55vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    /* Centered emerald halo — aligns with the image's horizon cluster */
+    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.26) 0%, transparent 60%),
+    /* Subtle cyan accent behind the title */
+    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
+    /* Bottom vignette */
+    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
+    /* Dark navy overlay — 74-80% alpha, same as hero-faq since this
+       image also wants to breathe (light trail is the focal element) */
+    linear-gradient(165deg, rgba(10, 37, 64, 0.76) 0%, rgba(14, 45, 77, 0.7) 50%, rgba(4, 20, 38, 0.8) 100%),
+    /* Foundation + horizon image */
+    url('/assets/img/brand/hero-about.jpg') center bottom / cover no-repeat,
+    /* Fallback */
+    #0A2540;
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-about-shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-about .container {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-about-copy {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero-about-copy .hero-eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.hero-about h1 {
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
+  color: #fff;
+}
+
+.hero-about .lead {
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* Mobile: smaller vertical padding */
+@media (max-width: 640px) {
+  .hero-about {
+    padding: var(--space-7) 0 var(--space-8);
+    min-height: 360px;
+  }
+  .hero-about .lead {
+    font-size: 0.95rem;
+  }
+}
+
+
+/* =======================================================================
+   ABOUT PAGE SECTIONS — prose blocks, belief card, 'not' grid,
+   partner logos, and CTA card. All sit below the hero and share the
+   same typography rhythm.
+   ======================================================================= */
+
+/* Shared prose block used by "Why iBoost exists" and "Who we are" */
+.about-prose {
+  max-width: 720px;
+}
+
+.about-prose-center {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-prose .eyebrow {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+}
+
+.about-prose h2 {
+  margin: 0 0 var(--space-3);
+}
+
+.about-prose p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--color-fg-soft);
+  margin: 0 0 var(--space-3);
+}
+
+.about-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* -- Belief section (single emphasized statement on navy) -- */
+.about-belief {
+  background: linear-gradient(
+    180deg,
+    #0A2540 0%,
+    #0e2d4d 100%
+  );
+  color: #fff;
+  padding: var(--space-10) 0;
+}
+
+.about-belief-card {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-belief-card .eyebrow {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: var(--space-3);
+  display: inline-block;
+}
+
+.about-belief-lead {
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #fff;
+  margin: 0 0 var(--space-3);
+}
+
+.about-belief-body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* -- "What iBoost is not" 2x2 grid -- */
+.about-not {
+  padding: var(--space-10) 0;
+}
+
+.about-not-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  max-width: 960px;
+  margin: var(--space-6) auto 0;
+}
+
+.about-not-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.about-not-item:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(10, 37, 64, 0.06);
+}
+
+.about-not-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.about-not-ico svg {
+  width: 20px;
+  height: 20px;
+}
+
+.about-not-body h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 2px 0 6px;
+  line-height: 1.3;
+}
+
+.about-not-body p {
+  font-size: 0.925rem;
+  line-height: 1.55;
+  color: var(--color-fg-soft);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .about-not-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+/* -- Who we are (centered prose) -- */
+.about-who {
+  padding: var(--space-10) 0;
+}
+
+/* -- Partner logo row -- */
+.about-partners {
+  padding: var(--space-8) 0;
+}
+
+.about-partners-eyebrow {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.about-partners-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  color: #94a3b8;
+  margin: 0 auto;
+  max-width: 920px;
+}
+
+.about-partner-logo {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+
+.about-partner-logo:hover {
+  opacity: 1;
+}
+
+.about-partner-logo img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.about-partners-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  margin: var(--space-4) 0 0;
+  font-style: italic;
+}
+
+/* -- Final CTA card on the About page -- */
+.about-cta {
+  padding: var(--space-10) 0 var(--space-12);
+}
+
+.about-cta-card {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    #0A2540 0%,
+    #061A30 100%
+  );
+  border-radius: var(--radius-xl);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-cta-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 100%, rgba(46, 204, 113, 0.25), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 90% 0%, rgba(6, 182, 212, 0.1), transparent 60%);
+  pointer-events: none;
+}
+
+.about-cta-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.about-cta-card h2 {
+  font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+  margin: 0 0 var(--space-2);
+  color: #fff;
+  letter-spacing: -0.015em;
+}
+
+.about-cta-sub {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0 0 var(--space-4);
+}
+
+.about-cta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.about-cta-secondary {
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.15s;
+}
+
+.about-cta-secondary:hover {
+  color: #fff;
+}
+
 
 /* =======================================================================
    REPORTING SHOWCASE — white passive card showing iBoost's monthly

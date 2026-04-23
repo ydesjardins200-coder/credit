@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 40" role="img" aria-label="Equifax">
+  <title>Equifax (placeholder)</title>
+  <!-- Simple circular glyph -->
+  <g fill="none" stroke="currentColor" stroke-width="2.6">
+    <circle cx="15" cy="20" r="8"/>
+    <line x1="20" y1="25" x2="25" y2="30"/>
+  </g>
+  <text x="34" y="26" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="-0.01em" fill="currentColor">Equifax</text>
+</svg>

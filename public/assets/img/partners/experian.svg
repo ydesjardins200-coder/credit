@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" role="img" aria-label="Experian">
+  <title>Experian (placeholder)</title>
+  <!-- Simple geometric mark: bureau = scale/balance -->
+  <g fill="currentColor">
+    <rect x="6" y="12" width="3" height="16" rx="0.5"/>
+    <rect x="6" y="12" width="16" height="3" rx="0.5"/>
+    <rect x="6" y="25" width="12" height="3" rx="0.5"/>
+  </g>
+  <text x="34" y="26" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="-0.01em" fill="currentColor">Experian</text>
+</svg>

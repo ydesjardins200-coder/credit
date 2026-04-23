@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 175 40" role="img" aria-label="TransUnion">
+  <title>TransUnion (placeholder)</title>
+  <!-- Two overlapping arcs = union -->
+  <g fill="none" stroke="currentColor" stroke-width="2.6">
+    <path d="M 8 22 A 7 7 0 0 1 22 22"/>
+    <path d="M 11 22 A 7 7 0 0 0 25 22"/>
+  </g>
+  <text x="34" y="26" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="-0.01em" fill="currentColor">TransUnion</text>
+</svg>
