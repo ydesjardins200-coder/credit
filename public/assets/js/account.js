@@ -250,50 +250,16 @@
     const formEl = document.getElementById('profile-form');
     const incompleteBlock = document.getElementById('profile-complete-incomplete');
     const successBlock = document.getElementById('profile-complete-success');
-
-    // TEMP DIAG — verify we're reaching initProfileForm at all and that
-    // all three required DOM nodes exist. Silent early return here was
-    // masking the symptom.
-    console.log('[account][diag] initProfileForm running. DOM found:', {
-      form: !!formEl,
-      incompleteBlock: !!incompleteBlock,
-      successBlock: !!successBlock,
-    });
-
-    if (!formEl || !incompleteBlock || !successBlock) {
-      console.warn('[account][diag] initProfileForm returning early — a required DOM node is missing');
-      return;
-    }
+    if (!formEl || !incompleteBlock || !successBlock) return;
 
     // 1. Fetch profile. getProfile() returns the row directly (or null),
-    // NOT a {data, error} envelope. This was bug in the first pass.
+    // NOT a {data, error} envelope. (Inconsistent with updateProfile's
+    // shape — something to normalize later when touching auth.js.)
     var profile = null;
     try {
       profile = await window.iboostAuth.getProfile();
     } catch (e) {
       console.error('[account] getProfile error:', e);
-    }
-
-    // TEMP DIAGNOSTIC — remove once the read issue is settled.
-    // Logs what we actually got back from Supabase so we can see which
-    // of the 7 required fields (if any) is missing at the JS layer.
-    console.log('[account][diag] profile:', profile);
-    if (profile) {
-      console.log('[account][diag] kyc fields:', {
-        date_of_birth:      profile.date_of_birth,
-        address_line1:      profile.address_line1,
-        address_city:       profile.address_city,
-        address_region:     profile.address_region,
-        address_postal:     profile.address_postal,
-        credit_goal_kind:   profile.credit_goal_kind,
-        credit_goal_detail: profile.credit_goal_detail,
-      });
-      console.log(
-        '[account][diag] isProfileKycComplete:',
-        window.iboostAuth.isProfileKycComplete
-          ? window.iboostAuth.isProfileKycComplete(profile)
-          : 'HELPER_MISSING'
-      );
     }
 
     // 2. On-file pill — phone + country readable display
