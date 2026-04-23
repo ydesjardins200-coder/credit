@@ -29,24 +29,47 @@
 
   // -------- Plan catalog --------
   // Kept in sync with /pricing.html. If pricing changes, update both.
+  // 'includes' is trimmed to the top ~5 bullets so it fits the narrow
+  // left column without scrolling.
   var PLANS = {
     free: {
       name: 'Free',
       amountUsd: 0,
       amountCad: 0,
-      isFree: true
+      isFree: true,
+      includes: [
+        'Full budget app (manual entry)',
+        'Complete education library',
+        'Monthly credit tips newsletter',
+        { text: 'No bureau reporting', muted: true },
+        { text: 'No AI guidance', muted: true }
+      ]
     },
     essential: {
       name: 'iBoost Essential',
       amountUsd: 15,
       amountCad: 20,
-      isFree: false
+      isFree: false,
+      includes: [
+        '$750 reported credit line',
+        'Monthly reporting to all major bureaus',
+        'Monthly score refresh',
+        'Monthly AI credit tip',
+        'Complete education library'
+      ]
     },
     complete: {
       name: 'iBoost Complete',
       amountUsd: 30,
       amountCad: 40,
-      isFree: false
+      isFree: false,
+      includes: [
+        '$2,000 reported credit line',
+        'Weekly score refresh',
+        'Unlimited on-demand AI advice',
+        'Dispute assistance for report errors',
+        'Priority support, 7 days a week'
+      ]
     }
   };
 
@@ -98,17 +121,42 @@
     var radio = document.querySelector('.plan-picker-radio[value="' + planKey + '"]');
     if (radio) radio.checked = true;
 
-    // Visual: add .is-selected to the chosen card, remove from others.
-    $$('.pricing-card[data-plan]').forEach(function (card) {
-      if (card.getAttribute('data-plan') === planKey) {
-        card.classList.add('is-selected');
+    // Visual: add .is-selected to the chosen row, remove from others.
+    $$('.plan-row[data-plan]').forEach(function (row) {
+      if (row.getAttribute('data-plan') === planKey) {
+        row.classList.add('is-selected');
       } else {
-        card.classList.remove('is-selected');
+        row.classList.remove('is-selected');
       }
     });
 
+    renderIncludes();
     updateSummaryAndSubmit();
     updatePaymentFieldsVisibility();
+  }
+
+  // -------- What's-included list --------
+  // Renders the selected plan's feature bullets into the left column.
+  // Each entry is either a string or { text, muted } — muted items get
+  // a line-through-ish "not included" visual treatment.
+  function renderIncludes() {
+    var list = $('#plan-includes-list');
+    if (!list) return;
+    var plan = PLANS[state.planKey];
+    var items = (plan && plan.includes) || [];
+
+    // Build HTML string rather than DOM nodes — simpler, and the list
+    // re-renders often enough that perf doesn't matter.
+    var html = '';
+    items.forEach(function (item) {
+      if (typeof item === 'string') {
+        html += '<li>' + item + '</li>';
+      } else if (item && item.text) {
+        var cls = item.muted ? ' class="plan-includes-item-muted"' : '';
+        html += '<li' + cls + '>' + item.text + '</li>';
+      }
+    });
+    list.innerHTML = html;
   }
 
   // -------- Summary + submit label --------

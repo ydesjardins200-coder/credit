@@ -6981,14 +6981,16 @@ body.auth-page .signup-intro.signup-intro-v2 {
 
 
 /* =======================================================================
-   CHECKOUT — PHASE 2 (plan picker + conditional payment form)
+   CHECKOUT — PHASE 2 (two-column: plan picker + payment form)
+   =======================================================================
+   /login.html-style 40/60 layout. Left: currency toggle + 3 skinny
+   radio-row plan cards + what's-included list. Right: summary +
+   payment form + submit. Payment form collapses when Free is selected.
    ======================================================================= */
 
 /* ---- Compact hero ----
-   Same dark-emerald palette as /pricing.html but ~45% of the vertical
-   footprint (min-height 180 vs pricing's 440). No skyline shapes
-   overlay — we want the eye to land on the picker below, not get
-   stuck in the hero. */
+   Same dark-emerald palette as /pricing.html but short, because the
+   user is here to finish a task. */
 .checkout-hero {
   position: relative;
   padding: var(--space-6) 0 var(--space-5);
@@ -7003,17 +7005,12 @@ body.auth-page .signup-intro.signup-intro-v2 {
   color: #fff;
   overflow: hidden;
 }
-
 .checkout-hero-copy {
   text-align: center;
   max-width: 620px;
   margin: 0 auto;
 }
-
-.checkout-hero-copy .hero-eyebrow {
-  margin-bottom: 8px;
-}
-
+.checkout-hero-copy .hero-eyebrow { margin-bottom: 8px; }
 .checkout-hero h1 {
   font-size: clamp(1.5rem, 3vw, 2rem);
   line-height: 1.2;
@@ -7022,7 +7019,6 @@ body.auth-page .signup-intro.signup-intro-v2 {
   margin: 0 0 10px;
   color: #fff;
 }
-
 .checkout-hero-lead {
   font-size: clamp(0.94rem, 1.2vw, 1rem);
   line-height: 1.55;
@@ -7030,72 +7026,98 @@ body.auth-page .signup-intro.signup-intro-v2 {
   max-width: 520px;
   margin: 0 auto;
 }
-
 @media (max-width: 640px) {
-  .checkout-hero {
-    padding: 24px 0 20px;
-    min-height: 140px;
-  }
-  .checkout-hero h1 {
-    font-size: 1.3rem;
-  }
-  .checkout-hero-lead {
-    font-size: 0.88rem;
-  }
+  .checkout-hero { padding: 24px 0 20px; min-height: 140px; }
+  .checkout-hero h1 { font-size: 1.3rem; }
+  .checkout-hero-lead { font-size: 0.88rem; }
 }
 
-/* ---- Main container in phase 2 ----
-   We drop the two-column .checkout-layout (replaced by the picker
-   section stacked above the confirm section). Keep .checkout-main
-   centered and padded. */
+/* ---- Main container ---- */
 .checkout-page .checkout-main {
   padding: var(--space-6) 0 var(--space-8);
   background: var(--color-bg);
 }
+.checkout-page .checkout-main > .container { max-width: 1120px; }
 
-.checkout-page .checkout-main > .container {
+/* ---- Two-column layout ----
+   40/60 desktop, stacked on mobile. Mirrors /login.html's shape so the
+   two pages feel like siblings. align-items: stretch so the payment
+   column's height drives the plan column's height — they stay visually
+   tied together even when the payment block is long. */
+.checkout-layout-v2 {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 32px;
+  align-items: stretch;
+}
+@media (max-width: 880px) {
+  .checkout-layout-v2 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ---- LEFT COLUMN ---- */
+.checkout-plans-col {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(10, 37, 64, 0.06);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  max-width: 1100px;
 }
-
-/* ---- Plan picker section ---- */
-.checkout-picker-section {
+.checkout-plans-inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  gap: 16px;
+  height: 100%;
+}
+.checkout-plans-heading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
-.checkout-picker-section .currency-toggle {
-  align-self: center;
-}
-
-/* Picker-mode pricing cards — behavior layer on top of the existing
-   .pricing-card styles from /pricing.html. The <label> wraps the
-   card so the whole thing is clickable; the hidden <input type=radio>
-   inside handles keyboard / focus / state. */
-.pricing-grid.is-picker-mode {
-  /* Same three-column grid as /pricing.html but with a little less
-     horizontal tension since the container is narrower. */
-  width: 100%;
-}
-
-.pricing-grid.is-picker-mode > .pricing-card {
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  /* Reset any <label>-inherited margins / typography */
+/* Currency toggle — appears above the plan rows per spec.
+   Lean on the existing .currency-toggle styles but override a few
+   things: smaller, left-aligned, no max-width auto-centering. */
+.checkout-currency-toggle {
+  align-self: flex-start;
   margin: 0;
 }
 
-.pricing-grid.is-picker-mode > .pricing-card:hover {
-  transform: translateY(-2px);
+/* ---- Plan rows (skinny radio cards) ---- */
+.plan-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.plan-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.plan-row:hover {
+  border-color: #cbd5e1;
+}
+.plan-row.is-selected {
+  border-color: var(--color-accent);
+  background: rgba(46, 204, 113, 0.04);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.12);
 }
 
-/* Hide the radio visually but keep it keyboard-focusable and
-   screen-reader-discoverable. */
+/* Hide native radio, keep keyboard-focusable */
 .plan-picker-radio {
   position: absolute;
   opacity: 0;
@@ -7103,78 +7125,164 @@ body.auth-page .signup-intro.signup-intro-v2 {
   width: 1px;
   height: 1px;
 }
-
-/* When the radio is focused via keyboard, ring the whole card. */
-.plan-picker-radio:focus-visible + .plan-picker-check ~ * {
-  /* no-op selector — real focus is on the card via the next rule */
-}
-.pricing-grid.is-picker-mode > .pricing-card:has(.plan-picker-radio:focus-visible) {
+.plan-row:has(.plan-picker-radio:focus-visible) {
   outline: 3px solid var(--color-accent);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
-/* Checkmark badge: hidden by default, fades in when card is selected. */
-.plan-picker-check {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
+/* Radio indicator circle on the left */
+.plan-row-indicator {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
   border-radius: 50%;
-  background: var(--color-accent);
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: border-color 0.18s ease;
+  flex-shrink: 0;
+}
+.plan-row-indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
   opacity: 0;
   transform: scale(0.6);
   transition: opacity 0.18s ease, transform 0.18s ease;
-  pointer-events: none;
-  z-index: 3;
 }
-
-.plan-picker-check svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Selected state — the card you chose */
-.pricing-grid.is-picker-mode > .pricing-card.is-selected {
+.plan-row.is-selected .plan-row-indicator {
   border-color: var(--color-accent);
-  box-shadow:
-    0 0 0 2px var(--color-accent),
-    0 12px 28px rgba(46, 204, 113, 0.18);
 }
-
-.pricing-grid.is-picker-mode > .pricing-card.is-selected .plan-picker-check {
+.plan-row.is-selected .plan-row-indicator-dot {
   opacity: 1;
   transform: scale(1);
 }
 
-/* When the featured (Essential) card is NOT selected, tone down its
-   scale emphasis so it doesn't fight the user's actual choice. */
-.pricing-grid.is-picker-mode > .pricing-card-featured:not(.is-selected) {
-  transform: none;
+/* Plan body: name + desc */
+.plan-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.plan-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.plan-row-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  letter-spacing: -0.01em;
+}
+.plan-row-desc {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+.plan-row-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+.plan-row-badge-soft {
+  background: rgba(46, 204, 113, 0.14);
+  color: #065f46;
 }
 
-@media (max-width: 900px) {
-  .pricing-grid.is-picker-mode > .pricing-card-featured {
-    /* /pricing.html's scale-up on the middle card doesn't make sense in
-       the picker, where the user's choice drives emphasis. */
-    transform: none !important;
-  }
+/* Price stack on the right */
+.plan-row-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+}
+.plan-row-amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.plan-row-period {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  line-height: 1.2;
 }
 
-/* ---- Confirm section (summary + payment + submit) ---- */
-.checkout-confirm-section {
+/* ---- What's included block ---- */
+.plan-includes {
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto; /* lets it absorb extra height when the right column is tall */
+}
+.plan-includes-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+.plan-includes-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plan-includes-list li {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-fg-soft);
+  padding-left: 22px;
+  position: relative;
+}
+.plan-includes-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='12 4 6 11 3 8'/%3E%3C/svg%3E");
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.plan-includes-list li.plan-includes-item-muted {
+  color: var(--color-muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.4);
+}
+.plan-includes-list li.plan-includes-item-muted::before {
+  background: #cbd5e1;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='8' x2='12' y2='8'/%3E%3C/svg%3E");
+}
+
+/* ---- RIGHT COLUMN — confirm / payment ---- */
+.checkout-confirm-col {
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 28px;
   box-shadow: 0 6px 18px rgba(10, 37, 64, 0.06);
-  max-width: 640px;
-  width: 100%;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -7188,9 +7296,6 @@ body.auth-page .signup-intro.signup-intro-v2 {
   gap: 8px;
 }
 
-/* Inherit .checkout-summary-row styles from the old checkout — they
-   already match our design tokens. */
-
 /* Payment fields block — collapses when Free is selected */
 .checkout-payment-fields {
   display: flex;
@@ -7201,40 +7306,26 @@ body.auth-page .signup-intro.signup-intro-v2 {
   transition: max-height 0.32s ease, opacity 0.2s ease, margin 0.32s ease;
   overflow: hidden;
 }
-
 body.is-free-selected .checkout-payment-fields {
   max-height: 0;
   opacity: 0;
-  margin-bottom: -20px; /* offset the parent's gap so spacing collapses too */
+  margin-bottom: -20px;
   pointer-events: none;
 }
-
-/* When Free is selected, also remove the payment-fields' bottom gap
-   cleanly (parent uses gap:20px which otherwise lingers). */
 body.is-free-selected .checkout-confirm-summary {
   margin-bottom: 0;
 }
 
-/* Submit spinner state — renamed from .is-loading to .is-processing
-   so both old and new class refs work during transition. */
-.checkout-submit-btn.is-processing {
-  pointer-events: none;
-}
-.checkout-submit-btn.is-processing .checkout-submit-txt {
-  opacity: 0;
-}
-.checkout-submit-btn.is-processing .checkout-submit-spinner {
-  opacity: 1;
-}
+/* Submit spinner state */
+.checkout-submit-btn.is-processing { pointer-events: none; }
+.checkout-submit-btn.is-processing .checkout-submit-txt { opacity: 0; }
+.checkout-submit-btn.is-processing .checkout-submit-spinner { opacity: 1; }
 
 @media (max-width: 640px) {
-  .checkout-confirm-section {
-    padding: 20px 18px;
-  }
-  .checkout-page .checkout-main > .container {
-    gap: var(--space-4);
-  }
+  .checkout-confirm-col,
+  .checkout-plans-col { padding: 20px 18px; }
 }
+
 
 
 /* Welcome banner on /account.html after successful checkout.

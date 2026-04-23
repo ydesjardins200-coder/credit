@@ -68,281 +68,274 @@
   <main class="checkout-main">
     <div class="container">
 
-      <!-- ============= PLAN PICKER =============
-           Reuses .pricing-grid / .pricing-card markup from /pricing.html so
-           the visual treatment stays identical. The picker-specific behavior
-           (radio selection, active-state outlining) is added via
-           .is-picker-mode on the grid — keeps the same cards clickable
-           without changing their base layout. -->
-      <section class="checkout-picker-section" aria-label="Plan selection">
+      <!-- ============= TWO-COLUMN LAYOUT =============
+           40/60 split on desktop (matches /login.html's visual language).
+           Stacks on mobile via media query. -->
+      <div class="checkout-layout-v2">
 
-        <div class="currency-toggle" role="group" aria-label="Currency">
-          <button type="button" data-currency-toggle="usd" aria-pressed="true">🇺🇸 USD</button>
-          <button type="button" data-currency-toggle="cad" aria-pressed="false">🇨🇦 CAD</button>
-        </div>
+        <!-- =========== LEFT COLUMN — plan picker =========== -->
+        <!-- Skinny radio-row cards. Order: Complete > Essential > Free.
+             Currency toggle sits ABOVE the cards per Yan's spec. -->
+        <aside class="checkout-plans-col" aria-label="Plan selection">
+          <div class="checkout-plans-inner">
 
-        <div class="pricing-grid is-picker-mode" role="radiogroup" aria-label="Choose a plan" id="plan-picker-grid">
+            <h2 class="checkout-plans-heading">Select a plan</h2>
 
-          <!-- ============= TIER 1: FREE ============= -->
-          <label class="pricing-card pricing-card-free" data-plan="free">
-            <input type="radio" name="plan" value="free" class="plan-picker-radio" />
-            <span class="plan-picker-check" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
-            <h3>Free</h3>
-            <div class="price-line">
-              <span class="price-amount">$0</span>
-              <span class="price-period">forever</span>
-            </div>
-            <p class="pricing-tagline">Learn the system. Build the habits. Upgrade when you're ready.</p>
-            <ul>
-              <li>Full budget app (manual entry)</li>
-              <li>Complete education library</li>
-              <li>Monthly credit tips newsletter</li>
-              <li class="pricing-item-muted">No bureau reporting</li>
-              <li class="pricing-item-muted">No AI guidance</li>
-            </ul>
-          </label>
-
-          <!-- ============= TIER 2: ESSENTIAL ============= -->
-          <label class="pricing-card pricing-card-essential pricing-card-featured" data-plan="essential">
-            <input type="radio" name="plan" value="essential" class="plan-picker-radio" />
-            <span class="plan-picker-check" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
-            <span class="pricing-card-badge">Most popular</span>
-            <h3>iBoost Essential</h3>
-            <div class="price-line">
-              <span class="price-amount" data-currency="usd">$15</span>
-              <span class="price-amount" data-currency="cad" hidden>$20</span>
-              <span class="price-currency" data-currency="usd">USD</span>
-              <span class="price-currency" data-currency="cad" hidden>CAD</span>
-              <span class="price-period">/ month</span>
-            </div>
-            <p class="pricing-tagline">Real credit work without the premium add-ons.</p>
-            <ul>
-              <li>$750 reported credit line</li>
-              <li>Monthly reporting to all major bureaus</li>
-              <li>Monthly score refresh</li>
-              <li>Monthly AI credit tip</li>
-              <li>Complete education library</li>
-            </ul>
-          </label>
-
-          <!-- ============= TIER 3: COMPLETE (default-selected) ============= -->
-          <label class="pricing-card pricing-card-complete" data-plan="complete">
-            <input type="radio" name="plan" value="complete" class="plan-picker-radio" checked />
-            <span class="plan-picker-check" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
-            <h3>iBoost Complete</h3>
-            <div class="price-line">
-              <span class="price-amount" data-currency="usd">$30</span>
-              <span class="price-amount" data-currency="cad" hidden>$40</span>
-              <span class="price-currency" data-currency="usd">USD</span>
-              <span class="price-currency" data-currency="cad" hidden>CAD</span>
-              <span class="price-period">/ month</span>
-            </div>
-            <p class="pricing-tagline">Everything we offer. Maximum score-building velocity.</p>
-            <ul>
-              <li><strong>$2,000 reported credit line</strong></li>
-              <li><strong>Weekly</strong> score refresh</li>
-              <li><strong>Unlimited on-demand AI advice</strong></li>
-              <li><strong>Dispute assistance for report errors</strong></li>
-              <li><strong>Priority support, 7 days a week</strong></li>
-            </ul>
-          </label>
-
-        </div>
-
-      </section>
-
-      <!-- ============= PAYMENT / CONFIRM SECTION =============
-           The .checkout-payment-fields block collapses when Free is selected
-           (controlled by JS adding .is-free-selected on <body>). The submit
-           button is always rendered — only its label and the
-           payment-fields block change. -->
-      <section class="checkout-confirm-section" aria-label="Payment and confirmation">
-
-        <div class="checkout-confirm-summary">
-          <div class="checkout-summary-row">
-            <span>Plan</span>
-            <span><strong id="summary-plan-name">iBoost Complete</strong></span>
-          </div>
-          <div class="checkout-summary-row">
-            <span>Billed today</span>
-            <span><strong id="billed-today-amount">$30.00</strong></span>
-          </div>
-          <div class="checkout-summary-row checkout-summary-row-muted" id="summary-renews-row">
-            <span>Renews monthly</span>
-            <span>Cancel anytime</span>
-          </div>
-        </div>
-
-        <div class="checkout-payment-fields" id="checkout-payment-fields">
-          <!-- Header + dummy-fill button -->
-          <div class="checkout-form-header">
-            <h2>Payment method</h2>
-            <p>Enter your card to activate your subscription.</p>
-            <!-- DEV-MODE shortcut: fills all fields with placeholder values.
-                 Visible because .checkout-dev-banner above makes it clear
-                 the page is not production. Delete this button when Stripe
-                 goes live (or gate it behind a NODE_ENV check). -->
-            <button type="button" class="checkout-fill-dummy-btn" id="checkout-fill-dummy">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Fill with dummy data
-            </button>
-          </div>
-
-          <form class="checkout-form" id="checkout-form" autocomplete="off" novalidate>
-
-            <!-- Email (read-only, prefilled from session) -->
-            <div class="checkout-field">
-              <label for="checkout-email">Email</label>
-              <input type="email" id="checkout-email" name="email" readonly value="signup@example.com" />
+            <div class="currency-toggle checkout-currency-toggle" role="group" aria-label="Currency">
+              <button type="button" data-currency-toggle="usd" aria-pressed="true">🇺🇸 USD</button>
+              <button type="button" data-currency-toggle="cad" aria-pressed="false">🇨🇦 CAD</button>
             </div>
 
-            <!-- Card number -->
-            <div class="checkout-field">
-              <label for="checkout-card-number">Card number</label>
-              <div class="checkout-card-input-wrap">
-                <input
-                  type="text"
-                  id="checkout-card-number"
-                  name="card_number"
-                  inputmode="numeric"
-                  autocomplete="cc-number"
-                  placeholder="1234 1234 1234 1234"
-                  maxlength="19"
-                />
-                <div class="checkout-card-logos" aria-hidden="true">
-                  <!-- Visa -->
-                  <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="38" height="24" rx="3" fill="#1434cb"/>
-                    <text x="19" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" font-style="italic" fill="#fff">VISA</text>
-                  </svg>
-                  <!-- Mastercard -->
-                  <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="38" height="24" rx="3" fill="#fff" stroke="#e5e7eb"/>
-                    <circle cx="15" cy="12" r="6" fill="#eb001b"/>
-                    <circle cx="23" cy="12" r="6" fill="#f79e1b" fill-opacity="0.9"/>
-                  </svg>
-                  <!-- Amex -->
-                  <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="38" height="24" rx="3" fill="#2557d6"/>
-                    <text x="19" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="7" fill="#fff">AMEX</text>
-                  </svg>
+            <div class="plan-rows" role="radiogroup" aria-label="Choose a plan" id="plan-picker-grid">
+
+              <!-- TIER 1 (top): COMPLETE (default-selected) -->
+              <label class="plan-row plan-row-complete" data-plan="complete">
+                <input type="radio" name="plan" value="complete" class="plan-picker-radio" checked />
+                <span class="plan-row-indicator" aria-hidden="true">
+                  <span class="plan-row-indicator-dot"></span>
+                </span>
+                <span class="plan-row-body">
+                  <span class="plan-row-head">
+                    <span class="plan-row-name">iBoost Complete</span>
+                    <span class="plan-row-badge">Best value</span>
+                  </span>
+                  <span class="plan-row-desc">Maximum score-building velocity.</span>
+                </span>
+                <span class="plan-row-price">
+                  <span class="plan-row-amount" data-currency="usd">$30</span>
+                  <span class="plan-row-amount" data-currency="cad" hidden>$40</span>
+                  <span class="plan-row-period">/ mo</span>
+                </span>
+              </label>
+
+              <!-- TIER 2: ESSENTIAL -->
+              <label class="plan-row plan-row-essential" data-plan="essential">
+                <input type="radio" name="plan" value="essential" class="plan-picker-radio" />
+                <span class="plan-row-indicator" aria-hidden="true">
+                  <span class="plan-row-indicator-dot"></span>
+                </span>
+                <span class="plan-row-body">
+                  <span class="plan-row-head">
+                    <span class="plan-row-name">iBoost Essential</span>
+                    <span class="plan-row-badge plan-row-badge-soft">Most popular</span>
+                  </span>
+                  <span class="plan-row-desc">Real credit work, essentials only.</span>
+                </span>
+                <span class="plan-row-price">
+                  <span class="plan-row-amount" data-currency="usd">$15</span>
+                  <span class="plan-row-amount" data-currency="cad" hidden>$20</span>
+                  <span class="plan-row-period">/ mo</span>
+                </span>
+              </label>
+
+              <!-- TIER 3: FREE -->
+              <label class="plan-row plan-row-free" data-plan="free">
+                <input type="radio" name="plan" value="free" class="plan-picker-radio" />
+                <span class="plan-row-indicator" aria-hidden="true">
+                  <span class="plan-row-indicator-dot"></span>
+                </span>
+                <span class="plan-row-body">
+                  <span class="plan-row-head">
+                    <span class="plan-row-name">Free</span>
+                  </span>
+                  <span class="plan-row-desc">Learn the system. Upgrade anytime.</span>
+                </span>
+                <span class="plan-row-price">
+                  <span class="plan-row-amount">$0</span>
+                  <span class="plan-row-period">forever</span>
+                </span>
+              </label>
+
+            </div>
+
+            <!-- What's included — dynamically populated from selected plan.
+                 Matches /pricing.html's feature list but trimmed to top 5
+                 bullets so it fits the narrow column. -->
+            <div class="plan-includes" id="plan-includes" aria-label="Plan includes">
+              <h3 class="plan-includes-heading">What's included</h3>
+              <ul class="plan-includes-list" id="plan-includes-list">
+                <!-- Populated by checkout.js -->
+              </ul>
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- =========== RIGHT COLUMN — payment / confirm =========== -->
+        <section class="checkout-confirm-col" aria-label="Payment and confirmation">
+
+          <div class="checkout-confirm-summary">
+            <div class="checkout-summary-row">
+              <span>Plan</span>
+              <span><strong id="summary-plan-name">iBoost Complete</strong></span>
+            </div>
+            <div class="checkout-summary-row">
+              <span>Billed today</span>
+              <span><strong id="billed-today-amount">$30.00</strong></span>
+            </div>
+            <div class="checkout-summary-row checkout-summary-row-muted" id="summary-renews-row">
+              <span>Renews monthly</span>
+              <span>Cancel anytime</span>
+            </div>
+          </div>
+
+          <div class="checkout-payment-fields" id="checkout-payment-fields">
+            <div class="checkout-form-header">
+              <h2>Payment method</h2>
+              <p>Enter your card to activate your subscription.</p>
+              <!-- DEV-MODE shortcut: fills all fields with placeholder values.
+                   Visible because .checkout-dev-banner above makes it clear
+                   the page is not production. Delete this button when Stripe
+                   goes live. -->
+              <button type="button" class="checkout-fill-dummy-btn" id="checkout-fill-dummy">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Fill with dummy data
+              </button>
+            </div>
+
+            <form class="checkout-form" id="checkout-form" autocomplete="off" novalidate>
+
+              <!-- Email (read-only, prefilled from session) -->
+              <div class="checkout-field">
+                <label for="checkout-email">Email</label>
+                <input type="email" id="checkout-email" name="email" readonly value="signup@example.com" />
+              </div>
+
+              <!-- Card number -->
+              <div class="checkout-field">
+                <label for="checkout-card-number">Card number</label>
+                <div class="checkout-card-input-wrap">
+                  <input
+                    type="text"
+                    id="checkout-card-number"
+                    name="card_number"
+                    inputmode="numeric"
+                    autocomplete="cc-number"
+                    placeholder="1234 1234 1234 1234"
+                    maxlength="19"
+                  />
+                  <div class="checkout-card-logos" aria-hidden="true">
+                    <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="38" height="24" rx="3" fill="#1434cb"/>
+                      <text x="19" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" font-style="italic" fill="#fff">VISA</text>
+                    </svg>
+                    <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="38" height="24" rx="3" fill="#fff" stroke="#e5e7eb"/>
+                      <circle cx="15" cy="12" r="6" fill="#eb001b"/>
+                      <circle cx="23" cy="12" r="6" fill="#f79e1b" fill-opacity="0.9"/>
+                    </svg>
+                    <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="38" height="24" rx="3" fill="#2557d6"/>
+                      <text x="19" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="7" fill="#fff">AMEX</text>
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Expiry + CVC on one row -->
-            <div class="checkout-field-row">
+              <!-- Expiry + CVC on one row -->
+              <div class="checkout-field-row">
+                <div class="checkout-field">
+                  <label for="checkout-expiry">Expiration</label>
+                  <input
+                    type="text"
+                    id="checkout-expiry"
+                    name="expiry"
+                    inputmode="numeric"
+                    autocomplete="cc-exp"
+                    placeholder="MM / YY"
+                    maxlength="7"
+                  />
+                </div>
+                <div class="checkout-field">
+                  <label for="checkout-cvc">
+                    CVC
+                    <span class="checkout-field-hint" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    id="checkout-cvc"
+                    name="cvc"
+                    inputmode="numeric"
+                    autocomplete="cc-csc"
+                    placeholder="CVC"
+                    maxlength="4"
+                  />
+                </div>
+              </div>
+
+              <!-- Name on card -->
               <div class="checkout-field">
-                <label for="checkout-expiry">Expiration</label>
+                <label for="checkout-cardholder">Name on card</label>
                 <input
                   type="text"
-                  id="checkout-expiry"
-                  name="expiry"
-                  inputmode="numeric"
-                  autocomplete="cc-exp"
-                  placeholder="MM / YY"
-                  maxlength="7"
+                  id="checkout-cardholder"
+                  name="cardholder"
+                  autocomplete="cc-name"
+                  placeholder="Full name as shown on card"
                 />
               </div>
-              <div class="checkout-field">
-                <label for="checkout-cvc">
-                  CVC
-                  <span class="checkout-field-hint" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                      <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  id="checkout-cvc"
-                  name="cvc"
-                  inputmode="numeric"
-                  autocomplete="cc-csc"
-                  placeholder="CVC"
-                  maxlength="4"
-                />
+
+              <!-- Country + postal -->
+              <div class="checkout-field-row">
+                <div class="checkout-field">
+                  <label for="checkout-country">Country</label>
+                  <select id="checkout-country" name="country">
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                  </select>
+                </div>
+                <div class="checkout-field">
+                  <label for="checkout-postal">ZIP / Postal code</label>
+                  <input
+                    type="text"
+                    id="checkout-postal"
+                    name="postal"
+                    autocomplete="postal-code"
+                    placeholder="12345"
+                  />
+                </div>
               </div>
-            </div>
+            </form>
+          </div>
 
-            <!-- Name on card -->
-            <div class="checkout-field">
-              <label for="checkout-cardholder">Name on card</label>
-              <input
-                type="text"
-                id="checkout-cardholder"
-                name="cardholder"
-                autocomplete="cc-name"
-                placeholder="Full name as shown on card"
-              />
-            </div>
+          <!-- Alert area for errors — outside the collapsible block so
+               errors stay visible when Free collapses the payment fields. -->
+          <div id="checkout-alert" class="alert alert-error" hidden></div>
 
-            <!-- Country + postal -->
-            <div class="checkout-field-row">
-              <div class="checkout-field">
-                <label for="checkout-country">Country</label>
-                <select id="checkout-country" name="country">
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                </select>
-              </div>
-              <div class="checkout-field">
-                <label for="checkout-postal">ZIP / Postal code</label>
-                <input
-                  type="text"
-                  id="checkout-postal"
-                  name="postal"
-                  autocomplete="postal-code"
-                  placeholder="12345"
-                />
-              </div>
-            </div>
-          </form>
-        </div>
+          <!-- Submit button — label changes based on selected plan. -->
+          <button type="submit" form="checkout-form" class="checkout-submit-btn" id="checkout-submit">
+            <span class="checkout-submit-txt" id="checkout-submit-label">
+              Pay <span id="pay-amount">$30.00</span>
+            </span>
+            <span class="checkout-submit-spinner" aria-hidden="true"></span>
+          </button>
 
-        <!-- Alert area for errors. OUTSIDE the form/payment-fields block so
-             it stays visible when Free collapses the payment fields. -->
-        <div id="checkout-alert" class="alert alert-error" hidden></div>
+          <!-- Trust & legal micro-text below submit -->
+          <p class="checkout-submit-legal" id="checkout-submit-legal">
+            By confirming your subscription, you authorize iBoost to charge your
+            card monthly until you cancel. Cancel anytime from your account
+            dashboard.
+          </p>
 
-        <!-- Submit button — label changes based on selected plan.
-             Lives outside the form but submits it via the form="..." attr,
-             so the same button works whether payment fields are collapsed
-             (Free) or visible (paid). -->
-        <button type="submit" form="checkout-form" class="checkout-submit-btn" id="checkout-submit">
-          <span class="checkout-submit-txt" id="checkout-submit-label">
-            Pay <span id="pay-amount">$30.00</span>
-          </span>
-          <span class="checkout-submit-spinner" aria-hidden="true"></span>
-        </button>
+          <div class="checkout-powered-by" aria-hidden="true" id="checkout-powered-by">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Secured by Stripe (placeholder &mdash; dev mode)
+          </div>
 
-        <!-- Trust & legal micro-text below submit. Swaps copy when Free is
-             selected (no "charge your card" language). -->
-        <p class="checkout-submit-legal" id="checkout-submit-legal">
-          By confirming your subscription, you authorize iBoost to charge your
-          card monthly until you cancel. Cancel anytime from your account
-          dashboard.
-        </p>
+        </section>
 
-        <div class="checkout-powered-by" aria-hidden="true" id="checkout-powered-by">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          Secured by Stripe (placeholder &mdash; dev mode)
-        </div>
-
-      </section>
-
+      </div>
     </div>
   </main>
 
