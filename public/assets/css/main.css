@@ -6128,18 +6128,23 @@ body.auth-page .signup-intro.login-intro::before {
      without bleeding into the security-block / benefit-list zone */
   height: 55%;
   opacity: 0.22;
-  /* Fade the image to transparent in its upper region so the edge where
-     it meets the text zone is soft, not a hard crop line */
+  /* Mask fades the image softly at BOTH ends:
+       - top: so it doesn't compete with the text zone above
+       - bottom: so the horizon / water-reflection line in the source
+         image (row ~430/540 ≈ 80% down, where brightness drops sharply)
+         disappears instead of reading as a hard horizontal edge */
   mask-image: linear-gradient(to bottom,
     transparent 0%,
     rgba(0, 0, 0, 0.15) 15%,
-    rgba(0, 0, 0, 0.7) 55%,
-    #000 100%);
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.95) 75%,
+    transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom,
     transparent 0%,
     rgba(0, 0, 0, 0.15) 15%,
-    rgba(0, 0, 0, 0.7) 55%,
-    #000 100%);
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.95) 75%,
+    transparent 100%);
 }
 
 /* Slightly tighten the h1 on login — no decorative pressure, so the
@@ -6148,40 +6153,12 @@ body.auth-page .signup-intro.login-intro::before {
   margin-bottom: 0.25rem;
 }
 
-/* Compact support line — replaces the former mini-FAQ accordion.
-   Small, unobtrusive, sits at the bottom of the column above the
-   decorative city silhouette. */
-.login-support-line {
-  margin-top: auto;                   /* push to the bottom of the flex column */
-  font-size: 0.85rem;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.72);
-  padding-top: var(--space-3);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.login-support-line a {
-  color: rgba(255, 255, 255, 0.92);
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.35);
-  text-underline-offset: 2px;
-  transition: color 0.15s, text-decoration-color 0.15s;
-}
-
-.login-support-line a:hover {
-  color: #fff;
-  text-decoration-color: #fff;
-}
-
 /* Mobile: drop the image entirely on the collapsed single-column layout
    (it would otherwise fight the text at narrow widths where there's no
    breathing room) */
 @media (max-width: 899px) {
   body.auth-page .signup-intro.login-intro::before {
     display: none;
-  }
-  .login-support-line {
-    margin-top: var(--space-2);
   }
 }
 
