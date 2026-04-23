@@ -39,13 +39,22 @@
   // now lands on /checkout.html where the user picks a plan and (for
   // paid tiers) enters payment details.
   //
-  // Phase 2 of the refactor will rebuild /checkout.html with the
-  // transparent dark-hero plan selector that matches /pricing.html. For
-  // now (phase 1), the redirect target is hardcoded to /checkout.html
-  // with no ?plan= param.
+  // Plan-forwarding: if the user arrived on /signup.html with a ?plan=
+  // query (e.g. they clicked 'Start Essential' on /pricing.html), we
+  // carry that hint through to /checkout.html?plan=... so their choice
+  // is pre-selected in the picker. Accepted values: free, essential,
+  // complete (matching checkout.js's PLANS catalog). Invalid values
+  // are dropped silently — checkout falls back to its default (complete).
 
   function getPostSignupPath() {
-    return '/checkout.html';
+    var target = '/checkout.html';
+    try {
+      var qp = (new URLSearchParams(window.location.search).get('plan') || '').toLowerCase();
+      if (qp === 'free' || qp === 'essential' || qp === 'complete') {
+        target += '?plan=' + qp;
+      }
+    } catch (e) { /* URL APIs unavailable — fall through to unparameterized target */ }
+    return target;
   }
 
   // ----- Phone formatting + validation -----
