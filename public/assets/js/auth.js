@@ -33,17 +33,58 @@
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true,
-        // Force implicit flow (hash-based #access_token=...) to match what
-        // our Supabase project emits via the OAuth callback. In supabase-js
-        // v2 recent versions, the default flowType was changed to PKCE
-        // which expects ?code=... query param. Our Supabase auth/v1/callback
-        // returns #access_token=... (implicit), so the client needs to be
-        // told to expect that format.
-        flowType: 'implicit',
+        // NOTE: we explicitly disable detectSessionInUrl because we're
+        // parsing the hash manually below. Observed: with it enabled,
+        // the client silently fails to extract the session from
+        // #access_token=... even though the hash IS present and the JWT
+        // is valid. Rather than fight that, we take over the hash parse
+        // ourselves — simpler, fully deterministic, and works regardless
+        // of which flowType/version the client defaults to.
+        detectSessionInUrl: false,
       },
     }
   );
+
+  // Manual OAuth hash ingestion.
+  // If the URL has #access_token=<jwt>&refresh_token=<rt>, extract them
+  // and call setSession() — this is what detectSessionInUrl is supposed
+  // to do but doesn't work in our environment. Blocking at module load
+  // via an immediately-invoked async function whose promise is exposed
+  // as `sessionBootReady`; requireSession etc. await this promise before
+  // doing anything else.
+  var sessionBootReady = (async function bootSessionFromHash() {
+    try {
+      var hash = window.location.hash || '';
+      if (hash.length < 2) return; // nothing to do
+
+      // Parse the fragment. Format: #k1=v1&k2=v2&... (standard URL-encoded).
+      var params = new URLSearchParams(hash.substring(1));
+      var access_token = params.get('access_token');
+      var refresh_token = params.get('refresh_token');
+
+      if (!access_token || !refresh_token) return; // not an OAuth return
+
+      // Tell Supabase: here's the session. This writes it to storage,
+      // emits SIGNED_IN, and makes getSession() return it immediately.
+      var { error } = await client.auth.setSession({
+        access_token: access_token,
+        refresh_token: refresh_token,
+      });
+      if (error) {
+        console.error('[iboost-auth] setSession rejected the OAuth tokens:', error);
+        return;
+      }
+
+      // Clean the hash from the URL (security — same thing
+      // detectSessionInUrl would have done).
+      if (window.history && window.history.replaceState) {
+        var clean = window.location.pathname + window.location.search;
+        window.history.replaceState({}, '', clean);
+      }
+    } catch (e) {
+      console.error('[iboost-auth] bootSessionFromHash threw:', e);
+    }
+  })();
 
   // ----- Public API -----
 
@@ -176,14 +217,18 @@
 
   async function requireSession(loginPath) {
     console.log('[iboost]', 'requireSession: href =', window.location.href);
-    // Fast path: getSession() returns instantly if the session is already
-    // persisted in localStorage (returning user, no OAuth in progress).
+    // Wait for the manual OAuth hash parse to complete (no-op on pages
+    // without a hash). This ensures setSession() has been called if
+    // we're coming back from OAuth.
+    await sessionBootReady;
+    console.log('[iboost]', 'requireSession: bootSession complete');
+
     let { session } = await getSession();
     console.log('[iboost]', 'requireSession: first getSession →', session ? 'SESSION' : 'null');
 
-    // Slow path: no session yet, but an OAuth return might be in progress.
-    // Wait for INITIAL_SESSION (captured by the module-level subscription
-    // above) which fires once Supabase finishes parsing the hash.
+    // Fallback for non-OAuth edge cases: if still null, wait a bit for
+    // INITIAL_SESSION in case the session is landing from elsewhere
+    // (storage hydration, multi-tab sync).
     if (!session) {
       console.log('[iboost]', 'requireSession: no session yet, awaiting INITIAL_SESSION…');
       session = await initialSessionReady;
@@ -360,6 +405,7 @@
   // if getSession() returns null, waits for the module-level
   // INITIAL_SESSION event before giving up.
   async function getSessionSettled() {
+    await sessionBootReady;
     let { session } = await getSession();
     if (!session) {
       session = await initialSessionReady;
