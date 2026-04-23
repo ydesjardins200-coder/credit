@@ -14,6 +14,13 @@ window.IBOOST_CONFIG = {
   // Supabase anon/public key
   SUPABASE_ANON_KEY: 'REPLACE_ME',
 
-  // Backend API base URL (Railway deployment, or http://localhost:3000 in dev)
+  // Backend API base URL. Call the Railway backend like:
+  //   fetch(window.IBOOST_CONFIG.API_BASE_URL + '/api/health', {
+  //     headers: { Authorization: 'Bearer ' + supabaseSession.access_token }
+  //   })
+  // Must NOT include a trailing slash.
+  //
+  // Prod:  https://iboost-backend-production.up.railway.app
+  // Local: http://localhost:3001 (see iboost-backend/.env.example)
   API_BASE_URL: 'REPLACE_ME',
 };
