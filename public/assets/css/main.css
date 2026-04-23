@@ -1535,6 +1535,95 @@ a:hover { text-decoration: underline; }
 
 
 /* =======================================================================
+   HERO — FAQ (calm, reference-style)
+   Same compact dark-hero pattern as .hero-pricing / .hero-how-it-works,
+   with:
+     - hero-faq.jpg (constellation of interconnected nodes, Creatify)
+     - Centered emerald halo aligned with the image's central hub node
+     - Slightly lighter dark overlay (74-78%) so the constellation
+       shows through more than the pricing skyline — the image is
+       already quiet, so we let it breathe.
+   ======================================================================= */
+
+.hero-faq {
+  position: relative;
+  padding: var(--space-9) 0 var(--space-10);
+  min-height: clamp(440px, 55vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    /* Centered emerald halo — aligns with the image's central hub node */
+    radial-gradient(ellipse 60% 55% at 50% 55%, rgba(46, 204, 113, 0.28) 0%, transparent 60%),
+    /* Subtle cyan accent behind the title */
+    radial-gradient(ellipse 40% 30% at 50% 25%, rgba(6, 182, 212, 0.08) 0%, transparent 55%),
+    /* Bottom vignette — smooths transition into the FAQ content below */
+    radial-gradient(ellipse 100% 70% at 50% 100%, transparent 55%, rgba(4, 20, 38, 0.6) 100%),
+    /* Dark navy overlay — 74-78% alpha (lighter than pricing's 80-82%)
+       so the constellation is clearly visible through it */
+    linear-gradient(165deg, rgba(10, 37, 64, 0.76) 0%, rgba(14, 45, 77, 0.7) 50%, rgba(4, 20, 38, 0.8) 100%),
+    /* Constellation image */
+    url('/assets/img/brand/hero-faq.jpg') center bottom / cover no-repeat,
+    /* Fallback */
+    #0A2540;
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-faq-shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-faq .container {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-faq-copy {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero-faq-copy .hero-eyebrow {
+  margin-bottom: var(--space-2);
+}
+
+.hero-faq h1 {
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-2);
+  color: #fff;
+}
+
+.hero-faq .lead {
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Mobile: smaller vertical padding, less min-height */
+@media (max-width: 640px) {
+  .hero-faq {
+    padding: var(--space-7) 0 var(--space-8);
+    min-height: 360px;
+  }
+  .hero-faq .lead {
+    font-size: 0.95rem;
+  }
+}
+
+
+/* =======================================================================
    REPORTING SHOWCASE — white passive card showing iBoost's monthly
    report to all 5 major credit bureaus (3 U.S. + 2 Canada).
    Each tile gets a staggered check-mark animation on scroll-into-view.

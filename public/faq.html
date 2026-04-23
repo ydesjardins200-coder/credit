@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="/assets/css/main.css" />
   <link rel="stylesheet" href="/assets/css/header-megamenu.css" />
 </head>
-<body class="iboost-mm">
+<body class="iboost-mm has-dark-hero">
   <!-- ============= HEADER ============= -->
   <!-- ============= SITE HEADER (mega menu) ============= -->
   <!-- Starts transparent on pages with a dark hero; flips to solid white
@@ -723,18 +723,40 @@
   </header>
   <!-- ============= END SITE HEADER ============= -->
   <main>
+    <!-- ============= HERO — FAQ (calm, reference-style) ============= -->
+    <section class="hero hero-faq" aria-labelledby="faq-hero-title">
+      <!-- Decorative geometric shapes overlay — same pattern as pricing /
+           how-it-works heroes. Positioned in corners to avoid competing
+           with the centered H1. -->
+      <svg class="hero-faq-shapes" viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g fill="#2ECC71">
+          <circle class="hfs-shape hfs-shape-1" cx="110" cy="75" r="7" opacity="0.22"/>
+          <rect class="hfs-shape hfs-shape-2" x="1070" y="95" width="13" height="13" rx="2" opacity="0.2"/>
+          <circle class="hfs-shape hfs-shape-3" cx="75" cy="285" r="5" opacity="0.18"/>
+          <rect class="hfs-shape hfs-shape-4" x="1110" y="315" width="10" height="10" rx="2" opacity="0.18"/>
+        </g>
+        <g fill="#06b6d4">
+          <circle class="hfs-shape hfs-shape-5" cx="1035" cy="55" r="4" opacity="0.25"/>
+        </g>
+      </svg>
+
+      <div class="container">
+        <div class="hero-faq-copy">
+          <span class="hero-eyebrow">
+            <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+            FAQ
+          </span>
+          <h1 id="faq-hero-title">Every question, <span class="hero-headline-gradient">answered honestly</span>.</h1>
+          <p class="lead">
+            Part one covers iBoost. Part two is a plain-English credit-bureau primer — useful whether you're a member or not.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- ============= FAQ ============= -->
     <section class="section section-surface faq-section">
       <div class="container">
-        <div class="section-header">
-          <span class="eyebrow">FAQ</span>
-          <h2>Common questions.</h2>
-          <p>
-            Answers grouped in two parts — first about iBoost specifically,
-            then a short credit-bureau primer for everyone building credit,
-            regardless of whether you're an iBoost member.
-          </p>
-        </div>
 
         <!-- ============= SUB-SECTION A: About iBoost ============= -->
         <h3 class="faq-subtitle">About iBoost</h3>
