@@ -5917,11 +5917,41 @@ body.auth-page .site-footer .container {
   overflow: hidden;
 }
 
+/* Bar fill starts collapsed (width 0) and grows to its final width
+   when .score-projection gets .is-visible (added by hero-counter.js
+   when the card enters the viewport). Duration 3500ms matches the
+   count-up animation on the +92 pts badge and the 580->672 score,
+   so the bar, the badge, and the score all fill in lockstep.
+
+   The final width (75%) is a visual metaphor for 'progress toward
+   excellent credit on a full score range' — not a literal 92/100 —
+   and was the pre-animation static value. Math happens to land close
+   enough (92/122 ≈ 75%) that no semantic change is needed. */
 .score-projection-bar-fill {
   position: absolute;
-  inset: 0 25% 0 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
   background: linear-gradient(90deg, #f59e0b 0%, var(--color-accent) 70%, #059669 100%);
   border-radius: 100px;
+  transition: width 3500ms cubic-bezier(0.33, 1, 0.68, 1);
+  /* cubic-bezier(0.33, 1, 0.68, 1) ≈ easeOutCubic — matches the JS
+     count-up easing so the bar's growth rate feels coordinated with
+     the number ticking up */
+}
+
+.score-projection.is-visible .score-projection-bar-fill {
+  width: 75%;
+}
+
+/* Reduced-motion: skip the animation, bar appears at final width
+   immediately. Mirrors the hero-counter.js reduced-motion handling. */
+@media (prefers-reduced-motion: reduce) {
+  .score-projection-bar-fill {
+    width: 75%;
+    transition: none;
+  }
 }
 
 .score-projection-caveat {

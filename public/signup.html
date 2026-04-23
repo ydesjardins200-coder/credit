@@ -84,12 +84,19 @@
       <div class="score-projection" aria-labelledby="sp-title">
         <div class="score-projection-header">
           <span class="score-projection-title" id="sp-title">Projected 12-month gain<sup>¹</sup></span>
-          <span class="score-projection-badge">+86 pts</span>
+          <span class="score-projection-badge"
+                data-count-up="92"
+                data-count-prefix="+"
+                data-count-suffix=" pts"
+                data-count-duration="3500">+92 pts</span>
         </div>
         <div class="score-projection-delta">
           <span class="from">580</span>
           <span class="arrow" aria-hidden="true">→</span>
-          <span class="to">666</span>
+          <span class="to"
+                data-count-up="672"
+                data-count-from="580"
+                data-count-duration="3500">672</span>
         </div>
         <div class="score-projection-bar" aria-hidden="true">
           <div class="score-projection-bar-fill"></div>
@@ -542,6 +549,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/signup.js" defer></script>
+  <script src="/assets/js/hero-counter.js?v=4" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var y = document.getElementById('year');

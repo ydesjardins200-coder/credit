@@ -185,15 +185,15 @@
 
   /* ------------------------------------------------------------------
      initJourneyShowcase — toggles .is-visible on .reporting-showcase,
-     .steps-showcase, .factors-showcase, and .monthly-showcase elements
-     when they scroll into view, so their scroll-triggered CSS animations
-     fire at the right moment.
+     .steps-showcase, .factors-showcase, .monthly-showcase, and
+     .score-projection elements when they scroll into view, so their
+     scroll-triggered CSS animations fire at the right moment.
      Separate from count-up observer above because the threshold is
      slightly different (showcases are bigger elements and we want to
      fire once ~20% of them is visible).
      ------------------------------------------------------------------ */
   function initJourneyShowcase() {
-    var selector = '.reporting-showcase, .steps-showcase, .factors-showcase, .monthly-showcase';
+    var selector = '.reporting-showcase, .steps-showcase, .factors-showcase, .monthly-showcase, .score-projection';
     var showcases = document.querySelectorAll(selector);
     if (!showcases.length) return;
 
