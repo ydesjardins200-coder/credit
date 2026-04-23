@@ -5,21 +5,19 @@ before the public launch. Items are grouped by category; each one is a
 line item that must be either **checked** (done) or **explicitly deferred**
 with a note before launch day.
 
-Last updated: 2026-04-21
+Last updated: 2026-04-23
 
 ---
 
 ## Assets to replace / source properly
 
-- [ ] **Hero background image** — currently using `public/assets/img/brand/hero-city.jpg`
-      which is a stylized urban skyline illustration sourced from a wallpaper
-      site (not licensed for commercial use). Must be replaced before launch
-      with either:
-        - a licensed equivalent (Unsplash / Pexels / paid stock),
-        - a commissioned custom illustration in the same style,
-        - or a pure-CSS/SVG generative background with no image asset.
-      **Owner:** Yan. Similar aesthetic is fine; palette should lean navy +
-      emerald (less pink/orange neon than the current placeholder).
+- [x] **Hero background image** — DONE. Replaced the unlicensed wallpaper-site
+      image with an AI-generated original at `public/assets/img/brand/hero-city.jpg`.
+      Palette locked to brand (emerald + cyan + navy, no neon pink/orange).
+      Composition matches our standardized hero system: bottom-weighted skyline,
+      top negative space for H1, center cluster aligned with CSS emerald halo
+      at 50%/75%. 960x540, 37 KB — consistent with sibling hero images
+      (pricing/how-it-works/faq/about).
 
 - [ ] **OG images / social share cards** — currently using the shield logo
       as OG image. Before launch, produce a proper social-sharing card
