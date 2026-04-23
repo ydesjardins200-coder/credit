@@ -45,10 +45,6 @@
     }
   );
 
-  // Diagnostic: log what the Supabase client saw at init, and what URL
-  // the page loaded with (before the client stripped the hash).
-  console.log('[iboost]', 'auth.js load: href =', window.location.href, 'hash.length =', (window.location.hash || '').length);
-
   // ----- Public API -----
 
   async function signUpWithPassword({ email, password, fullName, phone, country }) {
