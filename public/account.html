@@ -99,57 +99,267 @@
         </div>
       </article>
 
-      <!-- Onboarding checklist — 5 steps with one current -->
-      <article class="dash-card dash-checklist">
-        <div class="dash-checklist-head">
-          <h3 class="dash-checklist-title">Get set up in 5 steps</h3>
-          <div class="dash-checklist-progress"><strong>3 of 5</strong> complete</div>
-        </div>
-        <div class="dash-checklist-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">
-          <div class="dash-checklist-bar-fill" style="width: 60%"></div>
+      <!-- ===================== PROFILE COMPLETION =====================
+           Replaces the old 'Get set up in 5 steps' checklist (deleted).
+           Users see one of two states:
+
+             (A) Profile incomplete — .profile-onfile pill above a large
+                 form card with 8 inputs (DOB, address ×5, credit goal
+                 kind+detail). Save button upserts to public.profiles
+                 via updateProfile(), which we're extending in auth.js.
+
+             (B) Profile complete — small green 'all set' success card.
+
+           JS (account.js) picks which one to unhide based on the
+           profile row returned by getProfile(). Both blocks are
+           rendered in the HTML so there's no layout shift when the
+           state flips.
+           ============================================================ -->
+
+      <!-- (A) Incomplete state — default visibility, hidden once complete -->
+      <div class="profile-complete-block" id="profile-complete-incomplete">
+
+        <!-- Read-only "on file" pill — shows what we already have.
+             Phone + country are captured at signup / complete-profile.
+             Edit is on the Profile tab (not inline here). -->
+        <div class="profile-onfile" aria-label="On file">
+          <span class="profile-onfile-item">
+            <svg class="profile-onfile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span id="profile-onfile-phone">—</span>
+          </span>
+          <span class="profile-onfile-sep" aria-hidden="true">·</span>
+          <span class="profile-onfile-item">
+            <svg class="profile-onfile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span id="profile-onfile-country">—</span>
+          </span>
+          <span class="profile-onfile-sep" aria-hidden="true">·</span>
+          <button type="button" class="profile-onfile-edit" data-goto-tab="profile">Edit on Profile →</button>
         </div>
 
-        <div class="dash-check is-done">
-          <span class="dash-check-box" aria-hidden="true"></span>
-          <div class="dash-check-body">
-            <div class="dash-check-title">Create your account</div>
-            <p class="dash-check-desc">You're in. Welcome to iBoost.</p>
+        <!-- Profile form card -->
+        <article class="dash-card profile-form-card">
+          <div class="profile-form-head">
+            <h3 class="profile-form-title">Complete your profile</h3>
+            <p class="profile-form-sub">
+              We need these to prepare your file for bureau reporting. Your info stays private and is used only for iBoost.
+            </p>
           </div>
-        </div>
 
-        <div class="dash-check is-done">
-          <span class="dash-check-box" aria-hidden="true"></span>
-          <div class="dash-check-body">
-            <div class="dash-check-title">Choose your plan</div>
-            <p class="dash-check-desc">You're on iBoost Essential — $15/month.</p>
+          <!-- Progress indicator — X of 7 fields complete. JS keeps it in
+               sync with the current form state + already-saved values. -->
+          <div class="profile-form-progress">
+            <div class="profile-form-progress-label">
+              <strong id="profile-form-progress-filled">0</strong> of 7 fields complete
+            </div>
+            <div class="profile-form-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="7" id="profile-form-progress-bar-role">
+              <div class="profile-form-progress-fill" id="profile-form-progress-fill" style="width: 0%"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="dash-check is-done">
-          <span class="dash-check-box" aria-hidden="true"></span>
-          <div class="dash-check-body">
-            <div class="dash-check-title">Link your first credit card</div>
-            <p class="dash-check-desc">Visa ending 4242 connected. We'll monitor utilization.</p>
-          </div>
-        </div>
+          <!-- Alert area for save errors -->
+          <div id="profile-form-alert" class="alert alert-error" hidden></div>
+          <div id="profile-form-success" class="alert alert-success" hidden></div>
 
-        <div class="dash-check is-current">
-          <span class="dash-check-box" aria-hidden="true"></span>
-          <div class="dash-check-body">
-            <div class="dash-check-title">Set your credit goal</div>
-            <p class="dash-check-desc">Tell us your target score — we'll personalize your action items.</p>
-          </div>
-          <button type="button" class="dash-check-cta">Set goal</button>
-        </div>
+          <form id="profile-form" class="profile-form" novalidate autocomplete="on">
 
-        <div class="dash-check">
-          <span class="dash-check-box" aria-hidden="true"></span>
-          <div class="dash-check-body">
-            <div class="dash-check-title">Read your first lesson</div>
-            <p class="dash-check-desc">"How credit scoring works" — 5 min read.</p>
+            <!-- === Section 1: Date of birth === -->
+            <fieldset class="profile-form-section">
+              <legend class="profile-form-legend">Date of birth</legend>
+              <div class="profile-form-field">
+                <label for="profile-form-dob" class="sr-only">Date of birth</label>
+                <input
+                  type="date"
+                  id="profile-form-dob"
+                  name="date_of_birth"
+                  max="2026-04-23"
+                  required
+                  autocomplete="bday"
+                />
+                <p class="profile-form-hint">Must be 18 or older to build credit with iBoost.</p>
+              </div>
+            </fieldset>
+
+            <!-- === Section 2: Home address === -->
+            <fieldset class="profile-form-section">
+              <legend class="profile-form-legend">Home address</legend>
+
+              <div class="profile-form-field">
+                <label for="profile-form-address-line1">Street address</label>
+                <input
+                  type="text"
+                  id="profile-form-address-line1"
+                  name="address_line1"
+                  placeholder="123 Main St"
+                  autocomplete="address-line1"
+                  required
+                />
+              </div>
+
+              <div class="profile-form-field">
+                <label for="profile-form-address-line2">Apt, suite, unit <span class="profile-form-optional">(optional)</span></label>
+                <input
+                  type="text"
+                  id="profile-form-address-line2"
+                  name="address_line2"
+                  placeholder="Apt 4B"
+                  autocomplete="address-line2"
+                />
+              </div>
+
+              <div class="profile-form-field-row">
+                <div class="profile-form-field">
+                  <label for="profile-form-address-city">City</label>
+                  <input
+                    type="text"
+                    id="profile-form-address-city"
+                    name="address_city"
+                    placeholder="Montreal"
+                    autocomplete="address-level2"
+                    required
+                  />
+                </div>
+                <div class="profile-form-field">
+                  <label for="profile-form-address-region" id="profile-form-address-region-label">Province</label>
+                  <input
+                    type="text"
+                    id="profile-form-address-region"
+                    name="address_region"
+                    maxlength="2"
+                    placeholder="QC"
+                    autocomplete="address-level1"
+                    required
+                    pattern="[A-Za-z]{2}"
+                  />
+                </div>
+                <div class="profile-form-field">
+                  <label for="profile-form-address-postal" id="profile-form-address-postal-label">Postal code</label>
+                  <input
+                    type="text"
+                    id="profile-form-address-postal"
+                    name="address_postal"
+                    placeholder="H3Z 2Y7"
+                    autocomplete="postal-code"
+                    required
+                  />
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- === Section 3: Credit goal === -->
+            <fieldset class="profile-form-section">
+              <legend class="profile-form-legend">What's your credit goal?</legend>
+              <p class="profile-form-hint profile-form-legend-hint">
+                Pick the closest match — your team uses this to personalize outreach.
+              </p>
+
+              <div class="profile-goal-grid" role="radiogroup" aria-label="Credit goal">
+                <label class="profile-goal-option" data-goal-kind="buy_home">
+                  <input type="radio" name="credit_goal_kind" value="buy_home" required />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Buy a home</strong>
+                    <span>Qualify for a mortgage.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option" data-goal-kind="buy_car">
+                  <input type="radio" name="credit_goal_kind" value="buy_car" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Buy a car</strong>
+                    <span>Get the best auto loan rate.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option" data-goal-kind="rebuild">
+                  <input type="radio" name="credit_goal_kind" value="rebuild" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Rebuild after hardship</strong>
+                    <span>Recover from past credit issues.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option" data-goal-kind="lower_rates">
+                  <input type="radio" name="credit_goal_kind" value="lower_rates" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Lower my interest rates</strong>
+                    <span>Reduce cost of debt I already have.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option" data-goal-kind="business_loan">
+                  <input type="radio" name="credit_goal_kind" value="business_loan" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Qualify for a business loan</strong>
+                    <span>Build credit for entrepreneurship.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option" data-goal-kind="learning">
+                  <input type="radio" name="credit_goal_kind" value="learning" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Just learning</strong>
+                    <span>General credit knowledge + improvement.</span>
+                  </span>
+                </label>
+                <label class="profile-goal-option profile-goal-option-other" data-goal-kind="other">
+                  <input type="radio" name="credit_goal_kind" value="other" />
+                  <span class="profile-goal-dot" aria-hidden="true"></span>
+                  <span class="profile-goal-text">
+                    <strong>Other</strong>
+                    <span>Tell us in your own words.</span>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Free-form detail. Shown any time a goal is selected so
+                   the user can add context; required when kind=other. -->
+              <div class="profile-form-field profile-goal-detail" id="profile-goal-detail-wrap" hidden>
+                <label for="profile-form-goal-detail">
+                  Tell us more <span class="profile-form-optional" id="profile-goal-detail-optionality">(optional)</span>
+                </label>
+                <textarea
+                  id="profile-form-goal-detail"
+                  name="credit_goal_detail"
+                  rows="2"
+                  placeholder="Anything specific we should know about your situation?"
+                  maxlength="500"
+                ></textarea>
+              </div>
+            </fieldset>
+
+            <!-- Submit -->
+            <div class="profile-form-submit-row">
+              <button type="submit" class="btn btn-primary profile-form-submit" id="profile-form-submit">
+                <span class="profile-form-submit-txt">Save profile</span>
+                <span class="profile-form-submit-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+        </article>
+      </div>
+
+      <!-- (B) Complete state — hidden by default, unhidden when profile is
+           fully filled. Small success card, no content beyond the message
+           + 'Edit on Profile' affordance if user wants to change something. -->
+      <div class="profile-complete-block profile-complete-success" id="profile-complete-success" hidden>
+        <article class="dash-card profile-complete-success-card">
+          <svg class="profile-complete-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="profile-complete-success-body">
+            <h3>Profile complete</h3>
+            <p>Your team will call within 24 hours to walk you through next steps.</p>
           </div>
-        </div>
-      </article>
+          <button type="button" class="profile-complete-success-edit" data-goto-tab="profile">Edit on Profile →</button>
+        </article>
+      </div>
+
 
       <!-- Today's focus + milestones.
            HIDDEN in Wave 1: Today's focus copy refers to fake action items

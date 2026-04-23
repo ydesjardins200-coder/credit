@@ -227,6 +227,298 @@
   }
 
   // ---------------------------------------------------------------------
+  // Welcome tab — profile completion form
+  // ---------------------------------------------------------------------
+  //
+  // Shape of the work:
+  //   1. Fetch profile (phone, country + 8 KYC columns) via getProfile()
+  //   2. Populate the read-only "on file" pill with phone + country
+  //   3. If profile is already KYC-complete, show the success card and
+  //      hide the form. Otherwise pre-fill any partially-filled values
+  //      and wire up interactions.
+  //   4. Country determines whether the region label is "Province" or
+  //      "State" and the postal-code hint shape.
+  //   5. Radio changes reveal/hide the optional "tell us more" textarea,
+  //      and mark it required when kind='other'.
+  //   6. Typing updates the X-of-7 progress bar live.
+  //   7. Submit calls updateProfile(), flips to the success card on
+  //      success, or shows an error in the alert div on failure.
+
+  async function initProfileForm(user) {
+    // Guard: form might not be on the page (e.g. if we later nuke it
+    // via a different wave). All DOM reads below are null-safe.
+    const formEl = document.getElementById('profile-form');
+    const incompleteBlock = document.getElementById('profile-complete-incomplete');
+    const successBlock = document.getElementById('profile-complete-success');
+    if (!formEl || !incompleteBlock || !successBlock) return;
+
+    // 1. Fetch profile
+    var profile = null;
+    try {
+      const res = await window.iboostAuth.getProfile();
+      profile = res && res.data ? res.data : null;
+    } catch (e) {
+      console.error('[account] getProfile error:', e);
+    }
+
+    // 2. On-file pill — phone + country readable display
+    //    Phone: the stored value is +1XXXXXXXXXX (E.164). Format visually.
+    const onfilePhone = document.getElementById('profile-onfile-phone');
+    if (onfilePhone) {
+      var rawPhone = (profile && profile.phone) || '';
+      // Display as (XXX) XXX-XXXX if we recognize the NANP shape, else raw
+      var display = rawPhone;
+      var m = rawPhone.match(/^\+?1?(\d{3})(\d{3})(\d{4})$/);
+      if (m) display = '(' + m[1] + ') ' + m[2] + '-' + m[3];
+      onfilePhone.textContent = display || 'No phone on file';
+    }
+
+    const onfileCountry = document.getElementById('profile-onfile-country');
+    const country = (profile && profile.country) || null;
+    if (onfileCountry) {
+      onfileCountry.textContent =
+        country === 'CA' ? '🇨🇦 Canada' :
+        country === 'US' ? '🇺🇸 United States' :
+        'Country not set';
+    }
+
+    // 3. Already complete? Show success, hide form, we're done.
+    if (window.iboostAuth.isProfileKycComplete && window.iboostAuth.isProfileKycComplete(profile)) {
+      incompleteBlock.hidden = true;
+      successBlock.hidden = false;
+      return;
+    }
+
+    // 4. Country-aware labels + DOB max date
+    const regionLabel = document.getElementById('profile-form-address-region-label');
+    const postalLabel = document.getElementById('profile-form-address-postal-label');
+    const regionInput = document.getElementById('profile-form-address-region');
+    const postalInput = document.getElementById('profile-form-address-postal');
+
+    if (country === 'US') {
+      if (regionLabel) regionLabel.textContent = 'State';
+      if (postalLabel) postalLabel.textContent = 'ZIP code';
+      if (regionInput) regionInput.placeholder = 'NY';
+      if (postalInput) postalInput.placeholder = '10001';
+    } else {
+      // CA is the default
+      if (regionLabel) regionLabel.textContent = 'Province';
+      if (postalLabel) postalLabel.textContent = 'Postal code';
+      if (regionInput) regionInput.placeholder = 'QC';
+      if (postalInput) postalInput.placeholder = 'H3Z 2Y7';
+    }
+
+    // DOB max = today (ISO). Prevents picking future dates in the picker.
+    const dobInput = document.getElementById('profile-form-dob');
+    if (dobInput) {
+      var today = new Date();
+      var isoToday =
+        today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0');
+      dobInput.max = isoToday;
+    }
+
+    // Pre-fill any partially-filled fields. Preserves work across
+    // sessions — user filled 3 fields yesterday, finishes today.
+    if (profile) {
+      if (profile.date_of_birth && dobInput) dobInput.value = profile.date_of_birth;
+      var fieldMap = {
+        'profile-form-address-line1': profile.address_line1,
+        'profile-form-address-line2': profile.address_line2,
+        'profile-form-address-city':  profile.address_city,
+        'profile-form-address-region': profile.address_region,
+        'profile-form-address-postal': profile.address_postal,
+        'profile-form-goal-detail':   profile.credit_goal_detail
+      };
+      Object.keys(fieldMap).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && fieldMap[id]) el.value = fieldMap[id];
+      });
+      if (profile.credit_goal_kind) {
+        var radio = formEl.querySelector('input[name="credit_goal_kind"][value="' + profile.credit_goal_kind + '"]');
+        if (radio) radio.checked = true;
+      }
+    }
+
+    // 5. Credit goal radio → reveal optional detail textarea
+    const detailWrap = document.getElementById('profile-goal-detail-wrap');
+    const detailLabelOptionality = document.getElementById('profile-goal-detail-optionality');
+    const detailInput = document.getElementById('profile-form-goal-detail');
+
+    function updateGoalDetailVisibility() {
+      var checked = formEl.querySelector('input[name="credit_goal_kind"]:checked');
+      if (!checked) {
+        if (detailWrap) detailWrap.hidden = true;
+        return;
+      }
+      if (detailWrap) detailWrap.hidden = false;
+      if (checked.value === 'other') {
+        if (detailLabelOptionality) detailLabelOptionality.textContent = '(required)';
+        if (detailInput) detailInput.required = true;
+      } else {
+        if (detailLabelOptionality) detailLabelOptionality.textContent = '(optional)';
+        if (detailInput) detailInput.required = false;
+      }
+    }
+    formEl.querySelectorAll('input[name="credit_goal_kind"]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        updateGoalDetailVisibility();
+        updateProgress();
+      });
+    });
+    updateGoalDetailVisibility();
+
+    // 6. Progress calculation. 7 required fields:
+    //    DOB, line1, city, region, postal, goal_kind + (goal_detail if other)
+    //    We count goal_detail toward "fullness" only when kind='other'.
+    const progressFilled = document.getElementById('profile-form-progress-filled');
+    const progressFill   = document.getElementById('profile-form-progress-fill');
+    const progressBarRole = document.getElementById('profile-form-progress-bar-role');
+
+    function updateProgress() {
+      var vals = readFormValues();
+      var filled = 0;
+      if (vals.date_of_birth) filled++;
+      if (vals.address_line1) filled++;
+      if (vals.address_city) filled++;
+      if (vals.address_region && /^[A-Za-z]{2}$/.test(vals.address_region)) filled++;
+      if (vals.address_postal) filled++;
+      if (vals.credit_goal_kind) filled++;
+      // 7th field: detail required only when kind='other'. Otherwise
+      // we auto-count it as "not a blocker" toward 7.
+      if (vals.credit_goal_kind === 'other') {
+        if (vals.credit_goal_detail) filled++;
+      } else if (vals.credit_goal_kind) {
+        // Non-other goals get the 7th point automatically once a goal is chosen
+        filled++;
+      }
+      filled = Math.min(filled, 7);
+      if (progressFilled) progressFilled.textContent = String(filled);
+      if (progressFill) progressFill.style.width = (filled / 7 * 100) + '%';
+      if (progressBarRole) progressBarRole.setAttribute('aria-valuenow', String(filled));
+    }
+
+    function readFormValues() {
+      function v(id) {
+        var el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+      }
+      var checkedRadio = formEl.querySelector('input[name="credit_goal_kind"]:checked');
+      return {
+        date_of_birth:      v('profile-form-dob'),
+        address_line1:      v('profile-form-address-line1'),
+        address_line2:      v('profile-form-address-line2'),
+        address_city:       v('profile-form-address-city'),
+        address_region:     v('profile-form-address-region'),
+        address_postal:     v('profile-form-address-postal'),
+        credit_goal_kind:   checkedRadio ? checkedRadio.value : '',
+        credit_goal_detail: v('profile-form-goal-detail')
+      };
+    }
+
+    formEl.querySelectorAll('input, textarea').forEach(function (el) {
+      el.addEventListener('input', updateProgress);
+      el.addEventListener('change', updateProgress);
+    });
+    updateProgress();
+
+    // 7. Submit handler
+    const submitBtn = document.getElementById('profile-form-submit');
+    const alertEl   = document.getElementById('profile-form-alert');
+
+    formEl.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+
+      // Clear previous alerts
+      if (alertEl) {
+        alertEl.hidden = true;
+        alertEl.textContent = '';
+      }
+
+      var vals = readFormValues();
+
+      // Client-side validation
+      if (!vals.date_of_birth) return showErr('Please enter your date of birth.');
+      if (!vals.address_line1) return showErr('Please enter your street address.');
+      if (!vals.address_city) return showErr('Please enter your city.');
+      if (!/^[A-Za-z]{2}$/.test(vals.address_region)) {
+        return showErr(
+          country === 'US'
+            ? 'Please enter your 2-letter state code (e.g. NY).'
+            : 'Please enter your 2-letter province code (e.g. QC).'
+        );
+      }
+      if (!vals.address_postal) return showErr('Please enter your postal/ZIP code.');
+      if (!vals.credit_goal_kind) return showErr('Please choose a credit goal.');
+      if (vals.credit_goal_kind === 'other' && !vals.credit_goal_detail) {
+        return showErr('Please tell us about your goal in the text box.');
+      }
+
+      // DOB sanity: 18+
+      try {
+        var dob = new Date(vals.date_of_birth);
+        var eighteen = new Date();
+        eighteen.setFullYear(eighteen.getFullYear() - 18);
+        if (dob > eighteen) {
+          return showErr('You must be 18 or older to use iBoost.');
+        }
+      } catch (e) {
+        return showErr('Please enter a valid date of birth.');
+      }
+
+      // Submit
+      if (submitBtn) {
+        submitBtn.classList.add('is-loading');
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const res = await window.iboostAuth.updateProfile({
+          dateOfBirth:      vals.date_of_birth,
+          addressLine1:     vals.address_line1,
+          addressLine2:     vals.address_line2 || null,
+          addressCity:      vals.address_city,
+          addressRegion:    vals.address_region,
+          addressPostal:    vals.address_postal,
+          creditGoalKind:   vals.credit_goal_kind,
+          creditGoalDetail: vals.credit_goal_detail || null
+        });
+        if (res && res.error) {
+          return showErr(res.error.message || 'Could not save your profile. Please try again.');
+        }
+        // Success — flip to success card
+        incompleteBlock.hidden = true;
+        successBlock.hidden = false;
+        // Scroll the success card into view so the state change is visible
+        try {
+          successBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) { /* older browsers */ }
+      } catch (err) {
+        console.error('[account] profile submit error:', err);
+        showErr('Network error. Please try again.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.classList.remove('is-loading');
+          submitBtn.disabled = false;
+        }
+      }
+    });
+
+    function showErr(msg) {
+      if (alertEl) {
+        alertEl.textContent = msg;
+        alertEl.hidden = false;
+        try { alertEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      }
+      if (submitBtn) {
+        submitBtn.classList.remove('is-loading');
+        submitBtn.disabled = false;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Main init
   // ---------------------------------------------------------------------
 
@@ -300,6 +592,13 @@
     // avoid the off-by-one that local timezones introduce around
     // midnight. 1-based: the day they signed up IS day 1.
     populateWelcomeDayCount(user);
+
+    // Initialize the profile-completion form on the Welcome tab.
+    // Pulls current profile from Supabase, pre-fills existing values,
+    // wires up the progress bar, radio show/hide logic, and submit
+    // handler. Also flips between the incomplete/complete layouts
+    // based on isProfileKycComplete().
+    initProfileForm(user);
 
     // Sign out button
     const signoutBtn = document.getElementById('signout-btn');

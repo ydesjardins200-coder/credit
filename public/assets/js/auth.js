@@ -255,7 +255,7 @@
 
     const { data, error } = await client
       .from('profiles')
-      .select('id, email, full_name, phone, country, created_at, updated_at')
+      .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, created_at, updated_at')
       .eq('id', session.user.id)
       .single();
 
@@ -278,6 +278,26 @@
     if (!profile) return false;
     if (!profile.phone) return false;
     if (!profile.country) return false;
+    return true;
+  }
+
+  // Stricter check used by the Welcome tab's KYC form card: returns
+  // true only when the user has filled ALL 7 required bureau-prep
+  // fields (DOB + 4 address fields + credit goal). Phone and country
+  // are already required by isProfileComplete — so by the time any
+  // page runs this check, those are guaranteed present.
+  //
+  // credit_goal_detail is intentionally NOT required — it's optional
+  // unless the user picked 'other' as their kind, and even then we
+  // enforce that client-side, not here. The DB allows null.
+  function isProfileKycComplete(profile) {
+    if (!profile) return false;
+    if (!profile.date_of_birth) return false;
+    if (!profile.address_line1) return false;
+    if (!profile.address_city) return false;
+    if (!profile.address_region) return false;
+    if (!profile.address_postal) return false;
+    if (!profile.credit_goal_kind) return false;
     return true;
   }
 
@@ -309,13 +329,18 @@
   }
 
   // Update the current user's profile row. Writes to public.profiles
-  // (gated by the profiles_update_own RLS policy, so users can only
-  // update their OWN row) AND mirrors a subset of fields into
-  // auth.users.user_metadata via updateUser(), so pages that read from
-  // session.user.user_metadata (like /account.html for the top-bar
-  // display name) pick up the new values without a re-login.
+  // (gated by RLS — users can only update their own row) and mirrors
+  // a subset of name/phone/country into auth.users.user_metadata so
+  // the top bar picks them up without a re-login.
   //
-  // Accepts any subset of: firstName, lastName, phone, country.
+  // Accepts any subset of:
+  //   firstName, lastName, phone, country
+  //   dateOfBirth           YYYY-MM-DD string or null
+  //   addressLine1, addressLine2, addressCity, addressRegion, addressPostal
+  //   creditGoalKind        'buy_home'|'buy_car'|'rebuild'|'lower_rates'
+  //                         |'business_loan'|'learning'|'other' or null
+  //   creditGoalDetail      string or null
+  //
   // Returns { data, error } shaped like Supabase responses.
   async function updateProfile(fields) {
     fields = fields || {};
@@ -340,21 +365,27 @@
       country = (upper === 'CA' || upper === 'US') ? upper : null;
     }
 
-    // Upsert public.profiles. If the row exists (normal case: trigger
-    // fired on signup), this does an UPDATE and only touches the keys
-    // we supplied. If the row is missing (observed failure mode: OAuth
-    // signups where handle_new_user didn't fire), this INSERTs a new
-    // row — which needs the NOT NULL 'email' column populated from the
-    // session. The profiles_insert_own RLS policy (migration 0004)
-    // allows this INSERT as long as id = auth.uid().
-    //
-    // Note: for the UPDATE path we previously only supplied the changed
-    // keys to preserve untouched fields. With upsert we have to include
-    // id + email unconditionally (so a fresh insert has the required
-    // columns), and we rely on onConflict='id' + ignoreDuplicates=false
-    // to turn that into an UPDATE when the row already exists. PostgREST
-    // upsert semantics will only update the columns we send, so the
-    // preserve-untouched-fields behavior is intact.
+    // Region: 2-letter uppercase. DB has a CHECK that mirrors this.
+    var region = null;
+    if (fields.addressRegion) {
+      const upR = String(fields.addressRegion).toUpperCase().trim();
+      if (/^[A-Z]{2}$/.test(upR)) region = upR;
+    }
+
+    // Credit goal kind: whitelist (matches DB CHECK constraint)
+    var goalKind = null;
+    const GOAL_KINDS = [
+      'buy_home', 'buy_car', 'rebuild', 'lower_rates',
+      'business_loan', 'learning', 'other'
+    ];
+    if (fields.creditGoalKind && GOAL_KINDS.indexOf(fields.creditGoalKind) !== -1) {
+      goalKind = fields.creditGoalKind;
+    }
+
+    // Upsert public.profiles. Preserves untouched columns because
+    // PostgREST upsert only writes the fields we include in the row
+    // object — plus id + email which are always set so a fresh INSERT
+    // (missing-row fallback) satisfies the NOT NULL email constraint.
     const upsertRow = {
       id: session.user.id,
       email: session.user.email,
@@ -362,6 +393,18 @@
     if (fullName !== null) upsertRow.full_name = fullName;
     if (fields.phone) upsertRow.phone = fields.phone;
     if (country !== null) upsertRow.country = country;
+
+    // KYC fields — all nullable. Include only if the caller supplied them
+    // so we don't wipe existing values with undefined coming from a
+    // partial update.
+    if (fields.dateOfBirth !== undefined) upsertRow.date_of_birth = fields.dateOfBirth || null;
+    if (fields.addressLine1 !== undefined) upsertRow.address_line1 = fields.addressLine1 || null;
+    if (fields.addressLine2 !== undefined) upsertRow.address_line2 = fields.addressLine2 || null;
+    if (fields.addressCity !== undefined) upsertRow.address_city = fields.addressCity || null;
+    if (fields.addressRegion !== undefined) upsertRow.address_region = region;
+    if (fields.addressPostal !== undefined) upsertRow.address_postal = fields.addressPostal || null;
+    if (fields.creditGoalKind !== undefined) upsertRow.credit_goal_kind = goalKind;
+    if (fields.creditGoalDetail !== undefined) upsertRow.credit_goal_detail = fields.creditGoalDetail || null;
 
     const { error: profileError } = await client
       .from('profiles')
@@ -374,6 +417,8 @@
     // Mirror to user_metadata. This is best-effort — if it fails, the
     // profiles row is already updated and the app will still work;
     // we just log it. Metadata is what account.js uses for personalization.
+    // KYC fields (DOB, address, goal) are NOT mirrored — metadata is for
+    // display-layer personalization, not PII storage.
     const metadataUpdates = {};
     if (fullName !== null) metadataUpdates.full_name = fullName;
     if (fields.firstName) metadataUpdates.first_name = fields.firstName;
@@ -419,6 +464,7 @@
     requireSession,
     getProfile,
     isProfileComplete,
+    isProfileKycComplete,
     requireCompleteProfile,
     updateProfile,
   };
