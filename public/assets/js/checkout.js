@@ -230,10 +230,13 @@
     // Persist the choice so /pricing.html picks it up on the next visit
     try { localStorage.setItem('iboost.currency', newCurrency); } catch (e) { /* ok */ }
 
-    // Sync the toggle buttons' aria-pressed state
+    // Sync the toggle buttons' state. Set both aria-pressed (for a11y)
+    // AND toggle .active class (matches landing.js's pattern on the
+    // pricing page, and activates the .active CSS hook).
     $$('.currency-toggle button[data-currency-toggle]').forEach(function (btn) {
       var match = btn.getAttribute('data-currency-toggle') === newCurrency;
       btn.setAttribute('aria-pressed', match ? 'true' : 'false');
+      btn.classList.toggle('active', match);
     });
 
     // Swap visible price/currency spans on the cards
