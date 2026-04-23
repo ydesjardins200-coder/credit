@@ -209,15 +209,31 @@
   }
 
   // ----- If already signed in, bounce forward.
-  // If they came with ?plan=X from /pricing.html, honor that and send
-  // them to checkout (or account for Free). Otherwise, plain account
-  // redirect. Previously this ALWAYS went to /account.html, which
-  // silently ignored the plan selection — a signed-in user clicking
-  // a pricing CTA would never reach the checkout. -----
+  // Where does a signed-in user hitting /signup.html go next?
+  //   1. Profile incomplete (OAuth signups that never filled phone/country,
+  //      or any legacy account with NULLs) -> /complete-profile.html
+  //   2. Profile complete -> /checkout.html (the phase 1 post-signup target)
+  // We check profile completeness FIRST because a user who can't complete
+  // checkout (missing phone) should finish their profile, not be sent in
+  // circles. -----
+  async function getForwardPath() {
+    if (window.iboostAuth && window.iboostAuth.getProfile && window.iboostAuth.isProfileComplete) {
+      try {
+        const profile = await window.iboostAuth.getProfile();
+        if (!window.iboostAuth.isProfileComplete(profile)) {
+          return '/complete-profile.html';
+        }
+      } catch (e) {
+        // Fall through to checkout; gate on /account.html will re-check.
+      }
+    }
+    return getPostSignupPath();
+  }
+
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
-    if (session) window.location.replace(getPostSignupPath());
+    if (session) window.location.replace(await getForwardPath());
   })();
 
   // ----- FAQ mini accordion (in signup intro column) -----
@@ -310,7 +326,10 @@
     }
 
     if (data && data.session) {
-      window.location.replace(getPostSignupPath());
+      // Profile should be complete because the form just captured phone +
+      // country. But check anyway — cheap and catches the case where the
+      // trigger hasn't fired yet or a field was somehow dropped.
+      window.location.replace(await getForwardPath());
       return;
     }
 

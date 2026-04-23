@@ -27,10 +27,35 @@
     alertEl.textContent = '';
   }
 
+  // ----- Post-auth routing -----
+  // Where does a successfully-authenticated user go from login?
+  //   - Complete profile -> /account.html
+  //   - Incomplete profile (OAuth user who never filled phone+country,
+  //     or legacy password account from before 0003_phone applied)
+  //     -> /complete-profile.html
+  // Either way the gate on /account.html will enforce the same rule,
+  // so this function is purely a UX optimization (go straight to the
+  // right page instead of bouncing via /account.html first).
+  async function getPostAuthPath() {
+    if (!window.iboostAuth || !window.iboostAuth.getProfile) {
+      return t.accountPath; // auth module incomplete — safe fallback
+    }
+    try {
+      const profile = await window.iboostAuth.getProfile();
+      if (!window.iboostAuth.isProfileComplete(profile)) {
+        return '/complete-profile.html';
+      }
+    } catch (e) {
+      // Profile fetch failed — fall through to account; the gate there
+      // will re-evaluate and redirect correctly if needed.
+    }
+    return t.accountPath;
+  }
+
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
     const { session } = await window.iboostAuth.getSession();
-    if (session) window.location.replace(t.accountPath);
+    if (session) window.location.replace(await getPostAuthPath());
   })();
 
   // ----- FAQ mini accordion (in intro column) -----
@@ -98,6 +123,6 @@
       return;
     }
 
-    window.location.replace(t.accountPath);
+    window.location.replace(await getPostAuthPath());
   });
 })();

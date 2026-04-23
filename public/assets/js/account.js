@@ -191,8 +191,11 @@
       return;
     }
 
-    const session = await window.iboostAuth.requireSession('/login.html');
-    if (!session) return; // redirect already issued
+    const session = await window.iboostAuth.requireCompleteProfile({
+      loginPath: '/login.html',
+      completePath: '/complete-profile.html',
+    });
+    if (!session) return; // redirect already issued (to login OR complete-profile)
 
     const user = session.user;
     const firstName = deriveFirstName(user);
