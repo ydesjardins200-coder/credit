@@ -38,27 +38,6 @@
     }
   );
 
-  // Trace the page load state BEFORE Supabase finishes processing the
-  // URL. Captures what the browser sent before detectSessionInUrl
-  // cleans the hash. Critical for debugging OAuth.
-  trace('auth.js: loaded', {
-    href: window.location.href,
-    hash_len: (window.location.hash || '').length,
-    search_len: (window.location.search || '').length,
-  });
-
-  // Global auth-state listener — captures every event Supabase emits,
-  // independent of any page's waitForSignIn subscription. This ensures
-  // we see events even if no page explicitly subscribes, and helps
-  // diagnose timing issues where events fire before subscribers attach.
-  try {
-    client.auth.onAuthStateChange(function (event, session) {
-      trace('global onAuthStateChange: ' + event + (session ? ' (has session)' : ' (null)'));
-    });
-  } catch (e) {
-    trace('global onAuthStateChange threw');
-  }
-
   // ----- Public API -----
 
   async function signUpWithPassword({ email, password, fullName, phone, country }) {
@@ -137,91 +116,68 @@
   // OAuth fragment or PKCE code, wait for the SIGNED_IN event (with a
   // short timeout) before deciding there's no session. If no fragment
   // is present, skip the wait — normal page loads aren't racing anything.
-  // Trace helper: writes to both console AND sessionStorage so the log
-  // survives page navigations. After the OAuth flow ends, paste
-  //   console.log(sessionStorage.getItem('iboost-trace'))
-  // in DevTools to see the full cross-page trace.
-  function trace(msg, data) {
-    var entry = new Date().toISOString().slice(11, 23) + ' [' + window.location.pathname + '] ' + msg;
-    if (data !== undefined) {
-      try { entry += ' ' + JSON.stringify(data); } catch (e) { entry += ' <unserializable>'; }
-    }
-    console.log('[iboost-auth]', entry);
-    try {
-      var existing = sessionStorage.getItem('iboost-trace') || '';
-      sessionStorage.setItem('iboost-trace', existing + entry + '\n');
-    } catch (e) { /* storage might be disabled; console.log is the fallback */ }
-  }
 
   async function requireSession(loginPath) {
-    trace('requireSession: start', { href: window.location.href });
     let { session } = await getSession();
-    trace('requireSession: first getSession →', session ? 'HAS SESSION' : 'null');
     if (!session && hasOAuthRedirectArtifact()) {
-      trace('requireSession: URL has OAuth artifact, waiting for SIGNED_IN…');
       session = await waitForSignIn(5000);
-      trace('requireSession: waitForSignIn →', session ? 'HAS SESSION' : 'null');
-    } else if (!session) {
-      trace('requireSession: null session, no OAuth artifact — will redirect');
     }
     if (!session) {
-      trace('requireSession: redirecting to ' + (loginPath || '/login.html'));
       window.location.replace(loginPath || '/login.html');
       return null;
     }
-    trace('requireSession: session confirmed, returning');
     return session;
   }
 
   function hasOAuthRedirectArtifact() {
     var hash = window.location.hash || '';
+    if (hash.indexOf('access_token=') !== -1) return true;
+    if (hash.indexOf('error=') !== -1) return true;
     var search = window.location.search || '';
-    var result = false;
-    var reason = '';
-    if (hash.indexOf('access_token=') !== -1) { result = true; reason = 'hash has access_token'; }
-    else if (hash.indexOf('error=') !== -1) { result = true; reason = 'hash has error'; }
-    else if (/[?&]code=/.test(search)) { result = true; reason = 'query has code'; }
-    else { reason = 'none (hash=' + JSON.stringify(hash.slice(0, 40)) + ', search=' + JSON.stringify(search.slice(0, 40)) + ')'; }
-    trace('hasOAuthRedirectArtifact → ' + result + ' (' + reason + ')');
-    return result;
+    if (/[?&]code=/.test(search)) return true;
+    return false;
   }
 
   function waitForSignIn(timeoutMs) {
     return new Promise(function (resolve) {
       var settled = false;
       var subscription = null;
-      var startTs = Date.now();
 
-      function finish(session, reason) {
+      function finish(session) {
         if (settled) return;
         settled = true;
-        trace('waitForSignIn: finished after ' + (Date.now() - startTs) + 'ms — ' + reason + (session ? ' (HAS SESSION)' : ' (null)'));
         if (subscription && subscription.unsubscribe) subscription.unsubscribe();
         resolve(session);
       }
 
       try {
         var res = client.auth.onAuthStateChange(function (event, session) {
-          trace('waitForSignIn: onAuthStateChange → ' + event + (session ? ' with session' : ' null'));
-          if (session) finish(session, 'event=' + event);
+          // Accept any event that carries a session — typically SIGNED_IN,
+          // but INITIAL_SESSION or TOKEN_REFRESHED can land too depending
+          // on timing.
+          if (session) finish(session);
         });
         subscription = res && res.data && res.data.subscription;
-      } catch (e) {
-        trace('waitForSignIn: onAuthStateChange threw');
-      }
+      } catch (e) { /* subscribe failed — fall through to polling */ }
 
+      // Immediate re-probe: maybe the session was persisted before we
+      // subscribed (common — Supabase's detectSessionInUrl is fast).
       (async function immediateProbe() {
         var probe = await getSession();
-        if (probe.session) finish(probe.session, 'immediate-probe');
+        if (probe.session) finish(probe.session);
       })();
 
+      // Final timeout: if nothing fires, one last getSession probe then
+      // resolve with whatever we have (probably null, which triggers
+      // the caller's unauthenticated branch).
       setTimeout(async function () {
         if (settled) return;
         var probe = await getSession();
-        finish(probe.session || null, 'timeout-probe');
+        finish(probe.session || null);
       }, timeoutMs);
     });
   }
+
 
   // ----- Profile helpers (public.profiles row for the current user) -----
   //
@@ -326,22 +282,35 @@
       country = (upper === 'CA' || upper === 'US') ? upper : null;
     }
 
-    // Update public.profiles. Only include keys that were actually
-    // supplied, so partial updates don't null out existing values.
-    const updates = {};
-    if (fullName !== null) updates.full_name = fullName;
-    if (fields.phone) updates.phone = fields.phone;
-    if (country !== null) updates.country = country;
+    // Upsert public.profiles. If the row exists (normal case: trigger
+    // fired on signup), this does an UPDATE and only touches the keys
+    // we supplied. If the row is missing (observed failure mode: OAuth
+    // signups where handle_new_user didn't fire), this INSERTs a new
+    // row — which needs the NOT NULL 'email' column populated from the
+    // session. The profiles_insert_own RLS policy (migration 0004)
+    // allows this INSERT as long as id = auth.uid().
+    //
+    // Note: for the UPDATE path we previously only supplied the changed
+    // keys to preserve untouched fields. With upsert we have to include
+    // id + email unconditionally (so a fresh insert has the required
+    // columns), and we rely on onConflict='id' + ignoreDuplicates=false
+    // to turn that into an UPDATE when the row already exists. PostgREST
+    // upsert semantics will only update the columns we send, so the
+    // preserve-untouched-fields behavior is intact.
+    const upsertRow = {
+      id: session.user.id,
+      email: session.user.email,
+    };
+    if (fullName !== null) upsertRow.full_name = fullName;
+    if (fields.phone) upsertRow.phone = fields.phone;
+    if (country !== null) upsertRow.country = country;
 
-    if (Object.keys(updates).length > 0) {
-      const { error: profileError } = await client
-        .from('profiles')
-        .update(updates)
-        .eq('id', session.user.id);
-      if (profileError) {
-        console.error('[iboost-auth] updateProfile profiles error:', profileError);
-        return { data: null, error: profileError };
-      }
+    const { error: profileError } = await client
+      .from('profiles')
+      .upsert(upsertRow, { onConflict: 'id' });
+    if (profileError) {
+      console.error('[iboost-auth] updateProfile profiles upsert error:', profileError);
+      return { data: null, error: profileError };
     }
 
     // Mirror to user_metadata. This is best-effort — if it fails, the
@@ -374,7 +343,7 @@
   async function getSessionSettled() {
     let { session } = await getSession();
     if (!session && hasOAuthRedirectArtifact()) {
-      session = await waitForSignIn(2500);
+      session = await waitForSignIn(5000);
     }
     return { session };
   }
