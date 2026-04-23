@@ -54,7 +54,10 @@
 
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
-    const { session } = await window.iboostAuth.getSession();
+    // Use getSessionSettled (not getSession) so OAuth-returning users
+    // whose URL still has a #access_token= are detected once Supabase
+    // finishes parsing. Regular page loads skip the wait.
+    const { session } = await window.iboostAuth.getSessionSettled();
     if (session) window.location.replace(await getPostAuthPath());
   })();
 

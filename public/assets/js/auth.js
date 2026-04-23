@@ -103,13 +103,77 @@
   }
 
   // Redirect to login if not signed in. Returns the session when present.
+  //
+  // Handles the OAuth-return race: when a user lands on a gated page with
+  // a URL fragment like #access_token=... (after Google/Facebook/etc.
+  // redirects them back), Supabase parses the hash and writes the session
+  // to storage asynchronously. getSession() can return null for a few
+  // hundred ms while this happens. If we redirect to /login.html during
+  // that window, the user sees a bewildering "logged out" state even
+  // though they just successfully authenticated.
+  //
+  // Strategy: if the first getSession() returns null AND the URL has an
+  // OAuth fragment or PKCE code, wait for the SIGNED_IN event (with a
+  // short timeout) before deciding there's no session. If no fragment
+  // is present, skip the wait — normal page loads aren't racing anything.
   async function requireSession(loginPath) {
-    const { session } = await getSession();
+    let { session } = await getSession();
+    if (!session && hasOAuthRedirectArtifact()) {
+      session = await waitForSignIn(2500); // ms — generous enough for slow networks, short enough to not hang
+    }
     if (!session) {
       window.location.replace(loginPath || '/login.html');
       return null;
     }
     return session;
+  }
+
+  // True if the current URL looks like the browser just arrived from an
+  // OAuth provider: either a hash with access_token= (implicit flow) or
+  // a query with ?code= (PKCE flow). Keep the check narrow so regular
+  // fragments (/page#anchor) don't trigger the wait.
+  function hasOAuthRedirectArtifact() {
+    var hash = window.location.hash || '';
+    if (hash.indexOf('access_token=') !== -1) return true;
+    if (hash.indexOf('error=') !== -1) return true; // error case — still want the wait so we can see the failure cleanly
+    var search = window.location.search || '';
+    if (/[?&]code=/.test(search)) return true;
+    return false;
+  }
+
+  // Wait up to `timeoutMs` for the Supabase client to emit SIGNED_IN
+  // (which fires after it finishes parsing the OAuth fragment and
+  // persisting the session). If it doesn't fire in time, resolve with
+  // whatever getSession() returns — which is probably null, at which
+  // point the caller will do its usual "no session" branch.
+  function waitForSignIn(timeoutMs) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var subscription = null;
+
+      function finish(session) {
+        if (settled) return;
+        settled = true;
+        if (subscription && subscription.unsubscribe) subscription.unsubscribe();
+        resolve(session);
+      }
+
+      try {
+        var res = client.auth.onAuthStateChange(function (event, session) {
+          if (event === 'SIGNED_IN' && session) finish(session);
+        });
+        // supabase-js v2 returns { data: { subscription: {...} } }
+        subscription = res && res.data && res.data.subscription;
+      } catch (e) { /* ignore — we'll fall through to the timeout + final getSession poll */ }
+
+      setTimeout(async function () {
+        if (settled) return;
+        // Final check: maybe SIGNED_IN already fired before we subscribed,
+        // or the session landed without emitting. Ask directly.
+        var probe = await getSession();
+        finish(probe.session || null);
+      }, timeoutMs);
+    });
   }
 
   // ----- Profile helpers (public.profiles row for the current user) -----
@@ -255,6 +319,19 @@
     return { data: { updated: true }, error: null };
   }
 
+  // Public helper for pages that want to check "is the user signed in?"
+  // without redirecting. Like getSession(), but if there's an OAuth
+  // fragment in the URL, waits for Supabase to process it before
+  // returning. Use this on /login.html and /signup.html's
+  // redirect-if-signed-in checks so they handle OAuth returns correctly.
+  async function getSessionSettled() {
+    let { session } = await getSession();
+    if (!session && hasOAuthRedirectArtifact()) {
+      session = await waitForSignIn(2500);
+    }
+    return { session };
+  }
+
   window.iboostAuth = {
     client,
     signUpWithPassword,
@@ -262,6 +339,7 @@
     signInWithOAuth,
     signOut,
     getSession,
+    getSessionSettled,
     getUser,
     onAuthChange,
     requireSession,

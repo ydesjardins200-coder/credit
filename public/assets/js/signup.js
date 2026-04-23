@@ -232,7 +232,9 @@
 
   (async function redirectIfSignedIn() {
     if (!window.iboostAuth) return;
-    const { session } = await window.iboostAuth.getSession();
+    // getSessionSettled handles the OAuth-hash race the same way
+    // requireSession does on gated pages.
+    const { session } = await window.iboostAuth.getSessionSettled();
     if (session) window.location.replace(await getForwardPath());
   })();
 
