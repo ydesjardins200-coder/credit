@@ -118,11 +118,16 @@
   // is present, skip the wait — normal page loads aren't racing anything.
 
   async function requireSession(loginPath) {
+    console.log('[iboost]', 'requireSession: href =', window.location.href);
     let { session } = await getSession();
+    console.log('[iboost]', 'requireSession: first getSession →', session ? 'SESSION' : 'null');
     if (!session && hasOAuthRedirectArtifact()) {
+      console.log('[iboost]', 'requireSession: waiting for SIGNED_IN…');
       session = await waitForSignIn(5000);
+      console.log('[iboost]', 'requireSession: after wait →', session ? 'SESSION' : 'null');
     }
     if (!session) {
+      console.log('[iboost]', 'requireSession: redirecting to', loginPath || '/login.html');
       window.location.replace(loginPath || '/login.html');
       return null;
     }
@@ -131,11 +136,12 @@
 
   function hasOAuthRedirectArtifact() {
     var hash = window.location.hash || '';
-    if (hash.indexOf('access_token=') !== -1) return true;
-    if (hash.indexOf('error=') !== -1) return true;
     var search = window.location.search || '';
-    if (/[?&]code=/.test(search)) return true;
-    return false;
+    var result = hash.indexOf('access_token=') !== -1 ||
+                 hash.indexOf('error=') !== -1 ||
+                 /[?&]code=/.test(search);
+    console.log('[iboost]', 'hasOAuthRedirectArtifact →', result, '(hash.length=' + hash.length + ', search.length=' + search.length + ')');
+    return result;
   }
 
   function waitForSignIn(timeoutMs) {
