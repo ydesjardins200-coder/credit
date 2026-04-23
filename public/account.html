@@ -13,17 +13,18 @@
 </head>
 <body class="dash-body">
 
-  <!-- DEV MODE banner — honest disclosure about preview data.
-       Every number, name, date, and transaction below is a placeholder.
-       Real data lights up after bureau integration + first monthly report. -->
+  <!-- DEV MODE banner — some dashboard features already use real data
+       (name, email, signup date, plan). Credit-bureau data (score,
+       utilization, payment history) lights up after integration + first
+       monthly report. Updated as features become real. -->
   <div class="dash-dev-banner" role="status" aria-live="polite">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
       <line x1="12" y1="9" x2="12" y2="13"/>
       <line x1="12" y1="17" x2="12.01" y2="17"/>
     </svg>
-    <strong>Preview dashboard</strong>
-    <span>— real data will appear after your first monthly report</span>
+    <strong>Some features are still in preview</strong>
+    <span>&mdash; real credit data appears after your first monthly report</span>
   </div>
 
   <!-- Top bar: logo + user identity + signout -->
@@ -66,11 +67,21 @@
 
       <div class="dash-panel-head">
         <h1 id="greeting">Welcome back.</h1>
-        <p class="dash-panel-sub">You're on day <strong>12</strong> of your credit-building journey. Here's what's next.</p>
+        <!-- Day count populated by account.js from auth.users.created_at.
+             Copy defaults to day 1 for new signups — handled JS-side so
+             the static HTML reads correctly for SSR/no-JS fallback. -->
+        <p class="dash-panel-sub" id="welcome-subtitle">
+          You're on day <strong id="welcome-day-count">1</strong> of your credit-building journey. Let's get started.
+        </p>
       </div>
 
-      <!-- Streak hero — dark navy, mirrors the AI tip card from Credit tab -->
-      <article class="dash-streak">
+      <!-- Streak hero — dark navy, mirrors the AI tip card from Credit tab.
+           HIDDEN in Wave 1 of the make-it-real work: the numbers here are
+           fake (12-day streak, 7 green dots). This returns in Wave 3 when
+           we have a real user_daily_activity table + login tracking.
+           When unhiding, remove the hidden attribute and the 12 / 7-dots
+           will be driven by account.js. -->
+      <article class="dash-streak" hidden data-preview-only="wave-3">
         <div class="dash-streak-num">12</div>
         <div class="dash-streak-label">
           <div class="dash-streak-eye">Day streak</div>
@@ -140,8 +151,12 @@
         </div>
       </article>
 
-      <!-- Today's focus + milestones -->
-      <div class="dash-grid-2">
+      <!-- Today's focus + milestones.
+           HIDDEN in Wave 1: Today's focus copy refers to fake action items
+           on the Credit tab; Milestones require bureau data that doesn't
+           exist yet. Re-enable as Wave 2 / later when we have real
+           content to put here. -->
+      <div class="dash-grid-2" hidden data-preview-only="wave-later">
 
         <article class="dash-card">
           <h3 class="dash-card-title">Today's focus</h3>

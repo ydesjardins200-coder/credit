@@ -58,6 +58,51 @@
     return '·';
   }
 
+  // Compute "day N of your credit-building journey" from the user's
+  // signup timestamp, write it into the Welcome subtitle. Day 1 is the
+  // signup day itself (inclusive) — "day 1 of your journey" means
+  // "today is the first day".
+  //
+  // Uses UTC for both sides to avoid off-by-one near midnight local
+  // time. Floors negative values (e.g. clock skew) to 1. Defensive on
+  // missing/invalid created_at — falls back to day 1.
+  function populateWelcomeDayCount(user) {
+    var el = document.getElementById('welcome-day-count');
+    var subtitleEl = document.getElementById('welcome-subtitle');
+    if (!el) return;
+
+    var days = 1;
+    try {
+      if (user && user.created_at) {
+        var created = new Date(user.created_at);
+        if (!isNaN(created.getTime())) {
+          var now = new Date();
+          // Normalize both to UTC midnight so we're counting whole days
+          var createdUtcMs = Date.UTC(
+            created.getUTCFullYear(), created.getUTCMonth(), created.getUTCDate()
+          );
+          var nowUtcMs = Date.UTC(
+            now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()
+          );
+          var diffDays = Math.floor((nowUtcMs - createdUtcMs) / 86400000);
+          days = Math.max(1, diffDays + 1); // +1 so signup day = day 1
+        }
+      }
+    } catch (e) { /* fall through to days = 1 */ }
+
+    el.textContent = String(days);
+
+    // Subtitle copy adapts: day 1 gets a welcoming "Let's get started."
+    // Days 2+ get the forward-looking "Here's what's next." (mirrors the
+    // pre-Wave-1 copy for returning users).
+    if (subtitleEl) {
+      var suffix = days === 1 ? "Let's get started." : "Here's what's next.";
+      subtitleEl.innerHTML =
+        "You're on day <strong id=\"welcome-day-count\">" + days +
+        "</strong> of your credit-building journey. " + suffix;
+    }
+  }
+
   // ---------------------------------------------------------------------
   // Tab switching
   // ---------------------------------------------------------------------
@@ -242,6 +287,19 @@
       // Replace any trailing period with ", firstName."
       greetingEl.textContent = greetingEl.textContent.replace(/\.$/, ', ' + firstName + '.');
     }
+
+    // Day-since-signup counter + subtitle ("You're on day X of your
+    // credit-building journey. Let's get started.").
+    //
+    // Source: auth.users.created_at, available on the session. For
+    // Google OAuth users this is the first OAuth return; for password
+    // users it's the signUp() call. Both are correct starting points
+    // for "joined iBoost on this day."
+    //
+    // We count whole calendar days from signup-date to today in UTC to
+    // avoid the off-by-one that local timezones introduce around
+    // midnight. 1-based: the day they signed up IS day 1.
+    populateWelcomeDayCount(user);
 
     // Sign out button
     const signoutBtn = document.getElementById('signout-btn');
