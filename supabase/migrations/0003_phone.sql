@@ -36,20 +36,24 @@ alter table public.profiles
 --    Everything else in the function body matches migration 0002 —
 --    we're just adding the phone line to the declare + insert + update
 --    clauses.
+--
+--    Note: dollar-quoted with a *tag* ($func$) rather than plain $$.
+--    Supabase's dashboard SQL editor parses function bodies defensively
+--    and sometimes trips on plain $$ when the body contains inline --
+--    comments (got caught by this on first run of 0003). Tagged form
+--    ($func$...$func$) is unambiguous for any parser. Functionally
+--    identical to $$...$$.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $func$
 declare
   meta_full_name text := nullif(new.raw_user_meta_data->>'full_name', '');
   meta_phone text     := nullif(new.raw_user_meta_data->>'phone', '');
   meta_country text   := upper(nullif(new.raw_user_meta_data->>'country', ''));
 begin
-  -- Only accept known country codes. Any other value is discarded (column
-  -- stays null) so the CHECK constraint cannot fail and the signup still
-  -- succeeds. OAuth signups that don't supply country land here too.
   if meta_country is not null and meta_country not in ('CA', 'US') then
     meta_country := null;
   end if;
@@ -65,7 +69,7 @@ begin
 
   return new;
 end;
-$$;
+$func$;
 
 -- Trigger itself is unchanged from 0001/0002; no need to drop/recreate.
 -- The ON CONFLICT DO UPDATE path above handles the rare case where a
