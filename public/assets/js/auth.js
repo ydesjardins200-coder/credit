@@ -40,15 +40,20 @@
 
   // ----- Public API -----
 
-  async function signUpWithPassword({ email, password, fullName, country }) {
+  async function signUpWithPassword({ email, password, fullName, phone, country }) {
     const { data, error } = await client.auth.signUp({
       email,
       password,
       options: {
         // These land in auth.users.raw_user_meta_data. The handle_new_user
         // trigger (migration 0002) reads them into public.profiles.
+        // NOTE: phone is NOT YET in the profiles table — it lands in
+        // raw_user_meta_data and can be read from there. A future
+        // migration should add `phone text` to public.profiles and
+        // update the trigger to copy it across.
         data: {
           full_name: fullName || null,
+          phone: phone || null,
           country: country || null,
         },
         emailRedirectTo: window.location.origin + '/account.html',

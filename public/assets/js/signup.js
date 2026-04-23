@@ -21,6 +21,7 @@
   const firstNameInput = document.getElementById('first_name');
   const lastNameInput = document.getElementById('last_name');
   const emailInput = document.getElementById('email');
+  const phoneInput = document.getElementById('phone');
 
   const t = {
     fillFields: document.body.dataset.msgFillFields || 'Please fill in all fields and meet the password requirements.',
@@ -32,107 +33,63 @@
     accountPath: document.body.dataset.accountPath || '/account.html',
   };
 
-  // ----- Plan routing + selector wiring -----
-  // The signup page has an inline plan selector (3 mini-cards: Free,
-  // Essential, Complete) visible above the OAuth buttons. This replaces
-  // the previous "force redirect to pricing if no plan" behavior:
-  // users without a plan param can now pick inline, and users who
-  // arrived with ?plan=X see their choice pre-selected and can still
-  // change it without leaving the page.
+  // ----- Post-signup routing -----
+  // As of the capture-lead-first refactor: plan selection has moved off
+  // the signup page entirely. Every successful signup — free or paid —
+  // now lands on /checkout.html where the user picks a plan and (for
+  // paid tiers) enters payment details.
   //
-  // Flow:
-  //   1. On load: read ?plan= (if any), set pendingPlan, sync selector UI.
-  //   2. User clicks a card: update pendingPlan + UI + URL.
-  //   3. On submit: post-signup path uses whatever pendingPlan is now.
+  // Phase 2 of the refactor will rebuild /checkout.html with the
+  // transparent dark-hero plan selector that matches /pricing.html. For
+  // now (phase 1), the redirect target is hardcoded to /checkout.html
+  // with no ?plan= param.
 
-  function getUrlParam(name) {
-    try {
-      return new URLSearchParams(window.location.search).get(name);
-    } catch (e) {
-      return null;
-    }
+  function getPostSignupPath() {
+    return '/checkout.html';
   }
 
-  // Plan catalog — kept in sync with pricing page
-  var PLAN_AMOUNTS = {
-    free:      { usd: 0,  cad: 0  },
-    essential: { usd: 15, cad: 20 },
-    complete:  { usd: 30, cad: 40 }
-  };
-  var VALID_PLANS = ['free', 'essential', 'complete'];
+  // ----- Phone formatting + validation -----
+  // NANP phone numbers (Canada + US, both use country code +1).
+  // We collect ONLY the 10-digit local portion — users don't type the +1.
+  //
+  // Live-format the input as the user types so it visually becomes
+  //   (555) 123-4567
+  // regardless of whether they pasted, typed slowly, typed fast,
+  // used parentheses or didn't. The stored value on submit is the
+  // formatted string.
+  //
+  // Validation (on submit): must match (NXX) NXX-XXXX where N is 2-9.
+  // The HTML `pattern` attribute also enforces this as a last line
+  // of defense in case JS is disabled — browser will block submit.
 
-  // Mutable state: the currently-selected plan. Starts from URL param
-  // or defaults to essential. Lowercased + validated against VALID_PLANS.
-  var urlPlan = (getUrlParam('plan') || '').toLowerCase();
-  var pendingPlan = VALID_PLANS.indexOf(urlPlan) >= 0 ? urlPlan : 'essential';
+  function formatPhoneLive(rawValue) {
+    // Strip everything non-digit, then re-format what remains.
+    var digits = (rawValue || '').replace(/\D/g, '').slice(0, 10);
+    if (digits.length === 0) return '';
+    if (digits.length < 4)  return '(' + digits;
+    if (digits.length < 7)  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+    return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+  }
 
-  // Read currency preference from localStorage (set by landing.js on pricing)
-  var currency = 'usd';
-  try {
-    var saved = localStorage.getItem('iboost.currency');
-    if (saved === 'cad') currency = 'cad';
-  } catch (e) { /* storage disabled */ }
+  // Strict validator — only valid NANP (area code + exchange 2-9)
+  var PHONE_VALID_RE = /^\([2-9]\d{2}\)\s\d{3}-\d{4}$/;
 
-  // Sync the selector UI and the amount labels to match pendingPlan
-  // and the current currency. Called once on load and again every
-  // time the user clicks a different card.
-  function syncPlanSelectorUI() {
-    var cards = document.querySelectorAll('.signup-plan-card');
-    cards.forEach(function (card) {
-      var planKey = card.getAttribute('data-plan');
-      var isSelected = planKey === pendingPlan;
-      card.classList.toggle('is-selected', isSelected);
-      card.setAttribute('aria-checked', isSelected ? 'true' : 'false');
-    });
+  function isPhoneValid(value) {
+    return PHONE_VALID_RE.test((value || '').trim());
+  }
 
-    // Update the amount shown on each card per current currency
-    var amountEls = document.querySelectorAll('[data-plan-amount]');
-    amountEls.forEach(function (el) {
-      var planKey = el.getAttribute('data-plan-amount');
-      if (PLAN_AMOUNTS[planKey]) {
-        el.textContent = '$' + PLAN_AMOUNTS[planKey][currency];
+  // Live-format as user types. Keeping caret handling simple: after
+  // reformat, we set the caret to the end of the value. For a short
+  // field like (###) ###-#### this is imperceptibly different from
+  // preserving caret position mid-string, and avoids the bug-prone
+  // caret math that full-featured phone libraries carry.
+  if (phoneInput) {
+    phoneInput.addEventListener('input', function () {
+      var formatted = formatPhoneLive(phoneInput.value);
+      if (phoneInput.value !== formatted) {
+        phoneInput.value = formatted;
       }
     });
-
-    // Update the "Prices shown in USD/CAD" note
-    var label = document.getElementById('signup-plan-currency-label');
-    if (label) label.textContent = currency.toUpperCase();
-  }
-
-  // Wire up click handlers on the 3 mini-cards
-  function initPlanSelector() {
-    var cards = document.querySelectorAll('.signup-plan-card');
-    cards.forEach(function (card) {
-      card.addEventListener('click', function () {
-        var planKey = card.getAttribute('data-plan');
-        if (VALID_PLANS.indexOf(planKey) < 0) return;
-        pendingPlan = planKey;
-        syncPlanSelectorUI();
-
-        // Update the URL so refresh preserves the choice and so the
-        // user can share the URL with their plan embedded
-        if (window.history && window.history.replaceState) {
-          var newUrl = window.location.pathname + '?plan=' + encodeURIComponent(planKey) + window.location.hash;
-          window.history.replaceState({}, '', newUrl);
-        }
-      });
-    });
-  }
-
-  // Initial sync + wiring
-  syncPlanSelectorUI();
-  initPlanSelector();
-
-  // Compute where the user should land after signup succeeds.
-  //   Free -> /account.html (no payment step)
-  //   Paid -> /checkout.html?plan=X (visual payment mockup for now)
-  // Uses pendingPlan's CURRENT value (updated by the selector),
-  // not whatever was in the URL at page load.
-  function getPostSignupPath() {
-    if (pendingPlan === 'free') {
-      return t.accountPath;
-    }
-    return '/checkout.html?plan=' + encodeURIComponent(pendingPlan);
   }
 
   // ----- Alerts -----
@@ -191,16 +148,17 @@
     const firstOk = firstNameInput ? firstNameInput.value.trim().length > 0 : true;
     const lastOk = lastNameInput ? lastNameInput.value.trim().length > 0 : true;
     const emailOk = emailInput ? /\S+@\S+\.\S+/.test(emailInput.value.trim()) : true;
+    const phoneOk = phoneInput ? isPhoneValid(phoneInput.value) : true;
     // Country radios are optional in the DOM: gate only fires when they exist.
     const countryOk = !form.querySelector('input[name="country"]') || !!getSelectedCountry();
 
-    submitBtn.disabled = !(pwOk && consentOk && firstOk && lastOk && emailOk && countryOk);
+    submitBtn.disabled = !(pwOk && consentOk && firstOk && lastOk && emailOk && phoneOk && countryOk);
   }
 
   // Bind listeners
   if (pwInput) pwInput.addEventListener('input', updateSubmitState);
   if (consentBox) consentBox.addEventListener('change', updateSubmitState);
-  [firstNameInput, lastNameInput, emailInput].forEach((el) => {
+  [firstNameInput, lastNameInput, emailInput, phoneInput].forEach((el) => {
     if (el) el.addEventListener('input', updateSubmitState);
   });
   form.querySelectorAll('input[name="country"]').forEach((el) => {
@@ -226,6 +184,7 @@
       if (firstNameInput) firstNameInput.value = 'Demo';
       if (lastNameInput) lastNameInput.value = 'User';
       if (emailInput) emailInput.value = 'demo+' + ts + '@iboost.test';
+      if (phoneInput) phoneInput.value = '(514) 555-0100';
 
       // US is already the default checked radio — make sure it stays
       var usRadio = document.getElementById('country-us');
@@ -313,6 +272,7 @@
     const lastName = lastNameInput ? lastNameInput.value.trim() : '';
     const fullName = (firstName + ' ' + lastName).trim();
     const email = emailInput.value.trim();
+    const phone = phoneInput ? phoneInput.value.trim() : '';
     const password = pwInput.value;
     const country = getSelectedCountry();
     const countryRequired = !!form.querySelector('input[name="country"]');
@@ -320,7 +280,8 @@
     // Double-check everything server-side-ish before calling Supabase
     const { allMet } = evaluatePassword(password);
     const consentOk = consentBox ? consentBox.checked : true;
-    if (!firstName || !lastName || !email || !allMet || !consentOk ||
+    const phoneOk = phoneInput ? isPhoneValid(phone) : true;
+    if (!firstName || !lastName || !email || !phoneOk || !allMet || !consentOk ||
         (countryRequired && !country)) {
       showAlert(t.fillFields, 'error');
       return;
@@ -334,6 +295,9 @@
       email,
       password,
       fullName,
+      phone,   // NEW: formatted '(NXX) NXX-XXXX' — stored in auth.users
+               // raw_user_meta_data until a profiles schema migration adds it
+               // to public.profiles
       country,  // null if the field is absent (FR page today)
     });
 

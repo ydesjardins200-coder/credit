@@ -5263,6 +5263,16 @@ a:hover { text-decoration: underline; }
   border-color: var(--color-accent);
 }
 
+/* Small helper text under a form input (e.g., format hints).
+   Used on the signup phone field to show the expected (###) ###-####
+   format. Sits flush against the bottom of the input. */
+.form-group .form-hint {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  line-height: 1.3;
+}
+
 .divider {
   display: flex;
   align-items: center;
