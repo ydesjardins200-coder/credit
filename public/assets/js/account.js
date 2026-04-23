@@ -520,6 +520,303 @@
   }
 
   // ---------------------------------------------------------------------
+  // Profile tab — identity hero + personal info + credit-goal editor
+  // ---------------------------------------------------------------------
+  //
+  // Called from init() after the top-bar avatar is populated.
+  // Responsibilities:
+  //   1. Populate identity hero: full name, email, "Member since <Month YYYY>"
+  //   2. Populate read-only rows: name, email, phone (formatted), address
+  //      (joined), DOB (Month D, YYYY), credit goal (human text)
+  //   3. Wire up the per-row credit-goal editor: Edit -> open inline form,
+  //      Cancel -> close without save, Save -> updateProfile() -> refresh row
+
+  const GOAL_LABELS = {
+    buy_home:      'Buy a home',
+    buy_car:       'Buy a car',
+    rebuild:       'Rebuild after hardship',
+    lower_rates:   'Lower my interest rates',
+    business_loan: 'Qualify for a business loan',
+    learning:      'Just learning',
+    other:         'Other'
+  };
+
+  async function initProfileTab(user, firstName) {
+    // 1. Identity hero — name + email + member-since
+    const fullNameEl = document.getElementById('profile-full-name');
+    const emailHeroEl = document.getElementById('profile-email-display');
+    const memberSinceEl = document.getElementById('profile-member-since');
+
+    if (fullNameEl) {
+      var m = user.user_metadata || {};
+      var fullName = m.full_name || m.name ||
+        ((m.first_name || '') + ' ' + (m.last_name || '')).trim() ||
+        firstName;
+      fullNameEl.textContent = fullName;
+    }
+
+    if (emailHeroEl) emailHeroEl.textContent = user.email || '(no email)';
+
+    if (memberSinceEl) {
+      memberSinceEl.textContent = 'Member since ' + formatMonthYear(user.created_at);
+    }
+
+    // 2. Fetch profile for the info rows
+    var profile = null;
+    try {
+      profile = await window.iboostAuth.getProfile();
+    } catch (e) {
+      console.error('[account] profile-tab getProfile error:', e);
+    }
+
+    // Row helpers — write text, leaving dash if value is empty
+    function fillRow(id, val) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = (val && String(val).trim()) ? val : '—';
+    }
+
+    // Name (from metadata, same derivation as hero)
+    (function () {
+      var m = user.user_metadata || {};
+      var fullName = m.full_name || m.name ||
+        ((m.first_name || '') + ' ' + (m.last_name || '')).trim() ||
+        firstName;
+      fillRow('profile-row-name', fullName);
+    })();
+
+    // Email (from session)
+    fillRow('profile-row-email', user.email || '');
+
+    // Phone — display as (XXX) XXX-XXXX if NANP shape, else raw
+    (function () {
+      var raw = (profile && profile.phone) || '';
+      var match = raw.match(/^\+?1?(\d{3})(\d{3})(\d{4})$/);
+      var display = match ? '(' + match[1] + ') ' + match[2] + '-' + match[3] : raw;
+      fillRow('profile-row-phone', display);
+    })();
+
+    // Address — joined into one string. Skips blank pieces.
+    fillRow('profile-row-address', formatAddress(profile));
+
+    // DOB — "Month D, YYYY"
+    fillRow('profile-row-dob', formatLongDate(profile && profile.date_of_birth));
+
+    // Credit goal read display
+    renderGoalRead(profile);
+
+    // 3. Wire up the credit-goal editor
+    wireGoalEditor(profile);
+  }
+
+  // Format ISO date (YYYY-MM-DD or full ISO) as "Month YYYY".
+  // Returns "—" if not parsable. Uses UTC so signup-day-boundary is
+  // consistent with day-counter logic on Welcome.
+  function formatMonthYear(iso) {
+    if (!iso) return '—';
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '—';
+      var months = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+      return months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    } catch (e) {
+      return '—';
+    }
+  }
+
+  // Format YYYY-MM-DD as "Month D, YYYY"
+  function formatLongDate(iso) {
+    if (!iso) return '';
+    try {
+      var parts = String(iso).split('T')[0].split('-');
+      if (parts.length !== 3) return '';
+      var year = parseInt(parts[0], 10);
+      var month = parseInt(parts[1], 10);
+      var day = parseInt(parts[2], 10);
+      if (!year || !month || !day) return '';
+      var months = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+      return months[month - 1] + ' ' + day + ', ' + year;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function formatAddress(profile) {
+    if (!profile) return '';
+    var line1 = profile.address_line1 || '';
+    var line2 = profile.address_line2 || '';
+    var city  = profile.address_city || '';
+    var region = profile.address_region || '';
+    var postal = profile.address_postal || '';
+    var street = line1 + (line2 ? ', ' + line2 : '');
+    var cityRegion = [city, region].filter(Boolean).join(', ');
+    var tail = [cityRegion, postal].filter(Boolean).join(' ');
+    return [street, tail].filter(Boolean).join(', ');
+  }
+
+  // Render the credit-goal row's read mode from the profile row. Handles
+  // the "other" case where the detail text replaces the kind label as
+  // the primary description.
+  function renderGoalRead(profile) {
+    var kindTextEl = document.getElementById('profile-row-goal-kind-text');
+    var detailTextEl = document.getElementById('profile-row-goal-detail-text');
+    var editBtn = document.getElementById('profile-goal-edit-btn');
+    if (!kindTextEl || !detailTextEl || !editBtn) return;
+
+    var kind = profile && profile.credit_goal_kind;
+    var detail = (profile && profile.credit_goal_detail) || '';
+
+    if (!kind) {
+      kindTextEl.textContent = '—';
+      detailTextEl.hidden = true;
+      detailTextEl.textContent = '';
+      editBtn.textContent = 'Set';
+      return;
+    }
+
+    kindTextEl.textContent = GOAL_LABELS[kind] || kind;
+    if (detail.trim()) {
+      detailTextEl.textContent = '"' + detail.trim() + '"';
+      detailTextEl.hidden = false;
+    } else {
+      detailTextEl.hidden = true;
+      detailTextEl.textContent = '';
+    }
+    editBtn.textContent = 'Edit';
+  }
+
+  function wireGoalEditor(initialProfile) {
+    const readEl    = document.querySelector('#profile-row-goal .profile-goal-read');
+    const formWrap  = document.getElementById('profile-goal-edit-form');
+    const editBtn   = document.getElementById('profile-goal-edit-btn');
+    const form      = document.getElementById('profile-goal-form');
+    const cancelBtn = document.getElementById('profile-goal-cancel-btn');
+    const saveBtn   = document.getElementById('profile-goal-save-btn');
+    const detailWrap = document.getElementById('profile-goal-edit-detail-wrap');
+    const detailOptionality = document.getElementById('profile-goal-edit-detail-optionality');
+    const detailInput = document.getElementById('profile-goal-edit-detail');
+    const alertEl   = document.getElementById('profile-goal-edit-alert');
+
+    if (!readEl || !formWrap || !editBtn || !form) return;
+
+    // Current profile reference — updated on each successful save so
+    // Cancel restores the LATEST saved values, not the first-load ones.
+    var current = initialProfile;
+
+    function enterEditMode() {
+      // Pre-fill with current saved values
+      prefillEditForm(current);
+      readEl.hidden = true;
+      editBtn.hidden = true;
+      formWrap.hidden = false;
+      updateDetailVisibility();
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+    }
+
+    function exitEditMode() {
+      readEl.hidden = false;
+      editBtn.hidden = false;
+      formWrap.hidden = true;
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+    }
+
+    function prefillEditForm(profile) {
+      var kind = profile && profile.credit_goal_kind;
+      var detail = (profile && profile.credit_goal_detail) || '';
+      // Clear all radios first
+      form.querySelectorAll('input[name="credit_goal_kind"]').forEach(function (r) {
+        r.checked = false;
+      });
+      if (kind) {
+        var radio = form.querySelector('input[name="credit_goal_kind"][value="' + kind + '"]');
+        if (radio) radio.checked = true;
+      }
+      if (detailInput) detailInput.value = detail;
+    }
+
+    function updateDetailVisibility() {
+      var checked = form.querySelector('input[name="credit_goal_kind"]:checked');
+      if (!checked) {
+        if (detailWrap) detailWrap.hidden = true;
+        return;
+      }
+      if (detailWrap) detailWrap.hidden = false;
+      if (checked.value === 'other') {
+        if (detailOptionality) detailOptionality.textContent = '(required)';
+        if (detailInput) detailInput.required = true;
+      } else {
+        if (detailOptionality) detailOptionality.textContent = '(optional)';
+        if (detailInput) detailInput.required = false;
+      }
+    }
+
+    editBtn.addEventListener('click', enterEditMode);
+    if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
+
+    form.querySelectorAll('input[name="credit_goal_kind"]').forEach(function (r) {
+      r.addEventListener('change', updateDetailVisibility);
+    });
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+
+      var checked = form.querySelector('input[name="credit_goal_kind"]:checked');
+      if (!checked) return showGoalErr('Please choose a credit goal.');
+
+      var kind = checked.value;
+      var detail = (detailInput && detailInput.value || '').trim();
+      if (kind === 'other' && !detail) {
+        return showGoalErr('Please tell us about your goal in the text box.');
+      }
+
+      if (saveBtn) {
+        saveBtn.classList.add('is-loading');
+        saveBtn.disabled = true;
+      }
+
+      try {
+        const res = await window.iboostAuth.updateProfile({
+          creditGoalKind: kind,
+          creditGoalDetail: detail || null
+        });
+        if (res && res.error) {
+          return showGoalErr(res.error.message || 'Could not save. Please try again.');
+        }
+
+        // Update our in-memory profile + re-render read mode
+        current = current || {};
+        current.credit_goal_kind = kind;
+        current.credit_goal_detail = detail || null;
+        renderGoalRead(current);
+        exitEditMode();
+      } catch (err) {
+        console.error('[account] goal save error:', err);
+        showGoalErr('Network error. Please try again.');
+      } finally {
+        if (saveBtn) {
+          saveBtn.classList.remove('is-loading');
+          saveBtn.disabled = false;
+        }
+      }
+    });
+
+    function showGoalErr(msg) {
+      if (alertEl) {
+        alertEl.textContent = msg;
+        alertEl.hidden = false;
+      }
+      if (saveBtn) {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Main init
   // ---------------------------------------------------------------------
 
@@ -551,26 +848,17 @@
     const avatarEl = document.getElementById('user-avatar');
     if (avatarEl) avatarEl.textContent = initials;
 
-    // Profile tab: populate the big identity avatar, full name, and email
-    // so the Profile view reflects the real logged-in user — the other
-    // data (phone, address, SIN) stays as mockup placeholders for now.
+    // Profile tab (tab 6) — populate identity hero + personal info rows
+    // with real data from profiles + session. Credit goal is per-row
+    // editable. All other rows are read-only for this wave. See
+    // initProfileTab() definition above for details.
+    //
+    // Runs AFTER the top-bar/avatar population so profileAvatarEl can
+    // pick up the initials we derived at the top of init().
     const profileAvatarEl = document.getElementById('profile-avatar');
     if (profileAvatarEl) profileAvatarEl.textContent = initials;
 
-    const profileFullNameEl = document.getElementById('profile-full-name');
-    if (profileFullNameEl) {
-      var m = user.user_metadata || {};
-      var fullName = m.full_name || m.name ||
-        ((m.first_name || '') + ' ' + (m.last_name || '')).trim() ||
-        firstName;
-      profileFullNameEl.textContent = fullName;
-    }
-
-    const profileEmailDisplay = document.getElementById('profile-email-display');
-    if (profileEmailDisplay) profileEmailDisplay.textContent = user.email || '(no email)';
-
-    const profileEmailDetail = document.getElementById('profile-email-detail');
-    if (profileEmailDetail) profileEmailDetail.textContent = user.email || '(no email)';
+    initProfileTab(user, firstName);
 
     // Personalize the Welcome tab greeting.
     // The inline script in account.html already set "Welcome back." —

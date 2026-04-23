@@ -1510,30 +1510,192 @@
 
       <div class="dash-panel-head">
         <h1>Your profile</h1>
-        <p class="dash-panel-sub">Manage your account, plan, billing, and preferences.</p>
+        <p class="dash-panel-sub">What we have on file. You can update your credit goal at any time.</p>
       </div>
 
-      <!-- Identity hero: avatar + name + email + verified pill -->
+      <!-- Identity hero: avatar + name + email + member-since.
+           account.js populates #profile-avatar (initials), #profile-full-name,
+           #profile-email-display, and #profile-member-since from the session
+           and getProfile(). "Verified" pill removed — we do not verify
+           identity until bureau integration. -->
       <article class="dash-identity">
-        <div class="dash-identity-avatar" id="profile-avatar" aria-hidden="true">MR</div>
+        <div class="dash-identity-avatar" id="profile-avatar" aria-hidden="true">—</div>
         <div class="dash-identity-body">
-          <h2 id="profile-full-name">Marcus Reynolds</h2>
-          <p id="profile-email-display">marcus.reynolds@email.com</p>
+          <h2 id="profile-full-name">…</h2>
+          <p id="profile-email-display">…</p>
           <div class="dash-identity-member">
             <span class="dash-identity-dot" aria-hidden="true"></span>
-            Member since March 10, 2026 · 47 days
+            <span id="profile-member-since">Member since —</span>
           </div>
-        </div>
-        <div class="dash-identity-verified">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          Verified
         </div>
       </article>
 
+      <!-- Personal information — mostly read-only for this wave.
+           Every non-goal field (name, email, phone, address, DOB) is a
+           display-only row. Credit goal has its own per-row Edit button
+           that opens an inline form with the same radio grid + detail
+           textarea we use on Welcome.
+
+           Deliberately removed from mock:
+             - SIN / SSN row (we decided not to store it — commit 063d364)
+             - Card-level "Edit" button (no whole-card edit mode this wave) -->
+      <article class="dash-card">
+        <div class="dash-card-head">
+          <h3>Personal information</h3>
+        </div>
+        <div class="dash-info-rows">
+
+          <div class="dash-info-row">
+            <div class="dash-info-label">Full name</div>
+            <div class="dash-info-val" id="profile-row-name">—</div>
+            <div></div>
+          </div>
+
+          <div class="dash-info-row">
+            <div class="dash-info-label">Email</div>
+            <div class="dash-info-val" id="profile-row-email">—</div>
+            <div></div>
+          </div>
+
+          <div class="dash-info-row">
+            <div class="dash-info-label">Phone</div>
+            <div class="dash-info-val" id="profile-row-phone">—</div>
+            <div></div>
+          </div>
+
+          <div class="dash-info-row">
+            <div class="dash-info-label">Address</div>
+            <div class="dash-info-val" id="profile-row-address">—</div>
+            <div></div>
+          </div>
+
+          <div class="dash-info-row">
+            <div class="dash-info-label">Date of birth</div>
+            <div class="dash-info-val" id="profile-row-dob">—</div>
+            <div></div>
+          </div>
+
+          <!-- Credit goal row: read-mode by default, switches to edit-mode
+               when user clicks Edit. account.js toggles .is-editing on the
+               row container. -->
+          <div class="dash-info-row profile-goal-row" id="profile-row-goal">
+
+            <div class="dash-info-label">Credit goal</div>
+
+            <!-- Read mode: goal kind (human-readable) + detail if any -->
+            <div class="dash-info-val profile-goal-read">
+              <div id="profile-row-goal-kind-text">—</div>
+              <div id="profile-row-goal-detail-text" class="profile-goal-detail-text" hidden></div>
+            </div>
+
+            <button type="button" class="dash-info-btn profile-goal-edit-btn" id="profile-goal-edit-btn">Edit</button>
+
+            <!-- Edit mode: hidden by default. Full-width when open (spans
+                 all 3 columns of dash-info-row grid). -->
+            <div class="profile-goal-edit-form" id="profile-goal-edit-form" hidden>
+              <form id="profile-goal-form" class="profile-form">
+
+                <div class="profile-goal-grid" role="radiogroup" aria-label="Credit goal">
+                  <label class="profile-goal-option" data-goal-kind="buy_home">
+                    <input type="radio" name="credit_goal_kind" value="buy_home" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Buy a home</strong>
+                      <span>Qualify for a mortgage.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option" data-goal-kind="buy_car">
+                    <input type="radio" name="credit_goal_kind" value="buy_car" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Buy a car</strong>
+                      <span>Get the best auto loan rate.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option" data-goal-kind="rebuild">
+                    <input type="radio" name="credit_goal_kind" value="rebuild" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Rebuild after hardship</strong>
+                      <span>Recover from past credit issues.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option" data-goal-kind="lower_rates">
+                    <input type="radio" name="credit_goal_kind" value="lower_rates" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Lower my interest rates</strong>
+                      <span>Reduce cost of debt I already have.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option" data-goal-kind="business_loan">
+                    <input type="radio" name="credit_goal_kind" value="business_loan" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Qualify for a business loan</strong>
+                      <span>Build credit for entrepreneurship.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option" data-goal-kind="learning">
+                    <input type="radio" name="credit_goal_kind" value="learning" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Just learning</strong>
+                      <span>General credit knowledge + improvement.</span>
+                    </span>
+                  </label>
+                  <label class="profile-goal-option profile-goal-option-other" data-goal-kind="other">
+                    <input type="radio" name="credit_goal_kind" value="other" />
+                    <span class="profile-goal-dot" aria-hidden="true"></span>
+                    <span class="profile-goal-text">
+                      <strong>Other</strong>
+                      <span>Tell us in your own words.</span>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="profile-form-field profile-goal-detail" id="profile-goal-edit-detail-wrap" hidden>
+                  <label for="profile-goal-edit-detail">
+                    Tell us more <span class="profile-form-optional" id="profile-goal-edit-detail-optionality">(optional)</span>
+                  </label>
+                  <textarea
+                    id="profile-goal-edit-detail"
+                    name="credit_goal_detail"
+                    rows="2"
+                    maxlength="500"
+                    placeholder="Anything specific we should know about your situation?"
+                  ></textarea>
+                </div>
+
+                <div id="profile-goal-edit-alert" class="alert alert-error" hidden></div>
+
+                <div class="profile-goal-edit-actions">
+                  <button type="button" class="btn btn-ghost" id="profile-goal-cancel-btn">Cancel</button>
+                  <button type="submit" class="btn btn-primary profile-form-submit" id="profile-goal-save-btn">
+                    <span class="profile-form-submit-txt">Save goal</span>
+                    <span class="profile-form-submit-spinner" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+      </article>
+
+      <!-- ===================== PREVIEW-ONLY (hidden) =====================
+           Plan & billing, payment method, invoice history, notifications,
+           and delete-account all depend on features we haven't built:
+             - Plan column on profiles + Stripe integration (future)
+             - user_preferences table (future)
+             - real delete-account flow with cascades (future)
+           Kept in the DOM (not deleted) so re-enabling is flipping the
+           hidden attribute rather than rebuilding the markup.
+           ================================================================= -->
+
       <!-- Plan & billing -->
-      <article class="dash-plan-card">
+      <article class="dash-plan-card" hidden data-preview-only="wave-later">
         <div class="dash-plan-head">
           <div>
             <div class="dash-plan-eye">Current plan</div>
@@ -1568,48 +1730,8 @@
         </div>
       </article>
 
-      <!-- Personal information -->
-      <article class="dash-card">
-        <div class="dash-card-head">
-          <h3>Personal information</h3>
-          <button type="button" class="dash-card-edit">Edit</button>
-        </div>
-        <div class="dash-info-rows">
-          <div class="dash-info-row">
-            <div class="dash-info-label">Full name</div>
-            <div class="dash-info-val">Marcus Reynolds</div>
-            <div></div>
-          </div>
-          <div class="dash-info-row">
-            <div class="dash-info-label">Email</div>
-            <div class="dash-info-val" id="profile-email-detail">marcus.reynolds@email.com</div>
-            <div></div>
-          </div>
-          <div class="dash-info-row">
-            <div class="dash-info-label">Phone</div>
-            <div class="dash-info-val">+1 (514) 555-0142</div>
-            <div></div>
-          </div>
-          <div class="dash-info-row">
-            <div class="dash-info-label">Address</div>
-            <div class="dash-info-val">1234 Rue Saint-Laurent, Montréal, QC H2X 2S5</div>
-            <div></div>
-          </div>
-          <div class="dash-info-row">
-            <div class="dash-info-label">Date of birth</div>
-            <div class="dash-info-val">March 18, 1989</div>
-            <div></div>
-          </div>
-          <div class="dash-info-row">
-            <div class="dash-info-label">SIN / SSN</div>
-            <div class="dash-info-val">••• ••• 142</div>
-            <button type="button" class="dash-info-btn">Show</button>
-          </div>
-        </div>
-      </article>
-
       <!-- Payment method -->
-      <article class="dash-card">
+      <article class="dash-card" hidden data-preview-only="wave-later">
         <div class="dash-card-head">
           <h3>Payment method</h3>
           <button type="button" class="dash-card-edit">Update card</button>
@@ -1627,7 +1749,7 @@
       </article>
 
       <!-- Invoice history -->
-      <article class="dash-card">
+      <article class="dash-card" hidden data-preview-only="wave-later">
         <div class="dash-card-head">
           <h3>Invoice history</h3>
           <span class="dash-card-head-sub">Last 4 months</span>
@@ -1686,7 +1808,7 @@
       </article>
 
       <!-- Notifications preferences -->
-      <article class="dash-card">
+      <article class="dash-card" hidden data-preview-only="wave-later">
         <div class="dash-card-head">
           <h3>Notifications</h3>
         </div>
@@ -1730,7 +1852,7 @@
       </article>
 
       <!-- Danger zone -->
-      <div class="dash-danger">
+      <div class="dash-danger" hidden data-preview-only="wave-later">
         <div>
           <h4>Delete your account</h4>
           <p>Permanently remove your iBoost account. We'll stop all bureau reporting within 30 days.</p>

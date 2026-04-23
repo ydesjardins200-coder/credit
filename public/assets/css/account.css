@@ -1556,6 +1556,67 @@
   text-decoration: underline;
 }
 
+/* =======================================================================
+   PROFILE TAB — credit-goal per-row editor
+   ----------------------------------------------------------------------
+   The goal row uses .dash-info-row's 3-column grid (label, value, action)
+   in read mode. In edit mode, the form spans all three columns via the
+   full-width sub-block. Handled with grid-column: 1 / -1 on the form
+   wrapper, plus hiding the read + edit-button siblings.
+   ======================================================================= */
+
+.profile-goal-row {
+  /* The parent .dash-info-row already provides the 3-col grid. We just
+     need the edit form to span all columns when visible. */
+  position: relative;
+}
+
+/* The read-mode detail text is quoted italic and sits under the kind label */
+.profile-goal-detail-text {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: #64748b;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+/* Edit form spans full row width when visible */
+.profile-goal-edit-form {
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Edit actions row — Cancel (ghost) + Save (primary emerald) */
+.profile-goal-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Save button inside the goal editor reuses .profile-form-submit
+   sizing but smaller — the row-level editor is tighter than the
+   big Welcome form. */
+.profile-goal-edit-form .profile-form-submit {
+  min-width: 130px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+}
+
+/* Mobile: cancel/save buttons stack, form has tighter padding */
+@media (max-width: 600px) {
+  .profile-goal-edit-actions {
+    flex-direction: column-reverse; /* Save on top, Cancel below */
+  }
+  .profile-goal-edit-actions .btn {
+    width: 100%;
+  }
+}
+
 /* Today + Milestones */
 .dash-today {
   display: flex;
