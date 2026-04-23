@@ -21,10 +21,6 @@ Last updated: 2026-04-21
       **Owner:** Yan. Similar aesthetic is fine; palette should lean navy +
       emerald (less pink/orange neon than the current placeholder).
 
-- [ ] **Plexus image** — the previous test image at `hero-plexus.jpg` (35KB)
-      is still in the repo but no longer referenced. Delete it when the
-      final hero image decision is made, or decide if it's a useful fallback.
-
 - [ ] **OG images / social share cards** — currently using the shield logo
       as OG image. Before launch, produce a proper social-sharing card
       (1200×630px) that shows iBoost branding + tagline.
