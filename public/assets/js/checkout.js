@@ -64,11 +64,11 @@
       amountCad: 40,
       isFree: false,
       includes: [
-        '$2,000 reported credit line',
-        'Weekly score refresh',
-        'Unlimited on-demand AI advice',
-        'Dispute assistance for report errors',
-        'Priority support, 7 days a week'
+        '<strong>$2,000 reported credit line</strong>',
+        '<strong>Weekly</strong> score refresh',
+        '<strong>Unlimited on-demand AI advice</strong>',
+        '<strong>Dispute assistance for report errors</strong>',
+        '<strong>Priority support, 7 days a week</strong>'
       ]
     }
   };

@@ -7235,58 +7235,74 @@ body.auth-page .signup-intro.signup-intro-v2 {
 
 /* ---- What's included block ---- */
 .plan-includes {
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  flex: 1 1 auto; /* lets it absorb extra height when the right column is tall */
+  gap: 12px;
+  flex: 1 1 auto; /* absorbs extra height so left column matches right */
 }
 .plan-includes-heading {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--color-fg);
+  color: var(--color-primary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   margin: 0;
 }
 .plan-includes-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
+/* Item row — matches /pricing.html's .pricing-card li treatment:
+   subtle divider between rows, checkmark circle on the left,
+   comfortable line-height. */
 .plan-includes-list li {
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--color-fg-soft);
-  padding-left: 22px;
   position: relative;
+  padding: 0.55rem 0 0.55rem 1.85rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-fg-soft);
+  border-bottom: 1px solid var(--color-surface-2);
+}
+.plan-includes-list li:last-child {
+  border-bottom: none;
+}
+/* Bold spans inside items pick up primary color — matches Complete tier
+   emphasis on /pricing.html. */
+.plan-includes-list li strong {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 .plan-includes-list li::before {
-  content: '';
+  content: '✓';
   position: absolute;
   left: 0;
-  top: 0.45em;
-  width: 14px;
-  height: 14px;
+  top: 0.65rem;
+  width: 1.25rem;
+  height: 1.25rem;
   background: var(--color-accent);
+  color: #fff;
   border-radius: 50%;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='12 4 6 11 3 8'/%3E%3C/svg%3E");
-  background-size: 12px 12px;
-  background-position: center;
-  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
+/* Muted rows (Free tier "not included") — line-through + grey dash */
 .plan-includes-list li.plan-includes-item-muted {
   color: var(--color-muted);
   text-decoration: line-through;
   text-decoration-color: rgba(100, 116, 139, 0.4);
 }
 .plan-includes-list li.plan-includes-item-muted::before {
-  background: #cbd5e1;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='8' x2='12' y2='8'/%3E%3C/svg%3E");
+  content: '−';
+  background: var(--color-border-strong);
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 /* ---- RIGHT COLUMN — confirm / payment ---- */
