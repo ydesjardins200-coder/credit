@@ -34,9 +34,20 @@
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        // Force implicit flow (hash-based #access_token=...) to match what
+        // our Supabase project emits via the OAuth callback. In supabase-js
+        // v2 recent versions, the default flowType was changed to PKCE
+        // which expects ?code=... query param. Our Supabase auth/v1/callback
+        // returns #access_token=... (implicit), so the client needs to be
+        // told to expect that format.
+        flowType: 'implicit',
       },
     }
   );
+
+  // Diagnostic: log what the Supabase client saw at init, and what URL
+  // the page loaded with (before the client stripped the hash).
+  console.log('[iboost]', 'auth.js load: href =', window.location.href, 'hash.length =', (window.location.hash || '').length);
 
   // ----- Public API -----
 
@@ -145,6 +156,7 @@
     }
     try {
       client.auth.onAuthStateChange(function (event, session) {
+        console.log('[iboost]', 'onAuthStateChange:', event, session ? 'SESSION' : 'null');
         // Supabase emits INITIAL_SESSION once on client init. If the
         // OAuth hash was present, session will be truthy here. If the
         // user was logged out with no OAuth return, session will be
