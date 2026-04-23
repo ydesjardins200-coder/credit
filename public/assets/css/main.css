@@ -6980,6 +6980,263 @@ body.auth-page .signup-intro.signup-intro-v2 {
 }
 
 
+/* =======================================================================
+   CHECKOUT — PHASE 2 (plan picker + conditional payment form)
+   ======================================================================= */
+
+/* ---- Compact hero ----
+   Same dark-emerald palette as /pricing.html but ~45% of the vertical
+   footprint (min-height 180 vs pricing's 440). No skyline shapes
+   overlay — we want the eye to land on the picker below, not get
+   stuck in the hero. */
+.checkout-hero {
+  position: relative;
+  padding: var(--space-6) 0 var(--space-5);
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 60% 100% at 50% 50%, rgba(46, 204, 113, 0.28) 0%, transparent 70%),
+    linear-gradient(165deg, rgba(10, 37, 64, 0.96) 0%, rgba(14, 45, 77, 0.92) 50%, rgba(4, 20, 38, 0.98) 100%),
+    #0A2540;
+  color: #fff;
+  overflow: hidden;
+}
+
+.checkout-hero-copy {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.checkout-hero-copy .hero-eyebrow {
+  margin-bottom: 8px;
+}
+
+.checkout-hero h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 0 0 10px;
+  color: #fff;
+}
+
+.checkout-hero-lead {
+  font-size: clamp(0.94rem, 1.2vw, 1rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .checkout-hero {
+    padding: 24px 0 20px;
+    min-height: 140px;
+  }
+  .checkout-hero h1 {
+    font-size: 1.3rem;
+  }
+  .checkout-hero-lead {
+    font-size: 0.88rem;
+  }
+}
+
+/* ---- Main container in phase 2 ----
+   We drop the two-column .checkout-layout (replaced by the picker
+   section stacked above the confirm section). Keep .checkout-main
+   centered and padded. */
+.checkout-page .checkout-main {
+  padding: var(--space-6) 0 var(--space-8);
+  background: var(--color-bg);
+}
+
+.checkout-page .checkout-main > .container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 1100px;
+}
+
+/* ---- Plan picker section ---- */
+.checkout-picker-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.checkout-picker-section .currency-toggle {
+  align-self: center;
+}
+
+/* Picker-mode pricing cards — behavior layer on top of the existing
+   .pricing-card styles from /pricing.html. The <label> wraps the
+   card so the whole thing is clickable; the hidden <input type=radio>
+   inside handles keyboard / focus / state. */
+.pricing-grid.is-picker-mode {
+  /* Same three-column grid as /pricing.html but with a little less
+     horizontal tension since the container is narrower. */
+  width: 100%;
+}
+
+.pricing-grid.is-picker-mode > .pricing-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  /* Reset any <label>-inherited margins / typography */
+  margin: 0;
+}
+
+.pricing-grid.is-picker-mode > .pricing-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Hide the radio visually but keep it keyboard-focusable and
+   screen-reader-discoverable. */
+.plan-picker-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+/* When the radio is focused via keyboard, ring the whole card. */
+.plan-picker-radio:focus-visible + .plan-picker-check ~ * {
+  /* no-op selector — real focus is on the card via the next rule */
+}
+.pricing-grid.is-picker-mode > .pricing-card:has(.plan-picker-radio:focus-visible) {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Checkmark badge: hidden by default, fades in when card is selected. */
+.plan-picker-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.plan-picker-check svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Selected state — the card you chose */
+.pricing-grid.is-picker-mode > .pricing-card.is-selected {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    0 12px 28px rgba(46, 204, 113, 0.18);
+}
+
+.pricing-grid.is-picker-mode > .pricing-card.is-selected .plan-picker-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* When the featured (Essential) card is NOT selected, tone down its
+   scale emphasis so it doesn't fight the user's actual choice. */
+.pricing-grid.is-picker-mode > .pricing-card-featured:not(.is-selected) {
+  transform: none;
+}
+
+@media (max-width: 900px) {
+  .pricing-grid.is-picker-mode > .pricing-card-featured {
+    /* /pricing.html's scale-up on the middle card doesn't make sense in
+       the picker, where the user's choice drives emphasis. */
+    transform: none !important;
+  }
+}
+
+/* ---- Confirm section (summary + payment + submit) ---- */
+.checkout-confirm-section {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 6px 18px rgba(10, 37, 64, 0.06);
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.checkout-confirm-summary {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Inherit .checkout-summary-row styles from the old checkout — they
+   already match our design tokens. */
+
+/* Payment fields block — collapses when Free is selected */
+.checkout-payment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 2000px;
+  opacity: 1;
+  transition: max-height 0.32s ease, opacity 0.2s ease, margin 0.32s ease;
+  overflow: hidden;
+}
+
+body.is-free-selected .checkout-payment-fields {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: -20px; /* offset the parent's gap so spacing collapses too */
+  pointer-events: none;
+}
+
+/* When Free is selected, also remove the payment-fields' bottom gap
+   cleanly (parent uses gap:20px which otherwise lingers). */
+body.is-free-selected .checkout-confirm-summary {
+  margin-bottom: 0;
+}
+
+/* Submit spinner state — renamed from .is-loading to .is-processing
+   so both old and new class refs work during transition. */
+.checkout-submit-btn.is-processing {
+  pointer-events: none;
+}
+.checkout-submit-btn.is-processing .checkout-submit-txt {
+  opacity: 0;
+}
+.checkout-submit-btn.is-processing .checkout-submit-spinner {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .checkout-confirm-section {
+    padding: 20px 18px;
+  }
+  .checkout-page .checkout-main > .container {
+    gap: var(--space-4);
+  }
+}
+
+
 /* Welcome banner on /account.html after successful checkout.
    Emerald gradient card with check-circle icon. Appears once per
    completed checkout; auto-clears from URL on display. */

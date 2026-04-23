@@ -1,260 +1,367 @@
 /* =========================================================================
-   checkout.js — Visual-only payment mockup (NO real Stripe integration)
+   checkout.js — Plan picker + visual-only payment mockup
    =========================================================================
-   This script powers the /checkout.html page, which is a DEV-MODE visual
-   stand-in for the eventual Stripe Checkout integration. Its job:
+   Powers /checkout.html. Phase 2 rewrite:
 
-     1. Read ?plan= from the URL and populate the plan summary
-     2. Format the card-number input (space every 4 digits)
-     3. Format the expiry input (auto-insert " / " between MM and YY)
-     4. Handle the "Pay" submit — show spinner for ~1.8s, then redirect
-        to /account.html
-     5. NO validation of actual card numbers, NO API calls, NO charges
+     1. Plan picker with three cards (Free / Essential / Complete). Click
+        or keyboard-select a card to activate it. Default selection is
+        Complete; ?plan=<key> URL override is honored.
+     2. Currency toggle (USD / CAD). Persists to localStorage so the
+        choice survives across the pricing page and checkout.
+     3. Payment fields collapse when Free is selected; the submit button
+        label + legal copy swap to match. Paid plans show the card form.
+     4. Submit:
+        - Free: no card validation, redirect to
+          /account.html?signup=success&plan=free
+        - Paid: show spinner ~1.8s then redirect with
+          /account.html?signup=success&plan=<essential|complete>
+     5. No real Stripe integration. Validation is shape-only (is there
+        some content in each required field) — client-side niceties only.
 
-   When we integrate real Stripe later, this file becomes the handler
-   that exchanges card details for a Stripe token and calls the backend
-   to create a subscription. Until then, it's purely illustrative.
+   When Stripe integration happens later, the paid-plan submit branch is
+   the hook: replace the setTimeout with a real Stripe.js confirmCardPayment
+   (or whatever API we use). The picker + currency logic doesn't need to
+   change.
    ========================================================================= */
 
 (function () {
   'use strict';
 
   // -------- Plan catalog --------
-  // Kept in sync with the prices shown on /pricing.html. When we update
-  // pricing, update this object too.
+  // Kept in sync with /pricing.html. If pricing changes, update both.
   var PLANS = {
     free: {
       name: 'Free',
-      tagline: 'Learn the system. Build the habits. Upgrade when you\u2019re ready.',
       amountUsd: 0,
       amountCad: 0,
-      includes: [
-        'Full budget app (manual entry)',
-        'Complete education library',
-        'Monthly credit tips newsletter'
-      ]
+      isFree: true
     },
     essential: {
       name: 'iBoost Essential',
-      tagline: 'Real credit work without the premium add-ons.',
       amountUsd: 15,
       amountCad: 20,
-      includes: [
-        '$750 reported credit line',
-        'Monthly reporting to all major bureaus',
-        'Monthly score refresh',
-        'Monthly AI credit tip',
-        'Complete education library'
-      ]
+      isFree: false
     },
     complete: {
       name: 'iBoost Complete',
-      tagline: 'Everything we offer. Maximum score-building velocity.',
       amountUsd: 30,
       amountCad: 40,
-      includes: [
-        '$2,000 reported credit line',
-        'Weekly score refresh',
-        'Unlimited on-demand AI advice',
-        'Dispute assistance for report errors',
-        'Priority support, 7 days a week'
-      ]
+      isFree: false
     }
   };
 
-  // -------- Read query params --------
+  // -------- State --------
+  // Defaults: Complete plan, USD currency (or whatever localStorage says).
+  // Overridable at load time by ?plan= in the URL.
+  var state = {
+    planKey: 'complete',
+    currency: 'usd'
+  };
+
+  // -------- Utilities --------
+  function $(sel) { return document.querySelector(sel); }
+  function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+
   function getParam(name) {
-    var params = new URLSearchParams(window.location.search);
-    return params.get(name);
+    return new URLSearchParams(window.location.search).get(name);
   }
 
-  var planKey = (getParam('plan') || 'essential').toLowerCase();
-  var plan = PLANS[planKey] || PLANS.essential;
+  function formatMoney(amount, currency) {
+    // Simple formatter — whole-dollar amounts only (our plans have no
+    // cents). Prepend $ and append '.00' so the UI feels like a real
+    // checkout receipt.
+    var code = currency === 'cad' ? 'CAD' : 'USD';
+    return '$' + amount + '.00 ' + code;
+  }
 
-  // Currency defaults to USD unless persisted as CAD from the pricing page.
-  // The landing.js stores the currency choice in localStorage.
-  var currency = 'usd';
+  // -------- Initial state setup --------
+  // Pre-select a plan card from ?plan= (falls back to state default).
+  (function initPlanFromQuery() {
+    var qp = (getParam('plan') || '').toLowerCase();
+    if (PLANS[qp]) state.planKey = qp;
+  })();
+
+  // Pull currency preference from localStorage (set by /pricing.html's
+  // landing.js when the user toggles there).
   try {
     var saved = localStorage.getItem('iboost.currency');
-    if (saved === 'cad') currency = 'cad';
-  } catch (e) { /* storage disabled — fall through to USD */ }
+    if (saved === 'cad') state.currency = 'cad';
+  } catch (e) { /* storage disabled — default USD */ }
 
-  var amount = (currency === 'cad') ? plan.amountCad : plan.amountUsd;
-  var currencyLabel = (currency === 'cad') ? 'CAD' : 'USD';
+  // -------- Plan selection --------
+  // Mark the right <input type="radio"> as checked and sync UI.
+  function selectPlan(planKey) {
+    if (!PLANS[planKey]) return;
+    state.planKey = planKey;
 
-  // -------- Populate the plan summary on the left column --------
-  function populateSummary() {
-    var nameEl = document.getElementById('plan-name');
-    var amountEl = document.getElementById('plan-amount');
-    var currencyEl = document.getElementById('plan-currency');
-    var taglineEl = document.getElementById('plan-tagline');
-    var includesEl = document.getElementById('plan-includes');
-    var billedTodayEl = document.getElementById('billed-today-amount');
-    var payAmountEl = document.getElementById('pay-amount');
+    // Sync the radio (might already be checked if this came from a click).
+    var radio = document.querySelector('.plan-picker-radio[value="' + planKey + '"]');
+    if (radio) radio.checked = true;
 
-    if (nameEl) nameEl.textContent = plan.name;
-    if (amountEl) amountEl.textContent = '$' + amount;
-    if (currencyEl) currencyEl.textContent = currencyLabel;
-    if (taglineEl) taglineEl.textContent = plan.tagline;
+    // Visual: add .is-selected to the chosen card, remove from others.
+    $$('.pricing-card[data-plan]').forEach(function (card) {
+      if (card.getAttribute('data-plan') === planKey) {
+        card.classList.add('is-selected');
+      } else {
+        card.classList.remove('is-selected');
+      }
+    });
 
-    if (includesEl) {
-      includesEl.innerHTML = '';
-      plan.includes.forEach(function (item) {
-        var li = document.createElement('li');
-        li.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>' + escapeHtml(item) + '</span>';
-        includesEl.appendChild(li);
+    updateSummaryAndSubmit();
+    updatePaymentFieldsVisibility();
+  }
+
+  // -------- Summary + submit label --------
+  function updateSummaryAndSubmit() {
+    var plan = PLANS[state.planKey];
+    var amount = state.currency === 'cad' ? plan.amountCad : plan.amountUsd;
+
+    // Plan name in summary
+    var planNameEl = $('#summary-plan-name');
+    if (planNameEl) planNameEl.textContent = plan.name;
+
+    // Billed today
+    var billedEl = $('#billed-today-amount');
+    if (billedEl) {
+      billedEl.textContent = plan.isFree ? 'Free' : formatMoney(amount, state.currency);
+    }
+
+    // Renews row: hide for Free (nothing renews)
+    var renewsRow = $('#summary-renews-row');
+    if (renewsRow) renewsRow.hidden = plan.isFree;
+
+    // Submit button label
+    var labelEl = $('#checkout-submit-label');
+    if (labelEl) {
+      if (plan.isFree) {
+        labelEl.textContent = 'Activate Free plan';
+      } else {
+        labelEl.innerHTML =
+          'Pay <span id="pay-amount">' + formatMoney(amount, state.currency) + '</span>';
+      }
+    }
+
+    // Legal copy
+    var legalEl = $('#checkout-submit-legal');
+    if (legalEl) {
+      if (plan.isFree) {
+        legalEl.textContent =
+          'By continuing, you activate your free iBoost account. No card ' +
+          'is charged. Upgrade to a paid plan anytime from your dashboard.';
+      } else {
+        legalEl.textContent =
+          'By confirming your subscription, you authorize iBoost to charge ' +
+          'your card monthly until you cancel. Cancel anytime from your ' +
+          'account dashboard.';
+      }
+    }
+
+    // Stripe-secured badge: hide for Free
+    var poweredByEl = $('#checkout-powered-by');
+    if (poweredByEl) poweredByEl.style.display = plan.isFree ? 'none' : '';
+  }
+
+  // -------- Payment fields visibility --------
+  // Collapse the card-form block when Free is chosen. We toggle a body
+  // class rather than directly hiding the element so CSS transitions
+  // can style the collapse however it wants.
+  function updatePaymentFieldsVisibility() {
+    var plan = PLANS[state.planKey];
+    if (plan.isFree) {
+      document.body.classList.add('is-free-selected');
+    } else {
+      document.body.classList.remove('is-free-selected');
+    }
+  }
+
+  // -------- Currency toggle --------
+  function setCurrency(newCurrency) {
+    if (newCurrency !== 'usd' && newCurrency !== 'cad') return;
+    state.currency = newCurrency;
+
+    // Persist the choice so /pricing.html picks it up on the next visit
+    try { localStorage.setItem('iboost.currency', newCurrency); } catch (e) { /* ok */ }
+
+    // Sync the toggle buttons' aria-pressed state
+    $$('.currency-toggle button[data-currency-toggle]').forEach(function (btn) {
+      var match = btn.getAttribute('data-currency-toggle') === newCurrency;
+      btn.setAttribute('aria-pressed', match ? 'true' : 'false');
+    });
+
+    // Swap visible price/currency spans on the cards
+    $$('[data-currency]').forEach(function (el) {
+      el.hidden = el.getAttribute('data-currency') !== newCurrency;
+    });
+
+    updateSummaryAndSubmit();
+  }
+
+  // -------- Input formatters (card/expiry) --------
+  // Card number: digits only, space every 4. Max 16 digits => 19 chars
+  // including spaces. Matches the maxlength on the input.
+  function formatCardNumber(raw) {
+    var digits = raw.replace(/\D/g, '').slice(0, 16);
+    var parts = [];
+    for (var i = 0; i < digits.length; i += 4) {
+      parts.push(digits.slice(i, i + 4));
+    }
+    return parts.join(' ');
+  }
+
+  // Expiry: MM / YY (2 digits, slash, 2 digits). Auto-insert the slash
+  // after the first 2 digits.
+  function formatExpiry(raw) {
+    var digits = raw.replace(/\D/g, '').slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return digits.slice(0, 2) + ' / ' + digits.slice(2);
+  }
+
+  function wireInputFormatters() {
+    var cardInput = $('#checkout-card-number');
+    if (cardInput) {
+      cardInput.addEventListener('input', function (e) {
+        e.target.value = formatCardNumber(e.target.value);
       });
     }
-
-    var amountWithCents = '$' + amount.toFixed(2);
-    if (billedTodayEl) billedTodayEl.textContent = amountWithCents;
-    if (payAmountEl) payAmountEl.textContent = amountWithCents;
-  }
-
-  function escapeHtml(str) {
-    var d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
-  populateSummary();
-
-  // If it's a Free plan, there's no payment to process. Skip the form
-  // entirely and send the user straight to their account.
-  if (planKey === 'free' || amount === 0) {
-    window.location.replace('/account.html');
-    return;
-  }
-
-  // -------- Prefill email if we can find it from a previous session --------
-  // (Nothing to do here yet since signup flow doesn't persist email to
-  // localStorage, but leaving the hook so future sessions could.)
-  try {
-    var savedEmail = localStorage.getItem('iboost.pendingSignupEmail');
-    if (savedEmail) {
-      var emailEl = document.getElementById('checkout-email');
-      if (emailEl) emailEl.value = savedEmail;
+    var expiryInput = $('#checkout-expiry');
+    if (expiryInput) {
+      expiryInput.addEventListener('input', function (e) {
+        e.target.value = formatExpiry(e.target.value);
+      });
     }
-  } catch (e) { /* storage disabled */ }
+    var cvcInput = $('#checkout-cvc');
+    if (cvcInput) {
+      cvcInput.addEventListener('input', function (e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+      });
+    }
+  }
 
-  // -------- Card number formatting: space every 4 digits --------
-  var cardNumInput = document.getElementById('checkout-card-number');
-  if (cardNumInput) {
-    cardNumInput.addEventListener('input', function (e) {
-      var raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-      var formatted = raw.replace(/(.{4})/g, '$1 ').trim();
-      e.target.value = formatted;
+  // -------- Dummy-fill button (DEV MODE) --------
+  function wireDummyFill() {
+    var btn = $('#checkout-fill-dummy');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      $('#checkout-card-number').value = '4242 4242 4242 4242';
+      $('#checkout-expiry').value = '12 / 29';
+      $('#checkout-cvc').value = '123';
+      $('#checkout-cardholder').value = 'Test User';
+      $('#checkout-postal').value = '12345';
     });
   }
 
-  // -------- Expiry formatting: auto-insert " / " between MM and YY --------
-  var expiryInput = document.getElementById('checkout-expiry');
-  if (expiryInput) {
-    expiryInput.addEventListener('input', function (e) {
-      var raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-      if (raw.length >= 3) {
-        e.target.value = raw.slice(0, 2) + ' / ' + raw.slice(2);
-      } else {
-        e.target.value = raw;
+  // -------- Email prefill from Supabase session --------
+  // Run once iboostAuth is available (script load order guarantees it,
+  // but we defend anyway). Non-blocking — if session isn't available,
+  // email stays as the placeholder and user can still proceed.
+  async function prefillEmail() {
+    try {
+      if (!window.iboostAuth) return;
+      var res = await window.iboostAuth.getSessionSettled();
+      var session = res && res.session;
+      if (session && session.user && session.user.email) {
+        var emailEl = $('#checkout-email');
+        if (emailEl) emailEl.value = session.user.email;
       }
-    });
+    } catch (e) { /* non-fatal */ }
   }
 
-  // -------- CVC: numeric only --------
-  var cvcInput = document.getElementById('checkout-cvc');
-  if (cvcInput) {
-    cvcInput.addEventListener('input', function (e) {
-      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
-    });
-  }
+  // -------- Submit handler --------
+  function wireSubmit() {
+    var form = $('#checkout-form');
+    var submitBtn = $('#checkout-submit');
+    var alertEl = $('#checkout-alert');
+    if (!form || !submitBtn) return;
 
-  // -------- Postal: strip most special chars, keep alphanumerics and spaces --------
-  var postalInput = document.getElementById('checkout-postal');
-  if (postalInput) {
-    postalInput.addEventListener('input', function (e) {
-      e.target.value = e.target.value.replace(/[^A-Za-z0-9 ]/g, '').slice(0, 10);
-    });
-  }
-
-  // -------- DEV-MODE: "Fill with dummy data" button --------
-  // Populates every form field with placeholder values so partners /
-  // testers don't have to type anything to complete the demo flow.
-  // Uses the canonical Stripe test card 4242 4242 4242 4242 which
-  // makes the demo feel authentic without risking a real charge.
-  var fillDummyBtn = document.getElementById('checkout-fill-dummy');
-  if (fillDummyBtn) {
-    fillDummyBtn.addEventListener('click', function () {
-      // Use the input event path so the existing formatters (space every 4,
-      // auto-slash on expiry, etc.) run naturally rather than us hardcoding
-      // already-formatted strings that might drift from the formatter.
-      function setAndFire(el, value) {
-        if (!el) return;
-        el.value = value;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-
-      setAndFire(cardNumInput, '4242424242424242');
-      setAndFire(expiryInput, '1230');      // becomes "12 / 30"
-      setAndFire(cvcInput, '123');
-      var cardholderInput = document.getElementById('checkout-cardholder');
-      if (cardholderInput) cardholderInput.value = 'Demo User';
-      var countrySelect = document.getElementById('checkout-country');
-      if (countrySelect) countrySelect.value = 'US';
-      setAndFire(postalInput, '10001');
-
-      // Clear any prior error so the form looks clean after fill
-      clearAlert();
-    });
-  }
-
-  // -------- Form submit: show spinner, then redirect --------
-  // In the real implementation this will call Stripe.js to tokenize the
-  // card and POST to the backend. For the mockup we just simulate the
-  // async wait and go.
-  var form = document.getElementById('checkout-form');
-  var submitBtn = document.getElementById('checkout-submit');
-  var alertEl = document.getElementById('checkout-alert');
-
-  if (form && submitBtn) {
+    // The submit button lives outside the form but uses form="checkout-form",
+    // so submit events fire on the form. Both Free and paid go through here.
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (alertEl) alertEl.hidden = true;
 
-      // Minimal mock validation — user must have typed SOMETHING in the
-      // card number and expiry fields. This is purely visual; no real
-      // Luhn check or expiry validation.
-      var cardRaw = cardNumInput ? cardNumInput.value.replace(/\D/g, '') : '';
-      var expiryRaw = expiryInput ? expiryInput.value.replace(/\D/g, '') : '';
-      var cvcRaw = cvcInput ? cvcInput.value : '';
+      var plan = PLANS[state.planKey];
 
-      if (cardRaw.length < 12 || expiryRaw.length < 4 || cvcRaw.length < 3) {
-        showAlert('Please fill in all card details to continue.');
-        return;
+      // Paid plan: shape-validate the card fields. No real validation
+      // because there is no real payment processor — just make sure
+      // the user typed something sensible-shaped.
+      if (!plan.isFree) {
+        var cardNumber = ($('#checkout-card-number').value || '').replace(/\s/g, '');
+        var expiry = ($('#checkout-expiry').value || '').replace(/\s/g, '');
+        var cvc = $('#checkout-cvc').value || '';
+        var cardholder = ($('#checkout-cardholder').value || '').trim();
+        var postal = ($('#checkout-postal').value || '').trim();
+
+        if (cardNumber.length < 13 || cardNumber.length > 16) {
+          return showAlert('Enter a valid card number.');
+        }
+        if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+          return showAlert('Enter expiration as MM / YY.');
+        }
+        if (cvc.length < 3) {
+          return showAlert('Enter your card\u2019s CVC.');
+        }
+        if (!cardholder) {
+          return showAlert('Enter the name on your card.');
+        }
+        if (!postal) {
+          return showAlert('Enter your postal / ZIP code.');
+        }
       }
 
-      clearAlert();
-
-      // Lock the button and show spinner
-      submitBtn.classList.add('is-loading');
+      // Show spinner on the submit button. Duration differs for Free vs
+      // paid so the UX feels right — Free should feel instant-ish,
+      // paid should feel like a real card processor.
+      submitBtn.classList.add('is-processing');
       submitBtn.disabled = true;
 
-      // Simulate Stripe processing delay (1.5-2s feels realistic)
+      var delay = plan.isFree ? 600 : 1800;
       setTimeout(function () {
-        // In real integration: on success, redirect to account.
-        // On failure, show error and re-enable button.
-        window.location.replace('/account.html?signup=success&plan=' + encodeURIComponent(planKey));
-      }, 1800);
+        var qs = 'signup=success&plan=' + encodeURIComponent(state.planKey);
+        window.location.href = '/account.html?' + qs;
+      }, delay);
     });
+
+    function showAlert(message) {
+      if (!alertEl) return;
+      alertEl.textContent = message;
+      alertEl.hidden = false;
+      alertEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
-  function showAlert(msg) {
-    if (!alertEl) return;
-    alertEl.textContent = msg;
-    alertEl.hidden = false;
+  // -------- Wire it all up --------
+  function init() {
+    // Currency toggle buttons
+    $$('.currency-toggle button[data-currency-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var c = btn.getAttribute('data-currency-toggle');
+        setCurrency(c);
+      });
+    });
+
+    // Plan-picker cards. We listen to `change` on the radio so keyboard
+    // and click both work via native <label for="..."> semantics.
+    $$('.plan-picker-radio').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        if (radio.checked) selectPlan(radio.value);
+      });
+    });
+
+    // Apply initial state (default Complete, or ?plan= override, and the
+    // currency from localStorage).
+    setCurrency(state.currency);
+    selectPlan(state.planKey);
+
+    wireInputFormatters();
+    wireDummyFill();
+    wireSubmit();
+    prefillEmail();
   }
 
-  function clearAlert() {
-    if (!alertEl) return;
-    alertEl.hidden = true;
-    alertEl.textContent = '';
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
   }
+
 })();
