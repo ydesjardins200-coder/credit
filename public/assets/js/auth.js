@@ -117,71 +117,77 @@
   // short timeout) before deciding there's no session. If no fragment
   // is present, skip the wait — normal page loads aren't racing anything.
 
+  // ----- OAuth race handling -----
+  // When Supabase returns from OAuth, the browser lands on a URL with
+  // #access_token=... The Supabase client (configured with
+  // detectSessionInUrl: true) parses the hash SYNCHRONOUSLY and calls
+  // history.replaceState() to strip it for security. Then it asynchronously
+  // persists the session to localStorage.
+  //
+  // Consequence: by the time page code runs requireSession() on
+  // DOMContentLoaded, window.location.hash is already EMPTY even though
+  // an OAuth return is in progress. We can't use the URL as a signal.
+  //
+  // Instead, we subscribe to onAuthStateChange at module load (before any
+  // page code runs) and cache the first session we see. requireSession
+  // races getSession() against this cache — if either finds a session
+  // within a short window, we're authenticated.
+  //
+  // The 'initialSessionReady' promise resolves when Supabase has emitted
+  // its first auth event. Resolves with the session (may be null if
+  // truly logged out). Always resolves, never rejects.
+  var initialSessionReady = new Promise(function (resolve) {
+    var resolved = false;
+    function settle(session) {
+      if (resolved) return;
+      resolved = true;
+      resolve(session);
+    }
+    try {
+      client.auth.onAuthStateChange(function (event, session) {
+        // Supabase emits INITIAL_SESSION once on client init. If the
+        // OAuth hash was present, session will be truthy here. If the
+        // user was logged out with no OAuth return, session will be
+        // null — also the right answer, we just don't have a session
+        // to hand back.
+        if (event === 'INITIAL_SESSION' || session) {
+          settle(session);
+        }
+      });
+    } catch (e) { /* subscribe failed — fall through to the timeout */ }
+
+    // Safety timeout: if INITIAL_SESSION never fires (edge case), resolve
+    // with whatever getSession() currently returns. 3s is long enough
+    // for any reasonable network + storage read.
+    setTimeout(async function () {
+      if (resolved) return;
+      var { data } = await client.auth.getSession();
+      settle((data && data.session) || null);
+    }, 3000);
+  });
+
   async function requireSession(loginPath) {
     console.log('[iboost]', 'requireSession: href =', window.location.href);
+    // Fast path: getSession() returns instantly if the session is already
+    // persisted in localStorage (returning user, no OAuth in progress).
     let { session } = await getSession();
     console.log('[iboost]', 'requireSession: first getSession →', session ? 'SESSION' : 'null');
-    if (!session && hasOAuthRedirectArtifact()) {
-      console.log('[iboost]', 'requireSession: waiting for SIGNED_IN…');
-      session = await waitForSignIn(5000);
+
+    // Slow path: no session yet, but an OAuth return might be in progress.
+    // Wait for INITIAL_SESSION (captured by the module-level subscription
+    // above) which fires once Supabase finishes parsing the hash.
+    if (!session) {
+      console.log('[iboost]', 'requireSession: no session yet, awaiting INITIAL_SESSION…');
+      session = await initialSessionReady;
       console.log('[iboost]', 'requireSession: after wait →', session ? 'SESSION' : 'null');
     }
+
     if (!session) {
       console.log('[iboost]', 'requireSession: redirecting to', loginPath || '/login.html');
       window.location.replace(loginPath || '/login.html');
       return null;
     }
     return session;
-  }
-
-  function hasOAuthRedirectArtifact() {
-    var hash = window.location.hash || '';
-    var search = window.location.search || '';
-    var result = hash.indexOf('access_token=') !== -1 ||
-                 hash.indexOf('error=') !== -1 ||
-                 /[?&]code=/.test(search);
-    console.log('[iboost]', 'hasOAuthRedirectArtifact →', result, '(hash.length=' + hash.length + ', search.length=' + search.length + ')');
-    return result;
-  }
-
-  function waitForSignIn(timeoutMs) {
-    return new Promise(function (resolve) {
-      var settled = false;
-      var subscription = null;
-
-      function finish(session) {
-        if (settled) return;
-        settled = true;
-        if (subscription && subscription.unsubscribe) subscription.unsubscribe();
-        resolve(session);
-      }
-
-      try {
-        var res = client.auth.onAuthStateChange(function (event, session) {
-          // Accept any event that carries a session — typically SIGNED_IN,
-          // but INITIAL_SESSION or TOKEN_REFRESHED can land too depending
-          // on timing.
-          if (session) finish(session);
-        });
-        subscription = res && res.data && res.data.subscription;
-      } catch (e) { /* subscribe failed — fall through to polling */ }
-
-      // Immediate re-probe: maybe the session was persisted before we
-      // subscribed (common — Supabase's detectSessionInUrl is fast).
-      (async function immediateProbe() {
-        var probe = await getSession();
-        if (probe.session) finish(probe.session);
-      })();
-
-      // Final timeout: if nothing fires, one last getSession probe then
-      // resolve with whatever we have (probably null, which triggers
-      // the caller's unauthenticated branch).
-      setTimeout(async function () {
-        if (settled) return;
-        var probe = await getSession();
-        finish(probe.session || null);
-      }, timeoutMs);
-    });
   }
 
 
@@ -342,14 +348,13 @@
   }
 
   // Public helper for pages that want to check "is the user signed in?"
-  // without redirecting. Like getSession(), but if there's an OAuth
-  // fragment in the URL, waits for Supabase to process it before
-  // returning. Use this on /login.html and /signup.html's
-  // redirect-if-signed-in checks so they handle OAuth returns correctly.
+  // without redirecting. Same OAuth-race handling as requireSession:
+  // if getSession() returns null, waits for the module-level
+  // INITIAL_SESSION event before giving up.
   async function getSessionSettled() {
     let { session } = await getSession();
-    if (!session && hasOAuthRedirectArtifact()) {
-      session = await waitForSignIn(5000);
+    if (!session) {
+      session = await initialSessionReady;
     }
     return { session };
   }
