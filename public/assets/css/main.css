@@ -6162,6 +6162,58 @@ body.auth-page .signup-intro.login-intro::before {
   }
 }
 
+/* =======================================================================
+   SIGNUP PAGE — visual-style match to login (scoped)
+
+   Mirrors login's ::before treatment only — replaces the decorative
+   growth-curve SVG with the same bottom-fade hero-city.jpg so both
+   auth pages share the same visual language.
+
+   Deliberately does NOT mirror login's other changes:
+     - 50/50 grid kept (signup needs equal column weight for conversion)
+     - No padding/gap tightening (signup has more content that needs room)
+     - Trust-row, mini-FAQ, score-projection, security-block all stay
+       (these are load-bearing conversion elements on signup, even
+       though they were redundant on login)
+
+   Scoped via .signup-intro-v2 modifier class so un-versioned usages
+   elsewhere (if any appear in future) keep the original SVG decoration.
+   ======================================================================= */
+
+body.auth-page .signup-intro.signup-intro-v2::before {
+  /* Image */
+  background-image: url('/assets/img/brand/hero-city.jpg');
+  background-size: 100% auto;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+  /* Same lower-portion anchor as login */
+  height: 55%;
+  opacity: 0.22;
+  /* Same five-stop mask as login — fades softly at top AND bottom so
+     the horizon line in the source image (row ~430/540, 78-82% down)
+     doesn't read as a hard edge */
+  mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 15%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.95) 75%,
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 15%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.95) 75%,
+    transparent 100%);
+}
+
+/* Mobile: drop the image on collapsed single-column, same rationale
+   as login — no room for decoration without fighting text */
+@media (max-width: 899px) {
+  body.auth-page .signup-intro.signup-intro-v2::before {
+    display: none;
+  }
+}
+
 /* ---------- Country selector (two radio cards) ---------- */
 .country-select {
   display: grid;
