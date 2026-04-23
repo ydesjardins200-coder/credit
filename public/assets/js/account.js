@@ -261,6 +261,28 @@
       console.error('[account] getProfile error:', e);
     }
 
+    // TEMP DIAGNOSTIC — remove once the read issue is settled.
+    // Logs what we actually got back from Supabase so we can see which
+    // of the 7 required fields (if any) is missing at the JS layer.
+    console.log('[account][diag] profile:', profile);
+    if (profile) {
+      console.log('[account][diag] kyc fields:', {
+        date_of_birth:      profile.date_of_birth,
+        address_line1:      profile.address_line1,
+        address_city:       profile.address_city,
+        address_region:     profile.address_region,
+        address_postal:     profile.address_postal,
+        credit_goal_kind:   profile.credit_goal_kind,
+        credit_goal_detail: profile.credit_goal_detail,
+      });
+      console.log(
+        '[account][diag] isProfileKycComplete:',
+        window.iboostAuth.isProfileKycComplete
+          ? window.iboostAuth.isProfileKycComplete(profile)
+          : 'HELPER_MISSING'
+      );
+    }
+
     // 2. On-file pill — phone + country readable display
     //    Phone: the stored value is +1XXXXXXXXXX (E.164). Format visually.
     const onfilePhone = document.getElementById('profile-onfile-phone');
