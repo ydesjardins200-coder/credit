@@ -193,7 +193,6 @@
     }
     try {
       client.auth.onAuthStateChange(function (event, session) {
-        console.log('[iboost]', 'onAuthStateChange:', event, session ? 'SESSION' : 'null');
         // Supabase emits INITIAL_SESSION once on client init. If the
         // OAuth hash was present, session will be truthy here. If the
         // user was logged out with no OAuth return, session will be
@@ -216,27 +215,21 @@
   });
 
   async function requireSession(loginPath) {
-    console.log('[iboost]', 'requireSession: href =', window.location.href);
     // Wait for the manual OAuth hash parse to complete (no-op on pages
     // without a hash). This ensures setSession() has been called if
     // we're coming back from OAuth.
     await sessionBootReady;
-    console.log('[iboost]', 'requireSession: bootSession complete');
 
     let { session } = await getSession();
-    console.log('[iboost]', 'requireSession: first getSession →', session ? 'SESSION' : 'null');
 
-    // Fallback for non-OAuth edge cases: if still null, wait a bit for
-    // INITIAL_SESSION in case the session is landing from elsewhere
-    // (storage hydration, multi-tab sync).
+    // Fallback for edge cases: if still null after the bootSession
+    // step, wait briefly for INITIAL_SESSION in case the session is
+    // landing from elsewhere (storage hydration, multi-tab sync).
     if (!session) {
-      console.log('[iboost]', 'requireSession: no session yet, awaiting INITIAL_SESSION…');
       session = await initialSessionReady;
-      console.log('[iboost]', 'requireSession: after wait →', session ? 'SESSION' : 'null');
     }
 
     if (!session) {
-      console.log('[iboost]', 'requireSession: redirecting to', loginPath || '/login.html');
       window.location.replace(loginPath || '/login.html');
       return null;
     }
