@@ -250,7 +250,20 @@
     const formEl = document.getElementById('profile-form');
     const incompleteBlock = document.getElementById('profile-complete-incomplete');
     const successBlock = document.getElementById('profile-complete-success');
-    if (!formEl || !incompleteBlock || !successBlock) return;
+
+    // TEMP DIAG — verify we're reaching initProfileForm at all and that
+    // all three required DOM nodes exist. Silent early return here was
+    // masking the symptom.
+    console.log('[account][diag] initProfileForm running. DOM found:', {
+      form: !!formEl,
+      incompleteBlock: !!incompleteBlock,
+      successBlock: !!successBlock,
+    });
+
+    if (!formEl || !incompleteBlock || !successBlock) {
+      console.warn('[account][diag] initProfileForm returning early — a required DOM node is missing');
+      return;
+    }
 
     // 1. Fetch profile. getProfile() returns the row directly (or null),
     // NOT a {data, error} envelope. This was bug in the first pass.
