@@ -253,9 +253,14 @@
       });
     }
 
-    // Redirect on sign-out from another tab
+    // Redirect on actual sign-out events from other tabs. Intentionally
+    // NOT triggered on INITIAL_SESSION-with-null or other null-session
+    // emissions — Supabase fires INITIAL_SESSION with session=null during
+    // OAuth hash processing, and bouncing on that would break OAuth
+    // returns. SIGNED_OUT is the only event that means "the user
+    // deliberately ended their session."
     window.iboostAuth.onAuthChange(function (event, s) {
-      if (event === 'SIGNED_OUT' || !s) {
+      if (event === 'SIGNED_OUT') {
         window.location.replace('/login.html');
       }
     });

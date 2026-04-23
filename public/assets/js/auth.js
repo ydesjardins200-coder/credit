@@ -117,14 +117,22 @@
   // short timeout) before deciding there's no session. If no fragment
   // is present, skip the wait — normal page loads aren't racing anything.
   async function requireSession(loginPath) {
+    console.log('[iboost-auth] requireSession: start', { href: window.location.href });
     let { session } = await getSession();
+    console.log('[iboost-auth] requireSession: first getSession →', session ? 'HAS SESSION' : 'null');
     if (!session && hasOAuthRedirectArtifact()) {
-      session = await waitForSignIn(2500); // ms — generous enough for slow networks, short enough to not hang
+      console.log('[iboost-auth] requireSession: URL has OAuth artifact, waiting for SIGNED_IN…');
+      session = await waitForSignIn(5000);
+      console.log('[iboost-auth] requireSession: waitForSignIn →', session ? 'HAS SESSION' : 'null');
+    } else if (!session) {
+      console.log('[iboost-auth] requireSession: null session, no OAuth artifact — will redirect');
     }
     if (!session) {
+      console.log('[iboost-auth] requireSession: redirecting to', loginPath || '/login.html');
       window.location.replace(loginPath || '/login.html');
       return null;
     }
+    console.log('[iboost-auth] requireSession: session confirmed, returning');
     return session;
   }
 
@@ -134,44 +142,58 @@
   // fragments (/page#anchor) don't trigger the wait.
   function hasOAuthRedirectArtifact() {
     var hash = window.location.hash || '';
-    if (hash.indexOf('access_token=') !== -1) return true;
-    if (hash.indexOf('error=') !== -1) return true; // error case — still want the wait so we can see the failure cleanly
     var search = window.location.search || '';
-    if (/[?&]code=/.test(search)) return true;
-    return false;
+    var result = false;
+    var reason = '';
+    if (hash.indexOf('access_token=') !== -1) { result = true; reason = 'hash has access_token'; }
+    else if (hash.indexOf('error=') !== -1) { result = true; reason = 'hash has error'; }
+    else if (/[?&]code=/.test(search)) { result = true; reason = 'query has code'; }
+    else { reason = 'no OAuth artifact (hash=' + JSON.stringify(hash.slice(0, 40)) + ', search=' + JSON.stringify(search.slice(0, 40)) + ')'; }
+    console.log('[iboost-auth] hasOAuthRedirectArtifact →', result, '(' + reason + ')');
+    return result;
   }
 
-  // Wait up to `timeoutMs` for the Supabase client to emit SIGNED_IN
-  // (which fires after it finishes parsing the OAuth fragment and
-  // persisting the session). If it doesn't fire in time, resolve with
-  // whatever getSession() returns — which is probably null, at which
-  // point the caller will do its usual "no session" branch.
+  // Wait up to `timeoutMs` for the Supabase client to emit an auth event
+  // with a session (which fires after it finishes parsing the OAuth
+  // fragment and persisting the session). Accepts ANY event that comes
+  // with a session — SIGNED_IN is the typical one, but INITIAL_SESSION
+  // or TOKEN_REFRESHED can arrive too, depending on timing. If nothing
+  // fires in time, resolve with whatever getSession() returns.
   function waitForSignIn(timeoutMs) {
     return new Promise(function (resolve) {
       var settled = false;
       var subscription = null;
+      var startTs = Date.now();
 
-      function finish(session) {
+      function finish(session, reason) {
         if (settled) return;
         settled = true;
+        console.log('[iboost-auth] waitForSignIn: finished after', (Date.now() - startTs) + 'ms', '—', reason, session ? '(HAS SESSION)' : '(null)');
         if (subscription && subscription.unsubscribe) subscription.unsubscribe();
         resolve(session);
       }
 
       try {
         var res = client.auth.onAuthStateChange(function (event, session) {
-          if (event === 'SIGNED_IN' && session) finish(session);
+          console.log('[iboost-auth] waitForSignIn: onAuthStateChange →', event, session ? 'with session' : 'null');
+          if (session) finish(session, 'event=' + event);
         });
-        // supabase-js v2 returns { data: { subscription: {...} } }
         subscription = res && res.data && res.data.subscription;
-      } catch (e) { /* ignore — we'll fall through to the timeout + final getSession poll */ }
+      } catch (e) {
+        console.log('[iboost-auth] waitForSignIn: onAuthStateChange threw', e);
+      }
+
+      // Also poll once more immediately — the hash may have been processed
+      // synchronously, in which case waitFor is unnecessary.
+      (async function immediateProbe() {
+        var probe = await getSession();
+        if (probe.session) finish(probe.session, 'immediate-probe');
+      })();
 
       setTimeout(async function () {
         if (settled) return;
-        // Final check: maybe SIGNED_IN already fired before we subscribed,
-        // or the session landed without emitting. Ask directly.
         var probe = await getSession();
-        finish(probe.session || null);
+        finish(probe.session || null, 'timeout-probe');
       }, timeoutMs);
     });
   }
