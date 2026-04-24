@@ -326,7 +326,7 @@
 
     // The submit button lives outside the form but uses form="checkout-form",
     // so submit events fire on the form. Both Free and paid go through here.
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
       if (alertEl) alertEl.hidden = true;
 
@@ -359,17 +359,59 @@
         }
       }
 
-      // Show spinner on the submit button. Duration differs for Free vs
-      // paid so the UX feels right — Free should feel instant-ish,
-      // paid should feel like a real card processor.
+      // Spinner on. Duration logic unchanged — Free feels instant-ish,
+      // paid simulates a card processor.
       submitBtn.classList.add('is-processing');
       submitBtn.disabled = true;
+      var uiDelay = plan.isFree ? 600 : 1800;
 
-      var delay = plan.isFree ? 600 : 1800;
+      // Persist plan choice. We need to:
+      //   1. Look up the user's current plan (for from/to history)
+      //   2. Write plan + plan_currency to profiles
+      //   3. Insert a plan_changes row (source depends on whether
+      //      this is first signup or a later change)
+      // If anything fails we bail early, restore the button, show alert.
+      // If everything succeeds we run the fake-delay THEN redirect, so
+      // the UX feels the same as before.
+      try {
+        if (!window.iboostAuth) {
+          throw new Error('Auth not loaded. Refresh the page.');
+        }
+
+        var profile = await window.iboostAuth.getProfile();
+        var fromPlan = (profile && profile.plan) || null;
+        var toPlan = state.planKey;
+
+        var up = await window.iboostAuth.updateProfile({
+          plan: toPlan,
+          planCurrency: state.currency,
+        });
+        if (up.error) {
+          throw new Error(up.error.message || 'Could not save plan.');
+        }
+
+        // History row. If the user had no prior plan, this is their
+        // signup-time pick. If they had one, it's a self-change.
+        // recordPlanChange skips the insert if fromPlan === toPlan
+        // (no-op change) — still counts as success.
+        var source = fromPlan ? 'self_change' : 'signup';
+        var ch = await window.iboostAuth.recordPlanChange(fromPlan, toPlan, source);
+        if (ch.error) {
+          // Non-fatal: the plan is set on profiles, history just won't
+          // record. Log but continue — missing history < missing plan.
+          console.warn('[checkout] plan_changes insert failed:', ch.error);
+        }
+      } catch (err) {
+        submitBtn.classList.remove('is-processing');
+        submitBtn.disabled = false;
+        return showAlert(err.message || 'Something went wrong. Try again.');
+      }
+
+      // Success — run the UX delay then redirect.
       setTimeout(function () {
         var qs = 'signup=success&plan=' + encodeURIComponent(state.planKey);
         window.location.href = '/account.html?' + qs;
-      }, delay);
+      }, uiDelay);
     });
 
     function showAlert(message) {

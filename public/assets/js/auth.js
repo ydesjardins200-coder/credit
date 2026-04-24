@@ -382,6 +382,22 @@
       goalKind = fields.creditGoalKind;
     }
 
+    // Plan: whitelist (matches DB CHECK: free|essential|complete).
+    // Separate var so it can be null-blocked cleanly later; pattern
+    // matches goalKind/country.
+    var plan = null;
+    const PLAN_KINDS = ['free', 'essential', 'complete'];
+    if (fields.plan && PLAN_KINDS.indexOf(fields.plan) !== -1) {
+      plan = fields.plan;
+    }
+
+    // Plan currency: whitelist (matches DB CHECK: cad|usd).
+    var planCurrency = null;
+    if (fields.planCurrency) {
+      const pc = String(fields.planCurrency).toLowerCase();
+      if (pc === 'cad' || pc === 'usd') planCurrency = pc;
+    }
+
     // Upsert public.profiles. Preserves untouched columns because
     // PostgREST upsert only writes the fields we include in the row
     // object — plus id + email which are always set so a fresh INSERT
@@ -405,6 +421,19 @@
     if (fields.addressPostal !== undefined) upsertRow.address_postal = fields.addressPostal || null;
     if (fields.creditGoalKind !== undefined) upsertRow.credit_goal_kind = goalKind;
     if (fields.creditGoalDetail !== undefined) upsertRow.credit_goal_detail = fields.creditGoalDetail || null;
+
+    // Plan fields. `plan` presence triggers setting activation timestamp
+    // on the server side (now()) — cleaner than letting the caller
+    // decide what "now" means. Plan currency is independent — could be
+    // set without a plan change (e.g. user toggled USD/CAD on the
+    // checkout page without switching tiers).
+    if (fields.plan !== undefined) {
+      upsertRow.plan = plan;
+      upsertRow.plan_activated_at = plan ? new Date().toISOString() : null;
+    }
+    if (fields.planCurrency !== undefined) {
+      upsertRow.plan_currency = planCurrency;
+    }
 
     const { error: profileError } = await client
       .from('profiles')
@@ -451,6 +480,53 @@
     return { session };
   }
 
+  // Insert a row into public.plan_changes. Append-only history table.
+  // Called after a successful profile update with a plan change so
+  // we keep a record of "user moved from X to Y on this date."
+  //
+  // Returns { error } like other auth helpers.
+  async function recordPlanChange(fromPlan, toPlan, source) {
+    const { session } = await getSession();
+    if (!session || !session.user) {
+      return { error: { message: 'Not signed in' } };
+    }
+    // Don't insert a no-op row. If the user "changed" to the same plan
+    // they already have, skip — keeps history meaningful.
+    if (fromPlan === toPlan) {
+      return { error: null, skipped: true };
+    }
+    const { error } = await client.from('plan_changes').insert({
+      user_id: session.user.id,
+      from_plan: fromPlan || null,
+      to_plan: toPlan,
+      source: source || 'self_change',
+    });
+    if (error) {
+      console.error('[iboost-auth] recordPlanChange insert error:', error);
+    }
+    return { error };
+  }
+
+  // Read back the plan change history for the current user, newest first.
+  // Limit 10 by default — matches the Profile tab "View plan history" UX.
+  async function getPlanHistory(limit) {
+    const { session } = await getSession();
+    if (!session || !session.user) {
+      return { data: [], error: { message: 'Not signed in' } };
+    }
+    const { data, error } = await client
+      .from('plan_changes')
+      .select('id, from_plan, to_plan, changed_at, source')
+      .eq('user_id', session.user.id)
+      .order('changed_at', { ascending: false })
+      .limit(limit || 10);
+    if (error) {
+      console.error('[iboost-auth] getPlanHistory error:', error);
+      return { data: [], error };
+    }
+    return { data: data || [], error: null };
+  }
+
   window.iboostAuth = {
     client,
     signUpWithPassword,
@@ -467,6 +543,8 @@
     isProfileKycComplete,
     requireCompleteProfile,
     updateProfile,
+    recordPlanChange,
+    getPlanHistory,
   };
 
   // Global handler: any button with data-oauth="<provider>" that is NOT
