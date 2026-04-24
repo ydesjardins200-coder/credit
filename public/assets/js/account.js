@@ -607,6 +607,11 @@
 
     // 3. Wire up the credit-goal editor
     wireGoalEditor(profile);
+
+    // 4. Plan card (migration 0009/0010 wired up at checkout). Populates
+    // from profile.plan / plan_currency / plan_activated_at. If the user
+    // somehow has no plan, we show a "No plan selected" state and CTA.
+    initPlanCard(profile);
   }
 
   // Format ISO date (YYYY-MM-DD or full ISO) as "Month YYYY".
@@ -814,6 +819,194 @@
         saveBtn.disabled = false;
       }
     }
+  }
+
+  // ---------------------------------------------------------------------
+  // Plan card (Profile tab)
+  // ---------------------------------------------------------------------
+  // Populates the "Current plan" card with data from profile.plan and
+  // friends. Wires:
+  //   - "Change plan" button -> /checkout.html?plan=<current>&mode=change
+  //   - "View plan history" button -> expands a list from plan_changes
+  //
+  // Designed to be safe when profile.plan is null (edge case — users
+  // who skipped checkout somehow). Shows a friendly "No plan selected"
+  // state + CTA to finish signup.
+
+  var PLAN_META = {
+    free: {
+      name: 'iBoost Free',
+      priceCad: 0,
+      priceUsd: 0,
+      perks: [
+        'Credit education library',
+        'Progress tracking',
+        'Community resources',
+      ],
+    },
+    essential: {
+      name: 'iBoost Essential',
+      priceCad: 15,
+      priceUsd: 15,
+      perks: [
+        '$750 monthly reporting line to all 3 bureaus',
+        'AI action items every month',
+        'Full education library access',
+      ],
+    },
+    complete: {
+      name: 'iBoost Complete',
+      priceCad: 40,
+      priceUsd: 30,
+      perks: [
+        '$2,500 monthly reporting line to all 3 bureaus',
+        'Priority AI coaching + action items',
+        'Dispute assistance and credit advocacy',
+        '1-on-1 quarterly strategy calls',
+      ],
+    },
+  };
+
+  function initPlanCard(profile) {
+    var card = document.getElementById('profile-plan-card');
+    if (!card) return;
+
+    var titleEl   = document.getElementById('profile-plan-title');
+    var priceEl   = document.getElementById('profile-plan-price');
+    var badgeEl   = document.getElementById('profile-plan-badge');
+    var perksEl   = document.getElementById('profile-plan-perks');
+    var changeBtn = document.getElementById('profile-plan-change-btn');
+    var historyBtn= document.getElementById('profile-plan-history-btn');
+    var historyEl = document.getElementById('profile-plan-history');
+    var historyList = document.getElementById('profile-plan-history-list');
+
+    var plan = (profile && profile.plan) || null;
+    var currency = (profile && profile.plan_currency) || 'usd';
+    var meta = plan ? PLAN_META[plan] : null;
+
+    // No plan case — user slipped through signup without checkout.
+    // Should be rare (complete-profile now redirects to /checkout), but
+    // we're defensive: show a clear "pick a plan" state rather than
+    // rendering an empty card.
+    if (!meta) {
+      if (titleEl) titleEl.textContent = 'No plan selected';
+      if (priceEl) priceEl.textContent = 'Finish signup to activate your subscription.';
+      if (badgeEl) {
+        badgeEl.textContent = 'Pending';
+        badgeEl.style.background = '#fef3c7';
+        badgeEl.style.color = '#92400e';
+      }
+      if (perksEl) perksEl.innerHTML = '';
+      if (changeBtn) {
+        changeBtn.textContent = 'Pick a plan';
+        changeBtn.addEventListener('click', function () {
+          window.location.href = '/checkout.html';
+        });
+      }
+      if (historyBtn) historyBtn.style.display = 'none';
+      return;
+    }
+
+    // Plan is set — render the real card.
+    if (titleEl) titleEl.textContent = meta.name;
+
+    if (priceEl) {
+      var amount = currency === 'cad' ? meta.priceCad : meta.priceUsd;
+      var currencyLabel = currency === 'cad' ? 'CAD' : 'USD';
+      var priceStr = amount === 0
+        ? '<strong>Free</strong>'
+        : '<strong>$' + amount + ' ' + currencyLabel + '/month</strong>';
+      var activated = (profile && profile.plan_activated_at)
+        ? formatLongDate(profile.plan_activated_at)
+        : null;
+      priceEl.innerHTML = priceStr + (activated ? ' · Active since ' + activated : '');
+    }
+
+    if (perksEl) {
+      perksEl.innerHTML = meta.perks.map(function (p) {
+        return (
+          '<li class="dash-plan-perk">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<polyline points="20 6 9 17 4 12"/>' +
+            '</svg>' +
+            escapeHtml(p) +
+          '</li>'
+        );
+      }).join('');
+    }
+
+    // Change plan -> /checkout.html with current plan pre-selected + mode=change
+    if (changeBtn) {
+      changeBtn.textContent = 'Change plan';
+      changeBtn.addEventListener('click', function () {
+        window.location.href = '/checkout.html?plan=' +
+          encodeURIComponent(plan) + '&mode=change';
+      });
+    }
+
+    // View plan history — lazy-load on first click, toggle after that.
+    var historyLoaded = false;
+    if (historyBtn && historyEl) {
+      historyBtn.addEventListener('click', async function () {
+        var willShow = historyEl.hidden;
+        historyEl.hidden = !willShow;
+        historyBtn.setAttribute('aria-expanded', String(willShow));
+        historyBtn.textContent = willShow ? 'Hide plan history' : 'View plan history';
+
+        if (willShow && !historyLoaded) {
+          historyLoaded = true;
+          historyList.innerHTML =
+            '<li class="dash-plan-history-empty">Loading…</li>';
+          try {
+            var res = await window.iboostAuth.getPlanHistory(20);
+            if (res.error) throw new Error(res.error.message);
+            renderPlanHistory(historyList, res.data);
+          } catch (err) {
+            historyList.innerHTML =
+              '<li class="dash-plan-history-empty">Could not load history.</li>';
+          }
+        }
+      });
+    }
+  }
+
+  function renderPlanHistory(listEl, rows) {
+    if (!rows || !rows.length) {
+      listEl.innerHTML =
+        '<li class="dash-plan-history-empty">No plan changes yet.</li>';
+      return;
+    }
+
+    listEl.innerHTML = rows.map(function (r) {
+      var fromLabel = r.from_plan
+        ? (PLAN_META[r.from_plan] && PLAN_META[r.from_plan].name) || r.from_plan
+        : '(none)';
+      var toLabel = r.to_plan
+        ? (PLAN_META[r.to_plan] && PLAN_META[r.to_plan].name) || r.to_plan
+        : '(none)';
+      var when = formatLongDate(r.changed_at) || '';
+      var sourceHint = r.source === 'signup' ? ' · initial signup' : '';
+
+      return (
+        '<li class="dash-plan-history-item">' +
+          '<span class="dash-plan-history-item-change">' +
+            (r.from_plan
+              ? escapeHtml(fromLabel) + ' → ' + escapeHtml(toLabel)
+              : 'Signed up on ' + escapeHtml(toLabel)) +
+          '</span>' +
+          '<span class="dash-plan-history-item-when">' +
+            escapeHtml(when) + escapeHtml(sourceHint) +
+          '</span>' +
+        '</li>'
+      );
+    }).join('');
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   // ---------------------------------------------------------------------

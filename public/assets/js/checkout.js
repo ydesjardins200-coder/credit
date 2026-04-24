@@ -104,6 +104,27 @@
     if (PLANS[qp]) state.planKey = qp;
   })();
 
+  // mode=change: user arrived from /account.html's "Change plan" button.
+  // Swap the hero copy so it reads as a plan change rather than new
+  // signup. The submit-handler source detection (signup vs self_change)
+  // is based on profile.plan existence, independent of this flag, so
+  // this is a pure UX rewording.
+  var isChangeMode = (getParam('mode') || '') === 'change';
+  if (isChangeMode) {
+    (function applyChangeModeCopy() {
+      var eyebrow = document.getElementById('checkout-hero-eyebrow');
+      var title   = document.getElementById('checkout-hero-title');
+      var lead    = document.getElementById('checkout-hero-lead');
+      if (eyebrow) eyebrow.textContent = 'Change plan';
+      if (title)   title.textContent = 'Choose a new plan.';
+      if (lead) {
+        lead.textContent =
+          'Pick a different tier below. Your change takes effect ' +
+          'immediately (no proration — we\u2019ll add real billing later).';
+      }
+    })();
+  }
+
   // Pull currency preference from localStorage (set by /pricing.html's
   // landing.js when the user toggles there).
   try {

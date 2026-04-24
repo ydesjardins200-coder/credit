@@ -1684,51 +1684,42 @@
         </div>
       </article>
 
-      <!-- ===================== PREVIEW-ONLY (hidden) =====================
-           Plan & billing, payment method, invoice history, notifications,
-           and delete-account all depend on features we haven't built:
-             - Plan column on profiles + Stripe integration (future)
-             - user_preferences table (future)
-             - real delete-account flow with cascades (future)
-           Kept in the DOM (not deleted) so re-enabling is flipping the
-           hidden attribute rather than rebuilding the markup.
-           ================================================================= -->
-
-      <!-- Plan & billing -->
-      <article class="dash-plan-card" hidden data-preview-only="wave-later">
+      <!-- Plan & billing — plan data model is live (migrations 0009/0010);
+           actual Stripe integration is still future work. Today this card
+           shows what the user picked at checkout + lets them change plans.
+           "Next charge" row is hidden until Stripe populates it via webhook. -->
+      <article class="dash-plan-card" id="profile-plan-card">
         <div class="dash-plan-head">
           <div>
             <div class="dash-plan-eye">Current plan</div>
-            <h3 class="dash-plan-title">iBoost Essential</h3>
-            <div class="dash-plan-price"><strong>$15/month</strong> · Next charge May 12, 2026</div>
+            <h3 class="dash-plan-title" id="profile-plan-title">—</h3>
+            <div class="dash-plan-price" id="profile-plan-price">—</div>
           </div>
-          <div class="dash-plan-badge">Active</div>
+          <div class="dash-plan-badge" id="profile-plan-badge">Active</div>
         </div>
-        <ul class="dash-plan-perks">
-          <li class="dash-plan-perk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            $750 monthly reporting line to all 3 bureaus
-          </li>
-          <li class="dash-plan-perk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            AI action items every month
-          </li>
-          <li class="dash-plan-perk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Full education library access
-          </li>
+        <ul class="dash-plan-perks" id="profile-plan-perks">
+          <!-- Populated by account.js based on plan kind -->
         </ul>
         <div class="dash-plan-cta-row">
-          <button type="button" class="dash-plan-cta dash-plan-cta-primary">Upgrade to Complete →</button>
-          <button type="button" class="dash-plan-cta">Manage subscription</button>
+          <button type="button" class="dash-plan-cta dash-plan-cta-primary" id="profile-plan-change-btn">Change plan</button>
+          <button type="button" class="dash-plan-cta" id="profile-plan-history-btn" aria-expanded="false">View plan history</button>
+        </div>
+        <div class="dash-plan-history" id="profile-plan-history" hidden>
+          <ul class="dash-plan-history-list" id="profile-plan-history-list">
+            <!-- Populated by account.js on first open -->
+          </ul>
         </div>
       </article>
+
+      <!-- ===================== PREVIEW-ONLY (hidden) =====================
+           Payment method, invoice history, notifications, and
+           delete-account all depend on features we haven't built:
+             - Stripe integration (payment method + invoices)
+             - user_preferences table (notifications)
+             - real delete-account flow with cascades
+           Kept in the DOM (not deleted) so re-enabling is flipping the
+           hidden attribute rather than rebuilding the markup.
+           ================================================================= -->
 
       <!-- Payment method -->
       <article class="dash-card" hidden data-preview-only="wave-later">

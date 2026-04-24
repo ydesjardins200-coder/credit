@@ -3277,6 +3277,53 @@
   color: #fff;
 }
 
+/* Plan change history (expandable section below CTAs) */
+.dash-plan-history {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.dash-plan-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-plan-history-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 7px;
+  font-size: 0.84rem;
+  color: #334155;
+}
+
+.dash-plan-history-item-change {
+  font-weight: 600;
+  color: #0A2540;
+}
+
+.dash-plan-history-item-when {
+  color: #64748b;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.dash-plan-history-empty {
+  padding: 14px 12px;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+}
+
 /* Card head */
 .dash-card-head {
   display: flex;
