@@ -123,9 +123,18 @@
     // If the profile is already complete, this page has no business
     // being rendered — send the user forward. Idempotent safety net
     // in case a stale link or manual URL visit lands here.
+    //
+    // Where "forward" goes depends on whether they've already picked
+    // a plan: complete profile + no plan -> /checkout (they still
+    // need to finish signup); complete profile + plan -> /account
+    // (fully set up, go home).
     const profile = await window.iboostAuth.getProfile();
     if (window.iboostAuth.isProfileComplete(profile)) {
-      window.location.replace('/account.html');
+      if (profile && profile.plan) {
+        window.location.replace('/account.html');
+      } else {
+        window.location.replace('/checkout.html');
+      }
       return;
     }
 
@@ -197,8 +206,10 @@
       return;
     }
 
-    // Success. Go to the dashboard.
-    window.location.replace('/account.html');
+    // Success. Profile is now complete — next stop is /checkout.html
+    // where the user picks a plan. From there, submit writes the plan
+    // to the DB and redirects to /account.html.
+    window.location.replace('/checkout.html');
   });
 
   // Kick things off.
