@@ -128,4 +128,17 @@
 
     window.location.replace(await getPostAuthPath());
   });
+
+  // Read ?reason=... on load. Surfaced when the user was bounced here
+  // from an expired / invalid session elsewhere in the app so they
+  // don't wonder why they're suddenly logged out.
+  try {
+    var reason = new URLSearchParams(window.location.search).get('reason');
+    if (reason === 'session_expired') {
+      showAlert(
+        'Your previous session is no longer valid. Please sign in again.',
+        'error'
+      );
+    }
+  } catch (e) { /* URL parsing doesn't block the page */ }
 })();

@@ -440,6 +440,31 @@
       .upsert(upsertRow, { onConflict: 'id' });
     if (profileError) {
       console.error('[iboost-auth] updateProfile profiles upsert error:', profileError);
+
+      // Zombie-session detection: profiles.id has an FK to auth.users.id.
+      // If the FK violates, it means the session's user_id doesn't exist
+      // in auth.users — either the user was deleted server-side or the
+      // session token is stale from a wiped DB. Either way, the only
+      // recovery is to log out + send them to login.
+      //
+      // Postgres returns error code 23503 for foreign_key_violation;
+      // Supabase surfaces this in both `code` and `message`. Check both
+      // so we're resilient to error-shape changes.
+      var isFkViolation =
+        (profileError.code === '23503') ||
+        (typeof profileError.message === 'string' &&
+         profileError.message.indexOf('profiles_id_fkey') !== -1);
+
+      if (isFkViolation) {
+        return {
+          data: null,
+          error: {
+            code: 'session_zombie',
+            message: 'Your session is no longer valid. Please log in again.',
+            original: profileError,
+          },
+        };
+      }
       return { data: null, error: profileError };
     }
 

@@ -387,6 +387,22 @@
           planCurrency: state.currency,
         });
         if (up.error) {
+          // Zombie session: user_id from session doesn't exist in
+          // auth.users. Only clean recovery is log out + bounce to
+          // login. Keep the button disabled so they can't click again.
+          if (up.error.code === 'session_zombie') {
+            showAlert('Your session is no longer valid. Logging you out…');
+            // Small delay so they can read the message.
+            setTimeout(async function () {
+              try {
+                if (window.iboostAuth && window.iboostAuth.signOut) {
+                  await window.iboostAuth.signOut();
+                }
+              } catch (e) { /* best-effort */ }
+              window.location.replace('/login.html?reason=session_expired');
+            }, 1500);
+            return; // Don't fall through to the success redirect
+          }
           throw new Error(up.error.message || 'Could not save plan.');
         }
 
