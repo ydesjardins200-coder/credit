@@ -611,7 +611,9 @@
     // 4. Plan card (migration 0009/0010 wired up at checkout). Populates
     // from profile.plan / plan_currency / plan_activated_at. If the user
     // somehow has no plan, we show a "No plan selected" state and CTA.
-    initPlanCard(profile);
+    // Awaited because plan metadata now comes from public.plans via
+    // window.iboostPlans (migration 0012).
+    await initPlanCard(profile);
   }
 
   // Format ISO date (YYYY-MM-DD or full ISO) as "Month YYYY".
@@ -833,41 +835,23 @@
   // who skipped checkout somehow). Shows a friendly "No plan selected"
   // state + CTA to finish signup.
 
-  var PLAN_META = {
-    free: {
-      name: 'iBoost Free',
-      priceCad: 0,
-      priceUsd: 0,
-      perks: [
-        'Credit education library',
-        'Progress tracking',
-        'Community resources',
-      ],
-    },
-    essential: {
-      name: 'iBoost Essential',
-      priceCad: 15,
-      priceUsd: 15,
-      perks: [
-        '$750 monthly reporting line to all 3 bureaus',
-        'AI action items every month',
-        'Full education library access',
-      ],
-    },
-    complete: {
-      name: 'iBoost Complete',
-      priceCad: 40,
-      priceUsd: 30,
-      perks: [
-        '$2,500 monthly reporting line to all 3 bureaus',
-        'Priority AI coaching + action items',
-        'Dispute assistance and credit advocacy',
-        '1-on-1 quarterly strategy calls',
-      ],
-    },
-  };
+  // PLAN_META used to be a hardcoded object with name/priceCad/priceUsd/
+  // perks per plan. It's been replaced with public.plans via
+  // window.iboostPlans (migration 0012 + admin edits). The loader has
+  // a 24h sessionStorage cache so this page doesn't hammer the DB.
+  //
+  // Field-name mapping from old PLAN_META to DB shape:
+  //   old.name        -> db.name
+  //   old.priceCad    -> db.price_cad
+  //   old.priceUsd    -> db.price_usd
+  //   old.perks       -> db.perks (now array of {text, emphasized, muted})
+  //
+  // Old perks were strings. New ones are objects. The account page
+  // rendering uses the .text field; emphasized/muted flags are ignored
+  // here (account dash uses uniform checkmarks — only pricing.html and
+  // the admin UI visually differentiate).
 
-  function initPlanCard(profile) {
+  async function initPlanCard(profile) {
     var card = document.getElementById('profile-plan-card');
     if (!card) return;
 
@@ -882,7 +866,21 @@
 
     var plan = (profile && profile.plan) || null;
     var currency = (profile && profile.plan_currency) || 'usd';
-    var meta = plan ? PLAN_META[plan] : null;
+
+    // Fetch plans catalog from DB (with 24h cache). planMap is
+    // { free: {...}, essential: {...}, complete: {...} }.
+    // On fetch failure, window.iboostPlans falls back to hardcoded
+    // FALLBACK_PLANS — account page won't break even if DB is unreachable.
+    var planMap = {};
+    try {
+      if (window.iboostPlans) {
+        planMap = await window.iboostPlans.getPlansMap();
+      }
+    } catch (e) {
+      console.warn('[account] plans fetch failed, card will use empty map:', e);
+    }
+
+    var meta = plan ? planMap[plan] : null;
 
     // No plan case — user slipped through signup without checkout.
     // Should be rare (complete-profile now redirects to /checkout), but
@@ -911,7 +909,7 @@
     if (titleEl) titleEl.textContent = meta.name;
 
     if (priceEl) {
-      var amount = currency === 'cad' ? meta.priceCad : meta.priceUsd;
+      var amount = currency === 'cad' ? meta.price_cad : meta.price_usd;
       var currencyLabel = currency === 'cad' ? 'CAD' : 'USD';
       var priceStr = amount === 0
         ? '<strong>Free</strong>'
@@ -923,13 +921,21 @@
     }
 
     if (perksEl) {
-      perksEl.innerHTML = meta.perks.map(function (p) {
+      // perks is now an array of { text, emphasized, muted } objects.
+      // Account dashboard renders all perks with uniform checkmarks,
+      // skipping muted ones entirely (they're 'not included' markers
+      // meant for comparing tiers on pricing.html, not useful on a
+      // single-plan display where they'd look like misplaced negatives).
+      var visible = (meta.perks || []).filter(function (p) {
+        return p && p.text && !p.muted;
+      });
+      perksEl.innerHTML = visible.map(function (p) {
         return (
           '<li class="dash-plan-perk">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
               '<polyline points="20 6 9 17 4 12"/>' +
             '</svg>' +
-            escapeHtml(p) +
+            escapeHtml(p.text) +
           '</li>'
         );
       }).join('');
@@ -970,20 +976,31 @@
     }
   }
 
-  function renderPlanHistory(listEl, rows) {
+  async function renderPlanHistory(listEl, rows) {
     if (!rows || !rows.length) {
       listEl.innerHTML =
         '<li class="dash-plan-history-empty">No plan changes yet.</li>';
       return;
     }
 
+    // Plans catalog for pretty labels. Memory-cached by initPlanCard's
+    // earlier call, so this is basically free. Fallback to raw plan_key
+    // string if the map isn't available for any reason.
+    var planMap = {};
+    try {
+      if (window.iboostPlans) {
+        planMap = await window.iboostPlans.getPlansMap();
+      }
+    } catch (e) { /* fall through to key-as-label */ }
+
+    function labelFor(key) {
+      if (!key) return '(none)';
+      return (planMap[key] && planMap[key].name) || key;
+    }
+
     listEl.innerHTML = rows.map(function (r) {
-      var fromLabel = r.from_plan
-        ? (PLAN_META[r.from_plan] && PLAN_META[r.from_plan].name) || r.from_plan
-        : '(none)';
-      var toLabel = r.to_plan
-        ? (PLAN_META[r.to_plan] && PLAN_META[r.to_plan].name) || r.to_plan
-        : '(none)';
+      var fromLabel = labelFor(r.from_plan);
+      var toLabel = labelFor(r.to_plan);
       var when = formatLongDate(r.changed_at) || '';
       var sourceHint = r.source === 'signup' ? ' · initial signup' : '';
 

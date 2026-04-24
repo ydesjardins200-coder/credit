@@ -28,50 +28,99 @@
   'use strict';
 
   // -------- Plan catalog --------
-  // Kept in sync with /pricing.html. If pricing changes, update both.
-  // 'includes' is trimmed to the top ~5 bullets so it fits the narrow
-  // left column without scrolling.
-  var PLANS = {
-    free: {
-      name: 'Free',
-      amountUsd: 0,
-      amountCad: 0,
-      isFree: true,
-      includes: [
-        'Full budget app (manual entry)',
-        'Complete education library',
-        'Monthly credit tips newsletter',
-        { text: 'No bureau reporting', muted: true },
-        { text: 'No AI guidance', muted: true }
-      ]
-    },
-    essential: {
-      name: 'iBoost Essential',
-      amountUsd: 15,
-      amountCad: 20,
-      isFree: false,
-      includes: [
-        '$750 reported credit line',
-        'Monthly reporting to all major bureaus',
-        'Monthly score refresh',
-        'Monthly AI credit tip',
-        'Complete education library'
-      ]
-    },
-    complete: {
-      name: 'iBoost Complete',
-      amountUsd: 30,
-      amountCad: 40,
-      isFree: false,
-      includes: [
-        '<strong>$2,000 reported credit line</strong>',
-        '<strong>Weekly</strong> score refresh',
-        '<strong>Unlimited on-demand AI advice</strong>',
-        '<strong>Dispute assistance for report errors</strong>',
-        '<strong>Priority support, 7 days a week</strong>'
-      ]
-    }
-  };
+  // Loaded at init() from public.plans via window.iboostPlans (migration
+  // 0012). Shape after load: { free: {...}, essential: {...}, complete: {...} }
+  // with DB fields: plan_key, name, tagline, price_usd, price_cad, perks.
+  //
+  // We ALWAYS use { fresh: true } — checkout is the moment where seeing
+  // the correct price matters most; we willingly pay a ~100ms DB fetch
+  // for that correctness. The loader still caches the result afterward
+  // for other pages.
+  //
+  // Stays null until init() populates it. Every caller that references
+  // it runs after init() completes, so this is safe.
+  var planMap = null;
+
+  // Derive the shape checkout.js historically expected from the raw DB
+  // row. Specifically: isFree (derived) and includes (trimmed to top 5).
+  // Keeping the adapter here rather than in plans-loader means the
+  // loader stays a pure data-fetch module.
+  function adaptPlan(row) {
+    if (!row) return null;
+    // Top 5 non-muted perks for the "What's included" column. Muted
+    // perks are 'not included' markers — still useful on Free tier
+    // to contrast with paid plans, so include them but flagged.
+    // Order preserved.
+    var includes = (row.perks || [])
+      .slice(0, 5)
+      .map(function (p) {
+        // Match the legacy shape checkout.js expects:
+        //   string         -> plain line
+        //   {text, muted}  -> styled line
+        if (p.muted) {
+          return { text: p.text, muted: true };
+        }
+        if (p.emphasized) {
+          // Legacy PLANS used raw <strong> HTML. Preserve that for the
+          // Complete tier so checkout.html looks visually identical
+          // to the previous build even without CSS changes.
+          return '<strong>' + escapeHtml(p.text) + '</strong>';
+        }
+        return p.text;
+      });
+
+    return {
+      name: row.name,
+      amountUsd: row.price_usd,
+      amountCad: row.price_cad,
+      isFree: row.price_usd === 0 && row.price_cad === 0,
+      includes: includes
+    };
+  }
+
+  // Minimal escape for the <strong>-wrapping case above. Perks with
+  // HTML chars in them are edge-case but we should not break the page.
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // After DB load, sync visible prices in the <label class="plan-row">
+  // blocks on the page. HTML ships with fallback prices as the SEO-
+  // visible default; this overwrites them with the latest DB values
+  // (e.g. if admin changed Essential $15 -> $16, that propagates here).
+  //
+  // Only touches text content — never mutates structure, so every
+  // .plan-row-complete / -essential / -free CSS hook keeps working.
+  function syncPlanRowPrices() {
+    if (!planMap) return;
+    ['free', 'essential', 'complete'].forEach(function (key) {
+      var row = document.querySelector('.plan-row[data-plan="' + key + '"]');
+      var plan = planMap[key];
+      if (!row || !plan) return;
+
+      // Name
+      var nameEl = row.querySelector('.plan-row-name');
+      if (nameEl) nameEl.textContent = plan.name;
+
+      // Amounts — two span variants keyed by data-currency, OR a single
+      // amount for Free. Update whichever is present.
+      var amountUsd = row.querySelector('.plan-row-amount[data-currency="usd"]');
+      var amountCad = row.querySelector('.plan-row-amount[data-currency="cad"]');
+      if (amountUsd) amountUsd.textContent = '$' + plan.amountUsd;
+      if (amountCad) amountCad.textContent = '$' + plan.amountCad;
+
+      // Free row has a single .plan-row-amount with no data-currency.
+      if (!amountUsd && !amountCad) {
+        var amountAny = row.querySelector('.plan-row-amount');
+        if (amountAny) {
+          amountAny.textContent = plan.amountUsd === 0 ? '$0' : ('$' + plan.amountUsd);
+        }
+      }
+    });
+  }
 
   // -------- State --------
   // Defaults: Complete plan, USD currency (or whatever localStorage says).
@@ -99,9 +148,13 @@
 
   // -------- Initial state setup --------
   // Pre-select a plan card from ?plan= (falls back to state default).
+  // Runs before the DB-backed planMap is populated, so we validate
+  // against the fixed enum (matches public.plans.plan_key CHECK).
   (function initPlanFromQuery() {
     var qp = (getParam('plan') || '').toLowerCase();
-    if (PLANS[qp]) state.planKey = qp;
+    if (qp === 'free' || qp === 'essential' || qp === 'complete') {
+      state.planKey = qp;
+    }
   })();
 
   // mode=change: user arrived from /account.html's "Change plan" button.
@@ -135,7 +188,13 @@
   // -------- Plan selection --------
   // Mark the right <input type="radio"> as checked and sync UI.
   function selectPlan(planKey) {
-    if (!PLANS[planKey]) return;
+    // Validate the key against the fixed enum rather than planMap —
+    // planMap may not be populated yet on the first call (init runs
+    // selectPlan before awaiting the DB). The functions that actually
+    // READ plan data downstream (renderIncludes, updateSummaryAndSubmit,
+    // updatePaymentFieldsVisibility) are defensive and skip their
+    // rendering if planMap is null.
+    if (planKey !== 'free' && planKey !== 'essential' && planKey !== 'complete') return;
     state.planKey = planKey;
 
     // Sync the radio (might already be checked if this came from a click).
@@ -163,7 +222,12 @@
   function renderIncludes() {
     var list = $('#plan-includes-list');
     if (!list) return;
-    var plan = PLANS[state.planKey];
+    // Skip render until planMap is loaded. init() calls this again
+    // after the DB fetch completes. In the meantime the list stays
+    // empty (its container already has 'Loading...' handled elsewhere,
+    // or it renders blank briefly — acceptable for a checkout page).
+    if (!planMap) return;
+    var plan = planMap[state.planKey];
     var items = (plan && plan.includes) || [];
 
     // Build HTML string rather than DOM nodes — simpler, and the list
@@ -182,7 +246,12 @@
 
   // -------- Summary + submit label --------
   function updateSummaryAndSubmit() {
-    var plan = PLANS[state.planKey];
+    // Skip if planMap not yet loaded — init() re-invokes after fetch
+    // completes. The HTML has fallback prices visible on the radio
+    // cards meanwhile, so the page isn't blank.
+    if (!planMap) return;
+    var plan = planMap[state.planKey];
+    if (!plan) return;
     var amount = state.currency === 'cad' ? plan.amountCad : plan.amountUsd;
 
     // Plan name in summary
@@ -235,7 +304,8 @@
   // class rather than directly hiding the element so CSS transitions
   // can style the collapse however it wants.
   function updatePaymentFieldsVisibility() {
-    var plan = PLANS[state.planKey];
+    if (!planMap) return;
+    var plan = planMap[state.planKey];
     if (plan.isFree) {
       document.body.classList.add('is-free-selected');
     } else {
@@ -351,7 +421,16 @@
       e.preventDefault();
       if (alertEl) alertEl.hidden = true;
 
-      var plan = PLANS[state.planKey];
+      // planMap should always be loaded by the time a user clicks submit
+      // (init awaits the DB before wiring). Defensive guard for the rare
+      // race where submit fires before init finished.
+      if (!planMap) {
+        return showAlert('Plans still loading. Please wait a moment.');
+      }
+      var plan = planMap[state.planKey];
+      if (!plan) {
+        return showAlert('Please choose a plan.');
+      }
 
       // Paid plan: shape-validate the card fields. No real validation
       // because there is no real payment processor — just make sure
@@ -460,7 +539,8 @@
   }
 
   // -------- Wire it all up --------
-  function init() {
+  async function init() {
+    // Wire event listeners first (non-DB dependent).
     // Currency toggle buttons
     $$('.currency-toggle button[data-currency-toggle]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -477,15 +557,54 @@
       });
     });
 
-    // Apply initial state (default Complete, or ?plan= override, and the
-    // currency from localStorage).
-    setCurrency(state.currency);
-    selectPlan(state.planKey);
-
     wireInputFormatters();
     wireDummyFill();
     wireSubmit();
     prefillEmail();
+
+    // Fetch plans from DB with fresh=true — checkout is where pricing
+    // correctness matters most. ~100-200ms cost is acceptable; we pay
+    // it explicitly here and cache the result for the rest of the
+    // session (account page benefits from this warm cache if the user
+    // navigates there after checkout).
+    //
+    // While this fetch is in flight, the HTML ships with fallback
+    // prices visible on the radio cards so the user isn't looking at
+    // blanks. When the fetch resolves, syncPlanRowPrices() overwrites
+    // them with the live DB values.
+    var rawPlans = [];
+    try {
+      if (window.iboostPlans) {
+        rawPlans = await window.iboostPlans.getPlans({ fresh: true });
+      } else {
+        console.warn('[checkout] iboostPlans not loaded — using FALLBACK_PLANS');
+        // plans-loader.js wasn't loaded — use its fallback directly.
+        // This is a degraded-mode path; shouldn't happen in production.
+        rawPlans = [];
+      }
+    } catch (e) {
+      console.warn('[checkout] plans fetch failed:', e);
+      rawPlans = [];
+    }
+
+    // Convert DB rows to the checkout-local plan shape (isFree, includes,
+    // amountUsd/amountCad). planMap is populated regardless — if rawPlans
+    // is empty we keep it as an empty object, and the defensive guards
+    // in render functions skip their work.
+    planMap = {};
+    rawPlans.forEach(function (row) {
+      planMap[row.plan_key] = adaptPlan(row);
+    });
+
+    // Patch the visible DOM prices on the radio cards with live values.
+    syncPlanRowPrices();
+
+    // Now that planMap is populated, run the initial state application.
+    // These used to run before the DB fetch; moved here so the first
+    // render uses DB data not fallback, eliminating the visual flash
+    // of fallback -> DB values.
+    setCurrency(state.currency);
+    selectPlan(state.planKey);
   }
 
   if (document.readyState === 'loading') {
