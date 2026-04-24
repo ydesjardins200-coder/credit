@@ -200,6 +200,22 @@
     });
 
     if (error) {
+      // Zombie session: user's auth.users row no longer exists (dev-mode
+      // SQL cleanup, or a backup-restore scenario in prod). Sign out and
+      // bounce to login with a gentle notice. Same pattern as checkout.js.
+      if (error.code === 'session_zombie') {
+        showAlert('Your session is no longer valid. Logging you out…', 'error');
+        setTimeout(async function () {
+          try {
+            if (window.iboostAuth && window.iboostAuth.signOut) {
+              await window.iboostAuth.signOut();
+            }
+          } catch (e) { /* best-effort */ }
+          window.location.replace('/login.html?reason=session_expired');
+        }, 1500);
+        return;
+      }
+
       submitBtn.textContent = originalText || t.defaultSubmit;
       updateSubmitState();
       showAlert(error.message || t.genericError, 'error');
