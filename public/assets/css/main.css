@@ -91,6 +91,14 @@ a:hover { text-decoration: underline; }
 
 .muted { color: var(--color-muted); }
 
+/* HTML5 [hidden] attribute should always win, even against components that
+   set display:flex / inline-flex / etc. Browsers ship this rule by default
+   but at low specificity, so any element-level display rule beats it. We
+   re-assert it with !important so that JS-driven hiding (e.g. the
+   data-auth-hide pattern in header.js) just works regardless of the
+   element's normal display mode. */
+[hidden] { display: none !important; }
+
 /* ---------- Header ---------- */
 /* Simple header used by legal pages, auth pages, and as base styling.
    Marketing pages (index, how-it-works, pricing, faq) override this

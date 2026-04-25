@@ -259,6 +259,57 @@
   }
 
   // ---------------------------------------------------------------------
+  // AUTH-AWARE CTA SWAP
+  // ---------------------------------------------------------------------
+  // When the user is logged in, the marketing nav CTAs ("Sign in" /
+  // "Get started") are no longer relevant — they've already done both.
+  // Swap them for a single "Account" link.
+  //
+  // Markup contract (added on every mega-menu page's nav + drawer):
+  //   - [data-auth-swap] elements get their href and visible text
+  //     replaced with [data-auth-to] and [data-auth-label] when logged in.
+  //   - [data-auth-hide] elements get hidden entirely when logged in.
+  //
+  // Lives in header.js (not landing.js) so it runs on EVERY page that
+  // has the mega-menu — marketing pages, login.html, future legal-page
+  // migration. Single source of truth.
+  // ---------------------------------------------------------------------
+
+  async function updateHeaderForAuth() {
+    if (!window.iboostAuth) return;
+    const { session } = await window.iboostAuth.getSession();
+    if (!session) return;
+    document.querySelectorAll('[data-auth-swap]').forEach(function (el) {
+      const to = el.getAttribute('data-auth-to');
+      const label = el.getAttribute('data-auth-label');
+      if (to) el.setAttribute('href', to);
+      if (label) el.textContent = label;
+    });
+    document.querySelectorAll('[data-auth-hide]').forEach(function (el) {
+      el.hidden = true;
+    });
+  }
+
+  // iboostAuth comes from auth.js which is loaded via defer alongside the
+  // Supabase SDK. It may not be ready at DOMContentLoaded — poll briefly,
+  // then give up gracefully (logged-out is the correct fallback state).
+  function bootAuthSwap() {
+    if (window.iboostAuth) {
+      updateHeaderForAuth();
+      return;
+    }
+    let tries = 0;
+    const timer = setInterval(function () {
+      if (window.iboostAuth) {
+        clearInterval(timer);
+        updateHeaderForAuth();
+      } else if (++tries > 20) {
+        clearInterval(timer);
+      }
+    }, 100);
+  }
+
+  // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
 
@@ -266,6 +317,7 @@
     initScrollState();
     initMegaMenu();
     initDrawer();
+    bootAuthSwap();
   }
 
   if (document.readyState === 'loading') {

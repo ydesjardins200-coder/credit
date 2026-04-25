@@ -81,26 +81,6 @@
     });
   }
 
-  // ----- Header auth-aware CTA swap -----
-  // When logged in:
-  //   - swap [data-auth-swap] elements (e.g. "Sign in" -> "Account")
-  //   - hide [data-auth-hide] elements (e.g. the "Get started" CTA)
-  async function updateHeaderForAuth() {
-    if (!window.iboostAuth) return;
-    const { session } = await window.iboostAuth.getSession();
-    if (!session) return;
-    document.querySelectorAll('[data-auth-swap]').forEach(function (el) {
-      const to = el.getAttribute('data-auth-to');
-      const label = el.getAttribute('data-auth-label');
-      if (to) el.setAttribute('href', to);
-      if (label) el.textContent = label;
-    });
-    document.querySelectorAll('[data-auth-hide]').forEach(function (el) {
-      el.hidden = true;
-    });
-  }
-
-
   // ----- Boot -----
   document.addEventListener('DOMContentLoaded', function () {
     initCurrency();
@@ -118,16 +98,4 @@
       });
     });
   }
-
-  // If Supabase is loaded via defer, iboostAuth may not exist yet at DOMContentLoaded.
-  // Poll briefly, then give up.
-  let tries = 0;
-  const t = setInterval(function () {
-    if (window.iboostAuth) {
-      clearInterval(t);
-      updateHeaderForAuth();
-    } else if (++tries > 20) {
-      clearInterval(t);
-    }
-  }, 100);
 })();
