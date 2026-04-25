@@ -5377,16 +5377,21 @@ a:hover { text-decoration: underline; }
 }
 
 /* On auth pages (signup/login/etc.), let the header + footer span full width
-   to match the auth-split layout. Activated when <body> has .auth-page class. */
-body.auth-page .site-header .container,
-body.auth-page .site-footer .container {
+   to match the auth-split layout. Activated when <body> has .auth-page class.
+
+   EXCEPTION: login.html uses 'auth-page iboost-mm has-dark-hero' to get the
+   homepage-style transparent dark header. That layout expects the standard
+   centered .container width (matching marketing pages), so we explicitly
+   exclude .has-dark-hero from this full-width treatment. */
+body.auth-page:not(.has-dark-hero) .site-header .container,
+body.auth-page:not(.has-dark-hero) .site-footer .container {
   max-width: 100%;
   padding: 0 var(--space-3);
 }
 
 @media (min-width: 900px) {
-  body.auth-page .site-header .container,
-  body.auth-page .site-footer .container {
+  body.auth-page:not(.has-dark-hero) .site-header .container,
+  body.auth-page:not(.has-dark-hero) .site-footer .container {
     padding: 0 var(--space-4);
   }
 }
