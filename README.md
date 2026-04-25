@@ -8,6 +8,16 @@ A subscription-based credit-improvement platform serving customers in Canada and
 - **Backend:** Node.js + Express → deployed on Railway
 - **Database & Auth:** Supabase (Postgres + Auth)
 
+## Documentation
+
+Architectural specs and product vision live in [`docs/`](./docs/README.md).
+
+- [BRAIN architecture](./docs/brain-architecture.md) — the monthly intelligence pipeline (rules engine + LLM polish)
+- [Budget app vision](./docs/budget-app-vision.md) — QuickBooks-style ledger model for the Budget tab
+- [Credit bureau integration](./docs/credit-bureau-integration.md) — reading + reporting paths with each bureau
+
+See [`docs/README.md`](./docs/README.md) for an index and reading order.
+
 ## Repository Structure
 
 ```
