@@ -13,22 +13,695 @@
   <link rel="alternate" hreflang="en" href="https://iboostcredit.netlify.app/disclosures.html" />
   <meta name="robots" content="noindex, follow" />
   <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/header-megamenu.css" />
 </head>
-<body>
-  <header class="site-header">
-    <div class="container">
-      <a href="/" class="logo" aria-label="iBoost home">
-        <img
-          src="/assets/img/brand/logo-horizontal-80.png"
-          srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
-          alt="iBoost"
-          width="232" height="80"
-        />
+<body class="iboost-mm">
+  <header class="site-header" data-header>
+    <div class="container site-header-inner">
+      <a href="/" class="site-logo" aria-label="iBoost home">
+        <span class="site-logo-glow" aria-hidden="true"></span>
+        <img src="/assets/img/brand/logo-horizontal-light.svg" alt="iBoost" class="site-logo-img site-logo-light" />
+        <img src="/assets/img/brand/logo-horizontal-dark.svg" alt="iBoost" class="site-logo-img site-logo-dark" />
       </a>
+
       <nav class="site-nav" aria-label="Primary">
-        <a href="/pricing.html" class="btn btn-primary btn-cta-pulse" data-auth-hide>Get started</a>
-        <a href="/" class="btn btn-ghost nav-hide-mobile">Back to site</a>
+
+        <!-- PRODUCT -->
+        <div class="site-nav-item" data-menu>
+          <button type="button" class="site-nav-trigger" aria-expanded="false" aria-haspopup="true">
+            Product
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-mega" role="menu">
+            <div class="site-mega-cols site-mega-cols-3">
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Core</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item" href="/how-it-works.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">How it works</span>
+                      <span class="site-mega-desc">The 3-step system that reports credit activity monthly.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Pricing</span>
+                      <span class="site-mega-desc">Three tiers from $0 to $30/month. Cancel anytime.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">AI coach <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Monthly action items personalized to your profile.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Advanced</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Dispute tools <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Contest errors on your report directly from iBoost.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-pink">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Score simulator <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">See how actions affect your score before you take them.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="/how-it-works.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3zM21 9H3M9 21V9"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Budget &amp; utilization</span>
+                      <span class="site-mega-desc">Track spending to keep your credit utilization low.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Integrations</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Bank connections <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Link accounts via Plaid for automatic utilization tracking.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="/how-it-works.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Bureau direct access</span>
+                      <span class="site-mega-desc">View all 3 bureaus side-by-side in your dashboard.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Export &amp; API <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Get your iBoost data out whenever you want.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESOURCES -->
+        <div class="site-nav-item" data-menu>
+          <button type="button" class="site-nav-trigger" aria-expanded="false" aria-haspopup="true">
+            Resources
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-mega" role="menu">
+            <div class="site-mega-cols site-mega-cols-3">
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Learn</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">FAQ</span>
+                      <span class="site-mega-desc">Answers to common questions about iBoost and credit.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Education library <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Jargon-free lessons on credit, budgeting, and planning.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Blog <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Tips, stories, and deep dives on building credit.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Tools</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Score simulator <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Model how specific actions will move your score.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-pink">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Report analyzer <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Upload your bureau report, we'll flag issues.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Credit calculator <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">How much score boost you need for approval.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Popular topics</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Statement vs due date</span>
+                      <span class="site-mega-desc">Why timing matters for reported utilization.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Rent reporting explained</span>
+                      <span class="site-mega-desc">Can your rent build credit? US vs Canada.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="/faq.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Score ranges demystified</span>
+                      <span class="site-mega-desc">Poor, Fair, Good — what lenders actually see.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOR YOU -->
+        <div class="site-nav-item" data-menu>
+          <button type="button" class="site-nav-trigger" aria-expanded="false" aria-haspopup="true">
+            For you
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-mega" role="menu">
+            <div class="site-mega-cols site-mega-cols-3">
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Life stages</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">New to Canada <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Build a Canadian credit file from day one.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Students <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Start building early, before you need credit.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><path d="M12 21V7"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Newcomers to U.S. <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Establish U.S. credit from scratch.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Situations</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Rebuilding after setbacks <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Recover from collections, missed payments, or bankruptcy.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-pink">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Preparing for a mortgage <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Hit the score lenders need before you apply.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M2 17h1M21 17h1M7 17h10"/><path d="M3 17V8h13l4 4v5"/><path d="M6 8V5h8v3"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Preparing for a car loan <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Get to the threshold for best auto rates.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Challenges</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Thin credit file <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Fewer than 3 tradelines? Here's how to thicken it.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Post-divorce reset <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Rebuild your individual credit profile.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Post-bankruptcy <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Structured path back to prime credit.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPANY -->
+        <div class="site-nav-item" data-menu>
+          <button type="button" class="site-nav-trigger" aria-expanded="false" aria-haspopup="true">
+            Company
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-mega" role="menu">
+            <div class="site-mega-cols site-mega-cols-3">
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Our business</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item" href="/about.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">About us</span>
+                      <span class="site-mega-desc">Our mission to make credit accessible and understandable.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/privacy.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s-8-4-8-12V5l8-3 8 3v5c0 8-8 12-8 12z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Trust &amp; security <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">How we protect your data. Encryption, audits, standards.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Careers <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Help us build the future of credit in North America.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Connect</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-pink">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Contact <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Questions, partnerships, media inquiries.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item" href="mailto:hello@iboost.com" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Support</span>
+                      <span class="site-mega-desc">Reach our team — hello@iboost.com.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M1 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Partners <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Financial institutions, fintechs, credit unions.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+              <div class="site-mega-col">
+                <div class="site-mega-col-title">Press &amp; investors</div>
+                <div class="site-mega-col-items">
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-cyan">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Press kit <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Logos, photos, media packages.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-amber">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Company news <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Announcements, releases, milestones.</span>
+                    </span>
+                  </a>
+                  <a class="site-mega-item site-mega-soon" href="/pricing.html" role="menuitem">
+                    <span class="site-mega-ico site-mega-ico-purple">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                    </span>
+                    <span class="site-mega-body">
+                      <span class="site-mega-title">Investors <span class="site-mega-badge">Soon</span></span>
+                      <span class="site-mega-desc">Funding, financial reports, board.</span>
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <span class="site-nav-sep" aria-hidden="true"></span>
+
+        <a href="/login.html" class="site-nav-ghost" data-auth-swap data-auth-to="/account.html" data-auth-label="Account">Sign in</a>
+        <a href="/signup.html" class="site-nav-cta" data-auth-hide>Get started</a>
       </nav>
+
+      <!-- Mobile hamburger -->
+      <button type="button" class="site-hamburger" aria-label="Open navigation" data-drawer-open>
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="site-drawer" id="site-drawer" data-drawer hidden aria-hidden="true">
+      <div class="site-drawer-scrim" data-drawer-close aria-hidden="true"></div>
+      <aside class="site-drawer-panel" role="dialog" aria-modal="true" aria-label="Site menu">
+      <header class="site-drawer-head">
+        <a href="/" class="site-logo" aria-label="iBoost home">
+          <img src="/assets/img/brand/logo-horizontal-light.svg" alt="iBoost" class="site-logo-img" />
+        </a>
+        <button type="button" class="site-drawer-close" aria-label="Close navigation" data-drawer-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="site-drawer-body">
+
+        <!-- PRODUCT accordion -->
+        <div class="site-acc" data-acc>
+          <button type="button" class="site-acc-head" aria-expanded="false">
+            <span>Product</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-acc-body">
+            <a class="site-acc-item" href="/how-it-works.html">
+              <span class="site-acc-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">How it works</span>
+                <span class="site-acc-item-desc">The 3-step system</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Pricing</span>
+                <span class="site-acc-item-desc">$0 to $30/month</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">AI coach <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Monthly actions for you</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/how-it-works.html">
+              <span class="site-acc-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3zM21 9H3M9 21V9"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Budget &amp; utilization</span>
+                <span class="site-acc-item-desc">Keep utilization low</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Bank connections <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Plaid integration</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- RESOURCES accordion -->
+        <div class="site-acc" data-acc>
+          <button type="button" class="site-acc-head" aria-expanded="false">
+            <span>Resources</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-acc-body">
+            <a class="site-acc-item" href="/faq.html">
+              <span class="site-acc-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">FAQ</span>
+                <span class="site-acc-item-desc">Common questions</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/faq.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Education library <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Jargon-free lessons</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/faq.html">
+              <span class="site-acc-ico site-acc-ico-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Blog <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Tips and deep dives</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Score simulator <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Model score moves</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/faq.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Statement vs due date</span>
+                <span class="site-acc-item-desc">Timing that matters</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- FOR YOU accordion -->
+        <div class="site-acc" data-acc>
+          <button type="button" class="site-acc-head" aria-expanded="false">
+            <span>For you</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-acc-body">
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">New to Canada <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Start from day one</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Students <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Build early</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Rebuilding <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Recover and restart</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-pink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Mortgage ready <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Prep for a home buy</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Thin credit file <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Thicken your file</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <!-- COMPANY accordion -->
+        <div class="site-acc" data-acc>
+          <button type="button" class="site-acc-head" aria-expanded="false">
+            <span>Company</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="site-acc-body">
+            <a class="site-acc-item" href="/about.html">
+              <span class="site-acc-ico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">About us</span>
+                <span class="site-acc-item-desc">Our mission</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/privacy.html">
+              <span class="site-acc-ico site-acc-ico-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s-8-4-8-12V5l8-3 8 3v5c0 8-8 12-8 12z"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Trust &amp; security <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">How we protect you</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="mailto:hello@iboost.com">
+              <span class="site-acc-ico site-acc-ico-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Support</span>
+                <span class="site-acc-item-desc">hello@iboost.com</span>
+              </span>
+            </a>
+            <a class="site-acc-item" href="/pricing.html">
+              <span class="site-acc-ico site-acc-ico-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </span>
+              <span class="site-acc-body-col">
+                <span class="site-acc-item-title">Careers <span class="site-acc-badge">Soon</span></span>
+                <span class="site-acc-item-desc">Join the team</span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <footer class="site-drawer-foot">
+        <a href="/signup.html" class="site-drawer-cta-primary" data-auth-swap data-auth-to="/account.html" data-auth-label="Account">Get started</a>
+        <a href="/login.html" class="site-drawer-cta-ghost" data-auth-hide>Sign in</a>
+      </footer>
+      </aside>
     </div>
   </header>
 
@@ -192,7 +865,7 @@
           <div class="footer-col">
             <p class="footer-col-title">Company</p>
             <ul>
-              <li><a href="#" class="footer-col-link-soon">About us</a></li>
+              <li><a href="/about.html">About us</a></li>
               <li><a href="#" class="footer-col-link-soon">Contact</a></li>
               <li><a href="#" class="footer-col-link-soon">Careers</a></li>
               <li><a href="#" class="footer-col-link-soon">Press</a></li>
@@ -249,6 +922,10 @@
       </div>
     </div>
   </footer>
+  <script src="/assets/js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/header.js" defer></script>
   <script src="/assets/js/main.js" defer></script>
 </body>
 </html>
