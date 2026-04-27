@@ -1775,6 +1775,44 @@
 
 .dash-sum-val-positive { color: #16a34a; }
 
+/* Budget tab — Available card flips to red when user has overspent
+   (income - spent - transfers < 0). Subtle visual signal. */
+.dash-sum-val-negative { color: #dc2626; }
+
+/* Budget tab empty states.
+   Shown when user has no entries / no goals / no transactions yet.
+   Designed to be friendly + informative, not "broken" looking.
+   The CTA inside (e.g. "Add your first entry") is wired by account.js
+   in Phase 3 (Add Entry modal). */
+.dash-cats-empty,
+.dash-goals-empty,
+.dash-tx-empty {
+  padding: 32px 24px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e1;
+}
+.dash-cats-empty-title,
+.dash-goals-empty-title,
+.dash-tx-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 6px 0;
+}
+.dash-cats-empty-sub,
+.dash-goals-empty-sub,
+.dash-tx-empty-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+.dash-cats-empty strong {
+  color: var(--color-text);
+}
+
 .dash-sum-unit {
   font-size: 0.85rem;
   color: #64748b;

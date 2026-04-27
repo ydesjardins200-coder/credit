@@ -959,42 +959,39 @@
         </button>
       </div>
 
-      <!-- Summary row -->
-      <div class="dash-sumrow">
+      <!-- Summary row.
+           Values populated by account.js initBudgetTab via lib/budget.js.
+           Empty state: all $0. Mock values are placeholder until real
+           data resolves. -->
+      <div class="dash-sumrow" data-budget-summary>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Income</div>
-          <div class="dash-sum-val">$4,200</div>
-          <div class="dash-sum-delta">Same as March</div>
+          <div class="dash-sum-val" data-budget-income>$4,200</div>
+          <div class="dash-sum-delta" data-budget-income-sub>This month</div>
         </article>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Spent</div>
-          <div class="dash-sum-val">$2,847</div>
-          <div class="dash-sum-delta dash-sum-delta-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-            $180 less than March
-          </div>
+          <div class="dash-sum-val" data-budget-spent>$2,847</div>
+          <div class="dash-sum-delta" data-budget-spent-sub>This month</div>
         </article>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Available</div>
-          <div class="dash-sum-val dash-sum-val-positive">$1,353</div>
-          <div class="dash-sum-delta">8 days left in cycle</div>
+          <div class="dash-sum-val dash-sum-val-positive" data-budget-available>$1,353</div>
+          <div class="dash-sum-delta" data-budget-available-sub>Income minus spending</div>
         </article>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Savings rate</div>
-          <div class="dash-sum-val">32<span class="dash-sum-unit">%</span></div>
-          <div class="dash-sum-delta dash-sum-delta-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="18 15 12 9 6 15"/>
-            </svg>
-            +4 vs March
-          </div>
+          <div class="dash-sum-val"><span data-budget-savings-rate>32</span><span class="dash-sum-unit">%</span></div>
+          <div class="dash-sum-delta" data-budget-savings-sub>Of income saved</div>
         </article>
       </div>
 
-      <!-- Accounts -->
-      <div class="dash-accounts">
+      <!-- Accounts.
+           Gated to budget.flinks_connection (paid-tier feature). For Free
+           users, this section is hidden entirely by the permissions module.
+           When Flinks integration ships for paid users, this list becomes
+           dynamic from real bank data. -->
+      <div class="dash-accounts" data-feature="budget.flinks_connection">
         <article class="dash-acct">
           <div class="dash-acct-ico dash-acct-ico-visa">VISA</div>
           <div class="dash-acct-body">
@@ -1020,8 +1017,14 @@
       <div class="dash-grid-2">
 
         <article class="dash-card">
-          <h3 class="dash-card-title">Spending by category</h3>
-          <div class="dash-cats">
+          <div class="dash-card-title-row">
+            <h3 class="dash-card-title">Spending by category</h3>
+            <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
+          </div>
+          <!-- Container replaced by account.js initBudgetTab. Mock content
+               below is shown until data resolves (~100ms typical) or as
+               an empty-state placeholder for users with no entries. -->
+          <div class="dash-cats" data-budget-categories>
             <div class="dash-cat">
               <div class="dash-cat-row">
                 <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#2ECC71"></span>Housing</span>
@@ -1073,12 +1076,14 @@
           </div>
         </article>
 
-        <article class="dash-card">
+        <article class="dash-card" data-budget-goals-card>
           <div class="dash-card-title-row">
             <h3>Your goals</h3>
             <a href="#" class="dash-card-action">All goals →</a>
           </div>
-          <div class="dash-goals">
+          <!-- Container replaced by account.js initBudgetTab. Mock content
+               below is only shown until data resolves. -->
+          <div class="dash-goals" data-budget-goals>
             <div class="dash-goal dash-goal-ontrack">
               <div class="dash-goal-head">
                 <div class="dash-goal-name">Keep utilization &lt; 30%</div>
@@ -1118,10 +1123,11 @@
       <!-- Transactions -->
       <article class="dash-card">
         <div class="dash-card-title-row">
-          <h3>Recent transactions</h3>
+          <h3>Recent entries</h3>
           <a href="#" class="dash-card-action">See all →</a>
         </div>
-        <div class="dash-tx-list">
+        <!-- Container replaced by account.js initBudgetTab. -->
+        <div class="dash-tx-list" data-budget-tx-list>
 
           <div class="dash-tx">
             <div class="dash-tx-ico" style="background:#fef3c7; color:#b45309">
@@ -1909,6 +1915,9 @@
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/lib/locale.js" defer></script>
   <script src="/assets/js/lib/permissions.js" defer></script>
+  <script src="/assets/js/lib/budget-seed.js" defer></script>
+  <script src="/assets/js/lib/merchant-categories.js" defer></script>
+  <script src="/assets/js/lib/budget.js" defer></script>
   <script src="/assets/js/plans-loader.js" defer></script>
   <script src="/assets/js/account.js" defer></script>
 </body>

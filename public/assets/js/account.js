@@ -157,6 +157,13 @@
 
     setUrlTab(tabKey);
 
+    // Lazy-init for tabs that need data fetching. Each tab's init
+    // function is idempotent — safe to call multiple times.
+    if (tabKey === 'budget') {
+      // Fire-and-forget. Errors handled inside initBudgetTab.
+      initBudgetTab();
+    }
+
     // Scroll to top when switching tabs so users don't land mid-content
     if (window.scrollY > 80) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1052,6 +1059,330 @@
   }
 
   // ---------------------------------------------------------------------
+  // Budget tab: read path
+  //
+  // Reads from public.budget_categories / budget_entries / budget_goals
+  // (migration 0016) via window.iboostBudget. Replaces the mocked
+  // values in the Budget tab markup with real data.
+  //
+  // Flow on init:
+  //   1. ensureSeeded() — if user has 0 categories, creates the 16
+  //      starter set (idempotent).
+  //   2. getMonthSummary(today) — fetches current month entries +
+  //      computes summary stats client-side.
+  //   3. Render summary cards, category bars, goals, recent entries.
+  //
+  // Empty-state handling: if user has no entries this month, the
+  // summary cards show $0 and the lists show "Get started" placeholders.
+  // The "+ Add entry" button stays visible (Phase 3 wires it up).
+  //
+  // Defensive design: if any step fails (network error, RLS misconfig,
+  // libs not loaded), we log and leave the mock content in place rather
+  // than blanking the tab. Mock content is still informative — better
+  // than an empty page if data is broken.
+  // ---------------------------------------------------------------------
+
+  // Color per category kind. Stable, semantic — reinforces Patrick's
+  // 5-kind structural insight (different KINDS of money flow get
+  // different colors so users can read the bars at a glance).
+  const BUDGET_KIND_COLORS = {
+    income:        '#16a34a', // green — money in
+    fixed:         '#2ECC71', // emerald — committed monthly
+    variable:      '#0891b2', // cyan — necessary but variable
+    discretionary: '#f59e0b', // amber — wants
+    transfer:      '#8b5cf6', // purple — savings/CC payments
+  };
+
+  async function initBudgetTab() {
+    if (!window.iboostBudget) {
+      console.warn('[account] iboostBudget not loaded — budget tab will show mock data');
+      return;
+    }
+
+    // 1. Seed if needed. Idempotent — if user already has categories,
+    // this is a no-op. New users get the 16 starter categories silently.
+    try {
+      await window.iboostBudget.ensureSeeded();
+    } catch (e) {
+      console.error('[account] budget seed failed:', e);
+      // Fall through — we can still try to render whatever they have.
+    }
+
+    // 2. Fetch entries + summary for the current month.
+    const today = new Date();
+    const { data, error } = await window.iboostBudget.getMonthSummary(today);
+    if (error) {
+      console.error('[account] getMonthSummary error:', error);
+      return; // leave mock content in place
+    }
+    if (!data) return;
+
+    const { entries, summary } = data;
+
+    // 3. Render the four pieces.
+    renderBudgetSummary(summary);
+    renderBudgetCategories(summary.by_category);
+    renderBudgetGoals(today); // async — fetches goals separately
+    renderBudgetRecentEntries(entries);
+
+    // 4. Wire up the "+ Add entry" CTA (Phase 3 will replace the
+    // placeholder click handler with a real modal). For now: tells
+    // the user the feature is coming.
+    wireBudgetAddEntryCta();
+  }
+
+  function renderBudgetSummary(summary) {
+    const fmt = window.iboostBudget.formatCents;
+
+    setText('[data-budget-income]', fmt(summary.income_cents));
+    setText('[data-budget-spent]', fmt(summary.spent_cents));
+    setText('[data-budget-available]', fmt(summary.available_cents));
+    setText('[data-budget-savings-rate]', Math.round(summary.savings_rate * 100));
+
+    // Make the "Available" card flip to negative styling if the user
+    // overspent (income - spent - transfers < 0). Subtle — most users
+    // will be in the green most of the time.
+    const availEl = document.querySelector('[data-budget-available]');
+    if (availEl) {
+      availEl.classList.toggle('dash-sum-val-positive', summary.available_cents >= 0);
+      availEl.classList.toggle('dash-sum-val-negative', summary.available_cents < 0);
+    }
+
+    // Empty-state copy on subtitles. If income is zero, encourage
+    // adding a first entry. Otherwise the default "This month" labels
+    // are fine.
+    if (summary.income_cents === 0 && summary.spent_cents === 0) {
+      setText('[data-budget-income-sub]', 'Add your first entry');
+      setText('[data-budget-spent-sub]', 'Add your first entry');
+      setText('[data-budget-available-sub]', '—');
+      setText('[data-budget-savings-sub]', '—');
+    }
+  }
+
+  function renderBudgetCategories(byCategory) {
+    const container = document.querySelector('[data-budget-categories]');
+    if (!container) return;
+
+    // Filter out income/transfer kinds — the "Spending by category" bar
+    // chart is for outflows only. Income shows in the summary; transfers
+    // are tracked separately.
+    const spendCats = (byCategory || []).filter(function (c) {
+      return c.kind === 'fixed' || c.kind === 'variable' || c.kind === 'discretionary';
+    });
+
+    if (!spendCats.length) {
+      container.innerHTML =
+        '<div class="dash-cats-empty">' +
+          '<p class="dash-cats-empty-title">No spending entries yet</p>' +
+          '<p class="dash-cats-empty-sub">' +
+            'Tap <strong>+ Add entry</strong> to start tracking your spending.' +
+          '</p>' +
+        '</div>';
+      return;
+    }
+
+    // Find the highest spending total — used to scale bar widths so
+    // the largest category fills 100% and others scale proportionally.
+    var maxTotal = spendCats[0].total_cents;
+    var grandTotal = spendCats.reduce(function (sum, c) {
+      return sum + c.total_cents;
+    }, 0);
+
+    container.innerHTML = spendCats.map(function (cat) {
+      var color = BUDGET_KIND_COLORS[cat.kind] || '#94a3b8';
+      var barWidth = maxTotal > 0
+        ? Math.max(2, Math.round((cat.total_cents / maxTotal) * 100))
+        : 0;
+      var pctOfTotal = grandTotal > 0
+        ? Math.round((cat.total_cents / grandTotal) * 100)
+        : 0;
+      var emoji = cat.emoji ? cat.emoji + ' ' : '';
+      return (
+        '<div class="dash-cat">' +
+          '<div class="dash-cat-row">' +
+            '<span class="dash-cat-name">' +
+              '<span class="dash-cat-dot" style="background:' + color + '"></span>' +
+              escapeHtml(emoji + cat.category_name) +
+            '</span>' +
+            '<span class="dash-cat-val">' + window.iboostBudget.formatCents(cat.total_cents) + '</span>' +
+          '</div>' +
+          '<div class="dash-cat-bar">' +
+            '<div class="dash-cat-fill" style="width:' + barWidth + '%; background:' + color + '"></div>' +
+          '</div>' +
+          '<div class="dash-cat-pct">' + pctOfTotal + '% of spending · ' + cat.entry_count + ' ' +
+            (cat.entry_count === 1 ? 'entry' : 'entries') +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  async function renderBudgetGoals(today) {
+    const container = document.querySelector('[data-budget-goals]');
+    if (!container) return;
+
+    var goalsResult;
+    try {
+      goalsResult = await window.iboostBudget.getGoalsForMonth(today);
+    } catch (e) {
+      console.error('[account] getGoalsForMonth error:', e);
+      return;
+    }
+    if (goalsResult.error) {
+      console.error('[account] getGoalsForMonth error:', goalsResult.error);
+      return;
+    }
+
+    var goals = goalsResult.data || [];
+
+    if (!goals.length) {
+      container.innerHTML =
+        '<div class="dash-goals-empty">' +
+          '<p class="dash-goals-empty-title">No goals set</p>' +
+          '<p class="dash-goals-empty-sub">' +
+            'Set monthly targets like "Spend under $300 on dining" to ' +
+            'stay on track.' +
+          '</p>' +
+        '</div>' +
+        '<button type="button" class="dash-new-goal" disabled title="Coming soon">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" ' +
+                'aria-hidden="true">' +
+            '<line x1="12" y1="5" x2="12" y2="19"/>' +
+            '<line x1="5" y1="12" x2="19" y2="12"/>' +
+          '</svg>' +
+          'Set a new goal' +
+        '</button>';
+      // TODO(phase5): wire up the "Set a new goal" button to a goal-edit modal.
+      return;
+    }
+
+    // Render goals. For now this is a minimal render — future work
+    // (Phase 5) will compute progress against actual spending.
+    container.innerHTML = goals.map(function (g) {
+      var typeLabel = g.goal_type === 'spend_under' ? 'Stay under' :
+                      g.goal_type === 'save_at_least' ? 'Save at least' :
+                      'Spend exactly';
+      var emoji = g.category && g.category.emoji ? g.category.emoji + ' ' : '';
+      var catName = g.category ? g.category.name : '(category)';
+      return (
+        '<div class="dash-goal">' +
+          '<div class="dash-goal-head">' +
+            '<div class="dash-goal-name">' +
+              escapeHtml(emoji + typeLabel + ' ' +
+                window.iboostBudget.formatCents(g.target_cents) +
+                ' on ' + catName) +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('') +
+    '<button type="button" class="dash-new-goal" disabled title="Coming soon">' +
+      'Set a new goal' +
+    '</button>';
+  }
+
+  function renderBudgetRecentEntries(entries) {
+    const container = document.querySelector('[data-budget-tx-list]');
+    if (!container) return;
+
+    if (!entries || !entries.length) {
+      container.innerHTML =
+        '<div class="dash-tx-empty">' +
+          '<p class="dash-tx-empty-title">No entries yet</p>' +
+          '<p class="dash-tx-empty-sub">' +
+            'Your recent spending and income will show up here.' +
+          '</p>' +
+        '</div>';
+      return;
+    }
+
+    // Show the 5 most recent entries.
+    const recent = entries.slice(0, 5);
+    container.innerHTML = recent.map(function (e) {
+      var kind = (e.category && e.category.kind) || 'variable';
+      var color = BUDGET_KIND_COLORS[kind] || '#94a3b8';
+      // Background tint = lightened version of color (12% alpha-ish via hex)
+      var bgColor = color + '22'; // append low alpha
+      var isIncome = kind === 'income';
+      var sign = isIncome ? '+' : '−';
+      var amountClass = isIncome ? 'dash-tx-amount dash-tx-amount-income' : 'dash-tx-amount';
+      var emoji = e.category && e.category.emoji ? e.category.emoji : '•';
+      var catName = e.category ? e.category.name : '(uncategorized)';
+      var dateStr = formatEntryDate(e.entry_date);
+      var label = e.note ? escapeHtml(e.note) : escapeHtml(catName);
+
+      return (
+        '<div class="dash-tx">' +
+          '<div class="dash-tx-ico" style="background:' + bgColor + '; color:' + color + '; font-size:1.15rem;">' +
+            escapeHtml(emoji) +
+          '</div>' +
+          '<div class="dash-tx-body">' +
+            '<div class="dash-tx-merchant">' + label + '</div>' +
+            '<div class="dash-tx-meta">' +
+              '<span>' + escapeHtml(catName) + '</span>' +
+              '<span>·</span>' +
+              '<span>' + dateStr + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="' + amountClass + '">' +
+            sign + window.iboostBudget.formatCents(e.amount_cents).replace(/^\$/, '$') +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  // Format YYYY-MM-DD as "Today" / "Yesterday" / "Apr 14" / "Mar 22, 2025"
+  // depending on how recent. Compact, friendly.
+  function formatEntryDate(isoDate) {
+    if (!isoDate) return '—';
+    var entry = new Date(isoDate + 'T00:00:00');
+    if (isNaN(entry.getTime())) return isoDate;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (entry.getTime() === today.getTime()) return 'Today';
+    if (entry.getTime() === yesterday.getTime()) return 'Yesterday';
+
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var dayLabel = months[entry.getMonth()] + ' ' + entry.getDate();
+    if (entry.getFullYear() !== today.getFullYear()) {
+      dayLabel += ', ' + entry.getFullYear();
+    }
+    return dayLabel;
+  }
+
+  function wireBudgetAddEntryCta() {
+    // Phase 3 will replace this with a real modal. For now we wire a
+    // placeholder that shows a friendly "coming soon" alert — better
+    // than a dead button. Idempotent: if already wired, skip.
+    var btns = document.querySelectorAll('[data-budget-add-entry-cta]');
+    btns.forEach(function (btn) {
+      if (btn.getAttribute('data-wired') === 'true') return;
+      btn.setAttribute('data-wired', 'true');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        // TODO(phase3): open the Add Entry modal here. Stub for now.
+        alert('The "Add entry" form is coming in the next update.\n\n' +
+              'Soon you\'ll be able to log spending and income directly from this tab.');
+      });
+    });
+  }
+
+  // Helper: set text on the first element matching a selector. Silent
+  // no-op if element isn't found (some markup is wave-gated and may
+  // not be present at all).
+  function setText(selector, value) {
+    var el = document.querySelector(selector);
+    if (el) el.textContent = String(value);
+  }
+
+  // ---------------------------------------------------------------------
   // Permissions: tier-based feature gating
   //
   // Reads data-feature attributes on elements throughout account.html
@@ -1220,6 +1551,370 @@
   }
 
   // ---------------------------------------------------------------------
+  // Budget tab — read path
+  // ---------------------------------------------------------------------
+  //
+  // Phase 2 of the free-tier Budget tab implementation. Wires
+  // lib/budget.js to the existing visual mock in account.html.
+  //
+  // States:
+  //   1. LOADING — Mock HTML visible while data resolves (~100ms typical).
+  //   2. EMPTY — Free user with no entries. All summary stats $0.
+  //              Categories section shows "No entries yet". Recent entries
+  //              shows empty state with "Add your first entry" CTA.
+  //              Goals card hidden (no goals to show).
+  //   3. POPULATED — User has entries. Real numbers populated.
+  //
+  // Lazy-init: this function is called the FIRST time the user activates
+  // the Budget tab (not on page load). Tracked by budgetTabInitialized
+  // module-level flag. Subsequent activations don't re-fetch — that's the
+  // perf sweet spot. Adding entries does an optimistic UI update + targeted
+  // refresh in Phase 3 (Add Entry modal).
+
+  // Module-level state for the budget tab (so it's not re-fetched on
+  // every activation).
+  var budgetTabInitialized = false;
+  var budgetCurrentMonthIso = null; // Set on first init; user can change later
+
+  /**
+   * Initialize the Budget tab. Idempotent — safe to call multiple times,
+   * but only does real work on first call.
+   */
+  async function initBudgetTab() {
+    if (budgetTabInitialized) return;
+    budgetTabInitialized = true;
+
+    if (!window.iboostBudget) {
+      console.error('[account] iboostBudget lib missing');
+      renderBudgetError('Budget data layer not loaded. Refresh the page.');
+      return;
+    }
+
+    // Use today's date to determine the current month.
+    var today = new Date();
+    budgetCurrentMonthIso = window.iboostBudget.toMonthStart(today);
+
+    // 1. Ensure the user has starter categories. Idempotent (only seeds
+    // if user has zero categories). For a fresh Free user, this creates
+    // 16 categories on first Budget tab visit.
+    var seedResult = await window.iboostBudget.ensureSeeded();
+    if (seedResult.error) {
+      console.error('[account] budget seed failed:', seedResult.error);
+      renderBudgetError('Failed to set up your budget. Try refreshing.');
+      return;
+    }
+
+    // 2. Fetch entries + summary for the current month.
+    var summaryResult = await window.iboostBudget.getMonthSummary(today);
+    if (summaryResult.error) {
+      console.error('[account] getMonthSummary failed:', summaryResult.error);
+      renderBudgetError('Failed to load your budget data.');
+      return;
+    }
+
+    // 3. Fetch goals for current month (separate query because UI shows
+    // them differently — and a user can have goals without entries, or
+    // entries without goals).
+    var goalsResult = await window.iboostBudget.getGoalsForMonth(today);
+    var goals = goalsResult.error ? [] : goalsResult.data;
+
+    // 4. Render everything.
+    renderBudgetSummary(summaryResult.data.summary);
+    renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
+    renderBudgetGoals(goals, summaryResult.data.summary);
+    renderBudgetEntries(summaryResult.data.entries);
+
+    // 5. Wire the "+ Add entry" CTA. The modal itself is Phase 3 work;
+    // for now the CTA shows a "coming soon" toast or similar lightweight
+    // indication.
+    wireAddEntryCta();
+  }
+
+  /**
+   * Render a fatal error in the budget tab. Better than silent failure.
+   * Replaces the categories container with an error message; leaves the
+   * rest of the mock alone (since that's what's most useful for debugging).
+   */
+  function renderBudgetError(msg) {
+    var catsEl = document.querySelector('[data-budget-categories]');
+    if (catsEl) {
+      catsEl.innerHTML =
+        '<div style="padding:24px;color:#b91c1c;text-align:center;">' +
+          '<strong>Budget temporarily unavailable</strong><br>' +
+          '<span style="color:#64748b;font-size:0.9rem;">' + escapeHtml(msg) + '</span>' +
+        '</div>';
+    }
+  }
+
+  /**
+   * Render the 4 summary cards. Updates textContent only — preserves
+   * card structure + classes.
+   */
+  function renderBudgetSummary(summary) {
+    var fmt = window.iboostBudget.formatCents;
+
+    setText('[data-budget-income]', fmt(summary.income_cents));
+    setText('[data-budget-spent]', fmt(summary.spent_cents));
+    setText('[data-budget-available]', fmt(summary.available_cents));
+
+    // Savings rate is shown as a whole number percentage (e.g., "32" with
+    // the % symbol added by surrounding HTML). The lib gives us a 0..1
+    // float; round to integer for display.
+    var pct = Math.max(0, Math.round((summary.savings_rate || 0) * 100));
+    setText('[data-budget-savings-rate]', String(pct));
+
+    // Subtext under each summary number. Phase 2 keeps these static —
+    // month-over-month deltas come later (Phase 4+) when we have prior
+    // months' data to compare to.
+    setText('[data-budget-income-sub]', 'This month');
+    setText('[data-budget-spent-sub]', summary.spent_cents > 0 ? 'This month' : 'No spending logged yet');
+    setText('[data-budget-available-sub]', summary.income_cents > 0 ? 'Income minus spending' : 'Add income to track');
+    setText('[data-budget-savings-sub]', summary.income_cents > 0 ? 'Of income saved' : '—');
+  }
+
+  /**
+   * Render the spending-by-category bars. Only spending categories
+   * (fixed/variable/discretionary) — income and transfers excluded
+   * (they're not "spending" in the usual sense).
+   *
+   * If user has no spending entries, shows an empty state.
+   */
+  function renderBudgetCategories(summary, entries) {
+    var container = document.querySelector('[data-budget-categories]');
+    if (!container) return;
+
+    // Filter to spending categories only. Sort by total desc (biggest
+    // first) — already done by summarize().
+    var spendingCats = (summary.by_category || []).filter(function (c) {
+      return c.kind === 'fixed' || c.kind === 'variable' || c.kind === 'discretionary';
+    });
+
+    if (spendingCats.length === 0) {
+      container.innerHTML =
+        '<div class="dash-cats-empty">' +
+          '<div class="dash-cats-empty-title">No spending entries yet</div>' +
+          '<div class="dash-cats-empty-sub">Add your first entry to see your spending breakdown.</div>' +
+        '</div>';
+      return;
+    }
+
+    // Total spending (denominator for percentages). Already in summary.
+    var totalSpent = summary.spent_cents || 1; // avoid div-by-zero (1 cent is harmless visually)
+
+    // Color palette for category bars. Cycles through if many categories.
+    // Matches the existing mock palette (visual continuity).
+    var COLORS = ['#2ECC71', '#0891b2', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#94a3b8'];
+
+    var html = '';
+    spendingCats.forEach(function (cat, idx) {
+      var pct = Math.round((cat.total_cents / totalSpent) * 100);
+      var color = COLORS[idx % COLORS.length];
+      var entryWord = cat.entry_count === 1 ? 'entry' : 'entries';
+      var emoji = cat.emoji ? '<span style="margin-right:6px;">' + cat.emoji + '</span>' : '';
+
+      html +=
+        '<div class="dash-cat">' +
+          '<div class="dash-cat-row">' +
+            '<span class="dash-cat-name">' +
+              '<span class="dash-cat-dot" style="background:' + color + '"></span>' +
+              emoji +
+              escapeHtml(cat.category_name) +
+            '</span>' +
+            '<span class="dash-cat-val">' + window.iboostBudget.formatCents(cat.total_cents) + '</span>' +
+          '</div>' +
+          '<div class="dash-cat-bar">' +
+            '<div class="dash-cat-fill" style="width:' + pct + '%; background:' + color + ';"></div>' +
+          '</div>' +
+          '<div class="dash-cat-pct">' + pct + '% · ' + cat.entry_count + ' ' + entryWord + '</div>' +
+        '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Render goals card. If user has no goals, hide the entire card
+   * (cleaner than showing an empty card with just a "Set a new goal"
+   * button — that's discoverable from the main "Add entry" flow later).
+   */
+  function renderBudgetGoals(goals, summary) {
+    var card = document.querySelector('[data-budget-goals-card]');
+    var container = document.querySelector('[data-budget-goals]');
+    if (!card || !container) return;
+
+    if (!goals || goals.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+
+    // Build a per-category-id totals map from the summary for goal progress
+    var totalsByCategory = {};
+    (summary.by_category || []).forEach(function (c) {
+      totalsByCategory[c.category_id] = c.total_cents;
+    });
+
+    var fmt = window.iboostBudget.formatCents;
+    var html = '';
+
+    goals.forEach(function (g) {
+      var actual = totalsByCategory[g.category_id] || 0;
+      var target = g.target_cents || 0;
+
+      // Progress percentage — interpretation depends on goal_type.
+      // For simplicity in Phase 2 we treat all goals the same: % of target.
+      // Phase 5 will refine the visualization per goal_type.
+      var pct = target > 0 ? Math.round((actual / target) * 100) : 0;
+      var pctCapped = Math.min(100, pct); // bar fill capped at 100% visually
+
+      // Goal status
+      var statusClass, statusText;
+      if (g.goal_type === 'spend_under') {
+        if (pct > 100) { statusClass = 'dash-goal-alert'; statusText = pct + '% used'; }
+        else if (pct > 80) { statusClass = ''; statusText = 'Close to limit'; }
+        else { statusClass = 'dash-goal-ontrack'; statusText = 'On track'; }
+      } else if (g.goal_type === 'save_at_least') {
+        statusClass = pct >= 100 ? 'dash-goal-ontrack' : '';
+        statusText = pct + '% done';
+      } else {
+        statusClass = '';
+        statusText = pct + '% of target';
+      }
+
+      var catName = g.category && g.category.name ? g.category.name : 'Goal';
+      var emoji = g.category && g.category.emoji ? g.category.emoji + ' ' : '';
+
+      html +=
+        '<div class="dash-goal ' + statusClass + '">' +
+          '<div class="dash-goal-head">' +
+            '<div class="dash-goal-name">' + emoji + escapeHtml(catName) + '</div>' +
+            '<div class="dash-goal-pct">' + statusText + '</div>' +
+          '</div>' +
+          '<div class="dash-goal-bar"><div class="dash-goal-fill" style="width:' + pctCapped + '%"></div></div>' +
+          '<div class="dash-goal-meta">' +
+            '<span>' + fmt(actual) + ' ' + (g.goal_type === 'save_at_least' ? 'saved' : 'spent') + '</span>' +
+            '<span>' + (g.goal_type === 'spend_under' ? 'Limit ' : 'Target ') + fmt(target) + '</span>' +
+          '</div>' +
+        '</div>';
+    });
+
+    // Keep the "Set a new goal" button at the bottom (UI from existing mock)
+    html +=
+      '<button type="button" class="dash-new-goal" data-budget-add-goal-cta>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<line x1="12" y1="5" x2="12" y2="19"/>' +
+          '<line x1="5" y1="12" x2="19" y2="12"/>' +
+        '</svg>' +
+        ' Set a new goal' +
+      '</button>';
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Render the recent entries list (last 5). Empty state if none.
+   */
+  function renderBudgetEntries(entries) {
+    var container = document.querySelector('[data-budget-tx-list]');
+    if (!container) return;
+
+    if (!entries || entries.length === 0) {
+      // Empty state — friendly invite to add the first entry.
+      container.innerHTML =
+        '<div class="dash-tx-empty">' +
+          '<div class="dash-tx-empty-title">No entries yet</div>' +
+          '<div class="dash-tx-empty-sub">' +
+            'Track spending to see how money flows. Manual entry only — your data stays private.' +
+          '</div>' +
+          '<button type="button" class="btn btn-primary" data-budget-add-entry-cta ' +
+                  'style="padding:12px 24px;margin-top:16px;">' +
+            '+ Add your first entry' +
+          '</button>' +
+        '</div>';
+      return;
+    }
+
+    // Show last 5 entries (already sorted by entry_date desc + created_at desc
+    // by lib/budget.js). Anything more should go to a "See all" view (future).
+    var recent = entries.slice(0, 5);
+    var fmt = window.iboostBudget.formatCents;
+    var html = '';
+
+    recent.forEach(function (e) {
+      // Format entry_date as "Apr 27" style
+      var d = new Date(e.entry_date + 'T00:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      var catName = e.category && e.category.name ? e.category.name : 'Uncategorized';
+      var emoji = e.category && e.category.emoji ? e.category.emoji : '💵';
+      var note = e.note ? escapeHtml(e.note) : catName;
+      var kind = e.category && e.category.kind ? e.category.kind : 'variable';
+
+      // Color and sign based on kind
+      var iconBg, iconColor, valPrefix, valColor;
+      if (kind === 'income') {
+        iconBg = '#dcfce7'; iconColor = '#15803d';
+        valPrefix = '+ '; valColor = '#15803d';
+      } else if (kind === 'transfer') {
+        iconBg = '#dbeafe'; iconColor = '#1d4ed8';
+        valPrefix = ''; valColor = '#1d4ed8';
+      } else {
+        iconBg = '#fef3c7'; iconColor = '#b45309';
+        valPrefix = ''; valColor = '#0A2540';
+      }
+
+      html +=
+        '<div class="dash-tx">' +
+          '<div class="dash-tx-ico" style="background:' + iconBg + ';color:' + iconColor + ';font-size:1.2rem;">' +
+            emoji +
+          '</div>' +
+          '<div class="dash-tx-body">' +
+            '<div class="dash-tx-name">' + note + '</div>' +
+            '<div class="dash-tx-sub">' + dateStr + ' · ' + escapeHtml(catName) + '</div>' +
+          '</div>' +
+          '<div class="dash-tx-val" style="color:' + valColor + ';">' +
+            valPrefix + fmt(e.amount_cents) +
+          '</div>' +
+        '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Wire the "+ Add entry" CTAs. Phase 2 just shows a placeholder
+   * notification — the actual modal comes in Phase 3.
+   *
+   * Multiple CTAs may exist on the page (header CTA + empty-state CTA).
+   * Wire them all the same way.
+   */
+  function wireAddEntryCta() {
+    var ctas = document.querySelectorAll('[data-budget-add-entry-cta]');
+    ctas.forEach(function (btn) {
+      // Avoid double-wiring on re-render
+      if (btn.getAttribute('data-cta-wired') === 'true') return;
+      btn.setAttribute('data-cta-wired', 'true');
+
+      btn.addEventListener('click', function () {
+        // TODO(phase-3): open the Add Entry modal.
+        // For now, show a placeholder so users know the button works.
+        alert('Add Entry coming in the next update! Phase 3 wires the modal.');
+      });
+    });
+  }
+
+  /**
+   * Tiny helper: set textContent on an element matched by selector.
+   * No-op if element not found (defensive — partial DOM updates won't
+   * crash the whole render).
+   */
+  function setText(selector, text) {
+    var el = document.querySelector(selector);
+    if (el) el.textContent = text;
+  }
+
+  // ---------------------------------------------------------------------
   // Main init
   // ---------------------------------------------------------------------
 
@@ -1297,6 +1992,12 @@
     if (profileAvatarEl) profileAvatarEl.textContent = initials;
 
     initProfileTab(user, firstName);
+
+    // Budget tab — populates summary cards, category bars, goals,
+    // recent entries from public.budget_* tables (migration 0016).
+    // Eagerly initialized (matches Profile tab pattern). Seeds the
+    // 16 starter categories on first visit (idempotent).
+    initBudgetTab();
 
     // Personalize the Welcome tab greeting.
     // The inline script in account.html already set "Welcome back." —
