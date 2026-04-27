@@ -2965,13 +2965,32 @@
     importState.submitting = false;
 
     if (result.error) {
-      console.error('[account] addEntriesBatch error:', result.error);
+      // Log every field Supabase puts on its error objects so we can
+      // diagnose 400s. The default console.error of an Error/PostgrestError
+      // serializes only as "Object" in some browsers — we want message,
+      // details, hint, code, status visible.
+      var err = result.error;
+      console.error('[account] addEntriesBatch error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+        status: err.status,
+        raw: err,
+      });
+      // Also log a sample of what we tried to insert — first 3 rows
+      // is enough to spot null category_id / malformed date / etc.
+      console.error('[account] addEntriesBatch first 3 rows attempted:',
+        toImport.slice(0, 3));
+      console.error('[account] addEntriesBatch total attempted:', toImport.length);
+
+      var humanMsg = err.message || err.details || 'Unknown error';
       showImportError(
         (result.inserted > 0
           ? 'Imported ' + result.inserted + ' rows before failing. '
           : '') +
-        'Error: ' + (result.error.message || 'Unknown error') +
-        '. The remaining rows were not saved.'
+        'Error: ' + humanMsg +
+        '. Check the browser console for details. The remaining rows were not saved.'
       );
       if (nextBtn) {
         nextBtn.disabled = false;
