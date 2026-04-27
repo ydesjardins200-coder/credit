@@ -1049,7 +1049,7 @@
   // Does NOT re-wrap an element that's already wrapped.
   // ---------------------------------------------------------------------
 
-  function applyPermissions(profile) {
+  function applyPermissions(profile, plansMap) {
     if (!window.iboostPermissions) {
       console.warn('[account] iboostPermissions missing — gating disabled');
       return;
@@ -1059,11 +1059,11 @@
       var key = el.getAttribute('data-feature');
       if (!key) return;
       var access = window.iboostPermissions.canAccess(key, profile);
-      applyAccessToElement(el, key, access, profile);
+      applyAccessToElement(el, key, access, profile, plansMap);
     });
   }
 
-  function applyAccessToElement(el, featureKey, access, profile) {
+  function applyAccessToElement(el, featureKey, access, profile, plansMap) {
     if (access === 'allowed') {
       // Make sure no leftover lock state from a previous render
       removeLockOverlay(el);
@@ -1090,12 +1090,12 @@
         console.warn('[account] locked-visible but no pitch for:', featureKey);
         return;
       }
-      wrapWithLockOverlay(el, featureKey, pitch, profile);
+      wrapWithLockOverlay(el, featureKey, pitch, profile, plansMap);
       el.setAttribute('data-locked', 'visible');
     }
   }
 
-  function wrapWithLockOverlay(el, featureKey, pitch, profile) {
+  function wrapWithLockOverlay(el, featureKey, pitch, profile, plansMap) {
     // Move existing children into a content wrapper.
     var content = document.createElement('div');
     content.className = 'dash-iblock-locked-content';
@@ -1103,8 +1103,13 @@
       content.appendChild(el.firstChild);
     }
 
-    // Build overlay card with pitch copy.
+    // Compose the CTA dynamically from plansMap so admin price / name
+    // changes flow through. The pitch only carries title + body —
+    // price + plan name are NEVER hardcoded in copy. See permissions.js
+    // LOCK_PITCHES comment for the contract.
     var recommendedTier = window.iboostPermissions.recommendedTier(featureKey, profile);
+    var ctaText = composeCtaText(recommendedTier, profile, plansMap);
+
     var overlay = document.createElement('div');
     overlay.className = 'dash-iblock-locked-overlay';
     if (recommendedTier) overlay.setAttribute('data-recommended-tier', recommendedTier);
@@ -1122,7 +1127,7 @@
         '<p class="dash-iblock-locked-pitch">' + escapeHtml(pitch.body) + '</p>' +
         '<a href="/checkout.html?plan=' + encodeURIComponent(recommendedTier || 'essential') +
             '" class="btn btn-primary dash-iblock-locked-cta">' +
-          escapeHtml(pitch.cta) +
+          escapeHtml(ctaText) +
         '</a>' +
         '<a href="/pricing.html" class="dash-iblock-locked-secondary">' +
           'See what\'s included' +
@@ -1132,6 +1137,40 @@
     el.classList.add('dash-iblock-locked-host');
     el.appendChild(content);
     el.appendChild(overlay);
+  }
+
+  // Builds the CTA button text from the recommended tier's plan data,
+  // respecting the user's billing currency. Falls back gracefully when
+  // plans data isn't available (network failure, plans-loader disabled).
+  //
+  // Currency selection:
+  //   - Use profile.plan_currency if set ('cad' | 'usd')
+  //   - Otherwise default to 'usd' (matches checkout.js fallback)
+  //
+  // Output format: "Upgrade to {plan.name} — ${price}/mo"
+  // Fallback (no plans data): "Upgrade to {Tier name}" (no price shown)
+  function composeCtaText(recommendedTier, profile, plansMap) {
+    if (!recommendedTier) return 'Upgrade';
+
+    // Capitalized tier name as a final fallback ("essential" -> "Essential")
+    var tierLabel = recommendedTier.charAt(0).toUpperCase() + recommendedTier.slice(1);
+
+    if (!plansMap || !plansMap[recommendedTier]) {
+      return 'Upgrade to ' + tierLabel;
+    }
+
+    var plan = plansMap[recommendedTier];
+    var currency = (profile && profile.plan_currency === 'cad') ? 'cad' : 'usd';
+    var price = currency === 'cad' ? plan.price_cad : plan.price_usd;
+
+    // If price is missing/null/zero, skip the price portion. Free plan
+    // has price_usd: 0 — would produce weird "Upgrade for $0/mo" copy
+    // but that's not a real case (lock overlays never recommend Free).
+    if (price == null) {
+      return 'Upgrade to ' + (plan.name || tierLabel);
+    }
+
+    return 'Upgrade to ' + (plan.name || tierLabel) + ' — $' + price + '/mo';
   }
 
   function removeLockOverlay(el) {
@@ -1169,23 +1208,40 @@
     const firstName = deriveFirstName(user);
     const initials = deriveInitials(user);
 
-    // Fetch profile once and apply tier-based permissions BEFORE any
-    // tab content can render. Free users must never see locked content
-    // un-overlaid, even briefly. profile fetched here is shared with
-    // initProfileTab/initProfileForm later (they re-fetch internally
-    // because they're stable functions — small duplication, low cost).
+    // Fetch profile + plansMap once and apply tier-based permissions
+    // BEFORE any tab content can render. Free users must never see
+    // locked content un-overlaid, even briefly. profile fetched here
+    // is shared with initProfileTab/initProfileForm later (they
+    // re-fetch internally because they're stable functions — small
+    // duplication, low cost).
+    //
+    // plansMap feeds the lock overlay's CTA composition (price + plan
+    // name come from public.plans, admin-managed). Use {fresh: true}
+    // for the overlay because seeing a stale price after admin edits
+    // would silently break the conversion funnel — not worth the
+    // 24h cache savings here. The dashboard plan card (initPlanCard)
+    // still uses the cache for its own render.
     //
     // If profile fetch fails (network blip, RLS issue), we log + apply
     // permissions with null profile (treats user as Free, locks everything
-    // gated). That's the safe default — better to over-lock briefly than
-    // expose paid features to a user whose profile we couldn't verify.
+    // gated). If plansMap fetch fails, the lock overlay's CTA falls
+    // back to "Upgrade to Essential" without a price — degraded but
+    // not broken. Both fallbacks logged.
     let earlyProfile = null;
     try {
       earlyProfile = await window.iboostAuth.getProfile();
     } catch (e) {
       console.error('[account] early profile fetch failed:', e);
     }
-    applyPermissions(earlyProfile);
+    let earlyPlansMap = null;
+    try {
+      if (window.iboostPlans) {
+        earlyPlansMap = await window.iboostPlans.getPlansMap({ fresh: true });
+      }
+    } catch (e) {
+      console.error('[account] early plans fetch failed:', e);
+    }
+    applyPermissions(earlyProfile, earlyPlansMap);
 
     // Email in top bar
     const emailEl = document.getElementById('user-email');

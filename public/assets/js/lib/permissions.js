@@ -260,17 +260,18 @@
   //   2. Generic per-tier fallback (when no per-feature pitch is defined)
   //
   // Structure of each pitch:
-  //   { title, body, cta }
+  //   { title, body }
   //
-  // Voice notes (matches plans-loader.js + pricing.html taglines):
+  // The CTA button text is composed at render-time by the caller using
+  // the recommended tier's plan.name and plan.price_usd / plan.price_cad
+  // from the plans table (admin-managed). This keeps prices and plan
+  // names dynamic — admin edits in Settings are reflected on the next
+  // page load. See account.js wrapWithLockOverlay for the composition.
+  //
+  // Voice notes for title + body (matches plans-loader.js taglines):
   //   - Action-oriented, verbs forward
   //   - Specific: name the feature, name the benefit
   //   - Not pushy: state what's there, let the user decide
-  //   - Concrete numbers when possible ("$15/mo", "monthly", "all 3 bureaus")
-  //
-  // The CTA button shows price for clarity ("$15/mo") rather than just
-  // "Upgrade to Essential" — matches the established pattern from the
-  // Welcome banner and pricing page.
 
   const LOCK_PITCHES = {
 
@@ -279,7 +280,6 @@
       essential: {
         title: 'Unlock your real credit dashboard',
         body: 'Real bureau reporting, monthly score updates, and personalized AI tips to grow your score faster.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
       // No 'complete' variant — credit.tab unlocks at Essential, so users
       // who already have Essential never see this overlay. If they did
@@ -294,54 +294,46 @@
       essential: {
         title: 'See your real score',
         body: 'Pull from Equifax, TransUnion, and Experian. See where you stand and how you\'re trending.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
     'credit.score_graph': {
       essential: {
         title: 'Track your score over time',
         body: '6-month trend graph with bureau-by-bureau breakdown. Watch your work pay off.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
     'credit.ai_tip': {
       essential: {
         title: 'Get personalized AI tips',
         body: 'A monthly tip from iBoost\'s AI based on your actual credit profile. Specific, actionable, no fluff.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
       complete: {
         title: 'Get unlimited AI guidance',
         body: 'On-demand AI tips whenever you need them. Ask questions about your credit, get specific advice tailored to your file.',
-        cta: 'Upgrade to Complete — $30/mo',
       },
     },
     'credit.action_items': {
       essential: {
         title: 'Know what to focus on',
         body: 'Each month iBoost shows you the 3 actions most likely to move your score — based on YOUR profile.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
     'credit.progress_card': {
       essential: {
         title: 'Track your tier progress',
         body: 'See exactly how far you are from Very Good (740+), Excellent (800+), and beyond.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
     'credit.utilization_card': {
       essential: {
         title: 'Watch your utilization',
         body: 'Real-time tracking of credit utilization across all your cards. The single biggest score lever you control.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
     'credit.recent_activity': {
       essential: {
         title: 'See your bureau activity',
         body: 'Real-time feed of score changes, payment reports, and credit events from all bureaus.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
 
@@ -350,7 +342,6 @@
       complete: {
         title: 'Get dispute help',
         body: 'iBoost helps you dispute errors on your credit report — pre-written letters, follow-up tracking, the works.',
-        cta: 'Upgrade to Complete — $30/mo',
       },
     },
 
@@ -361,7 +352,6 @@
       essential: {
         title: 'See offers matched to your score',
         body: 'Pre-approval checks based on your real credit profile. Soft pulls only — no impact on your score.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
 
@@ -370,7 +360,6 @@
       essential: {
         title: 'Auto-import your transactions',
         body: 'Connect your bank with Flinks. Transactions categorize automatically. No more typing every coffee purchase.',
-        cta: 'Upgrade to Essential — $15/mo',
       },
     },
   };
@@ -381,12 +370,10 @@
     essential: {
       title: 'Unlock with iBoost Essential',
       body: 'Real bureau reporting. Monthly score updates. Personalized AI guidance.',
-      cta: 'Upgrade to Essential — $15/mo',
     },
     complete: {
       title: 'Unlock with iBoost Complete',
       body: 'Everything in Essential, plus weekly score refresh, unlimited AI guidance, and dispute assistance.',
-      cta: 'Upgrade to Complete — $30/mo',
     },
   };
 

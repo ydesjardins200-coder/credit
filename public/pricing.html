@@ -770,14 +770,15 @@
           <div class="pricing-grid">
 
             <!-- ============= TIER 1: FREE ============= -->
-            <div class="pricing-card pricing-card-free">
-              <h3>Free</h3>
+            <div class="pricing-card pricing-card-free" data-plan-card="free">
+              <h3 data-plan-name>Free</h3>
               <div class="price-line">
-                <span class="price-amount">$0</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd>$0</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$0</span>
                 <span class="price-period">forever</span>
               </div>
-              <p class="pricing-tagline">Learn the system. Build the habits. Upgrade when you're ready.</p>
-              <ul>
+              <p class="pricing-tagline" data-plan-tagline>Learn the system. Build the habits. Upgrade when you're ready.</p>
+              <ul data-plan-perks>
                 <li>Full budget app (manual entry)</li>
                 <li>Complete education library</li>
                 <li>Manual score dashboard</li>
@@ -790,19 +791,19 @@
             </div>
 
             <!-- ============= TIER 2: ESSENTIAL (RECOMMENDED) ============= -->
-            <div class="pricing-card pricing-card-essential pricing-card-featured">
+            <div class="pricing-card pricing-card-essential pricing-card-featured" data-plan-card="essential">
               <span class="pricing-card-badge">Most popular</span>
-              <h3>iBoost Essential</h3>
+              <h3 data-plan-name>iBoost Essential</h3>
               <div class="price-line">
-                <span class="price-amount" data-currency="usd">$15</span>
-                <span class="price-amount" data-currency="cad" hidden>$20</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd>$15</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$20</span>
                 <span class="price-currency" data-currency="usd">USD</span>
                 <span class="price-currency" data-currency="cad" hidden>CAD</span>
                 <span class="price-period">/ month</span>
               </div>
-              <p class="pricing-tagline">Real credit work without the premium add-ons.</p>
-              <ul>
-                <li>$750 reported credit line<sup>4</sup></li>
+              <p class="pricing-tagline" data-plan-tagline>Real credit work without the premium add-ons.</p>
+              <ul data-plan-perks>
+                <li>$750 reported credit line</li>
                 <li>Monthly reporting to all major bureaus</li>
                 <li>Monthly score refresh</li>
                 <li>Budget app with goals &amp; smart transaction screening</li>
@@ -814,18 +815,18 @@
             </div>
 
             <!-- ============= TIER 3: COMPLETE ============= -->
-            <div class="pricing-card pricing-card-complete">
-              <h3>iBoost Complete</h3>
+            <div class="pricing-card pricing-card-complete" data-plan-card="complete">
+              <h3 data-plan-name>iBoost Complete</h3>
               <div class="price-line">
-                <span class="price-amount" data-currency="usd">$30</span>
-                <span class="price-amount" data-currency="cad" hidden>$40</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd>$30</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$40</span>
                 <span class="price-currency" data-currency="usd">USD</span>
                 <span class="price-currency" data-currency="cad" hidden>CAD</span>
                 <span class="price-period">/ month</span>
               </div>
-              <p class="pricing-tagline">Everything we offer. Maximum score-building velocity.</p>
-              <ul>
-                <li><strong>$2,000 reported credit line</strong><sup>4</sup></li>
+              <p class="pricing-tagline" data-plan-tagline>Everything we offer. Maximum score-building velocity.</p>
+              <ul data-plan-perks>
+                <li><strong>$2,000 reported credit line</strong></li>
                 <li>Monthly reporting to all major bureaus</li>
                 <li><strong>Weekly</strong> score refresh</li>
                 <li>Budget app with goals &amp; smart transaction screening</li>
@@ -840,9 +841,9 @@
           </div>
 
           <p class="pricing-disclaimer">
-            <sup>3</sup> Billed monthly. No credit check to sign up. Cancel
+            Billed monthly. No credit check to sign up. Cancel
             anytime — you only pay for months you use.
-            <sup>4</sup> Reported credit line sizes the tradeline iBoost adds
+            Reported credit line sizes the tradeline iBoost adds
             to your report. A larger line increases your total available
             credit, which can improve utilization-driven score factors faster.
             Actual score impact depends on your individual credit profile,
@@ -1211,6 +1212,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/auth.js" defer></script>
   <script src="/assets/js/header.js" defer></script>
+  <script src="/assets/js/plans-loader.js" defer></script>
   <script src="/assets/js/landing.js" defer></script>
   <script>
     // Footer year
