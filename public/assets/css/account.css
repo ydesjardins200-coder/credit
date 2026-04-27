@@ -3714,3 +3714,167 @@
   }
   .dash-danger-btn { justify-self: start; }
 }
+
+/* =======================================================================
+ * LOCK OVERLAY — tier-gated content cover
+ *
+ * Rendered over content that exists in the DOM but the user's tier
+ * doesn't unlock. Visually: blurred view of locked content + centered
+ * upgrade card.
+ *
+ * Designed to work at any container size — wraps a panel today
+ * (whole #panel-credit hidden behind the overlay), wraps individual
+ * cards in the future per-card mode (matrix doc Phase 2).
+ *
+ * MARKUP CONTRACT
+ *   <article class="dash-iblock-locked-host" data-feature="credit.tab">
+ *     <div class="dash-iblock-locked-content">
+ *       ...the locked content (gets blurred)...
+ *     </div>
+ *     <div class="dash-iblock-locked-overlay" data-recommended-tier="essential">
+ *       <h3>Unlock with iBoost Essential</h3>
+ *       <p>Real bureau reporting...</p>
+ *       <a href="/checkout.html?plan=essential" class="btn btn-primary">
+ *         Upgrade to Essential
+ *       </a>
+ *     </div>
+ *   </article>
+ *
+ * The host element MUST have position: relative for the overlay's
+ * absolute positioning to work. The .dash-iblock-locked-host class
+ * sets that up automatically.
+ * ======================================================================= */
+
+/* Host: positions the overlay absolutely on top of locked content.
+   The "iblock" prefix avoids collision with future .dash-locked utilities
+   that might appear elsewhere — this is the iBoost-block-locked pattern. */
+.dash-iblock-locked-host {
+  position: relative;
+  /* min-height ensures the overlay has somewhere to render even if the
+     locked content is short — prevents a visually empty lock state */
+  min-height: 320px;
+}
+
+/* The wrapped locked content. Blurred to suggest "there's something here"
+   without showing real-looking data. pointer-events: none prevents users
+   from interacting with the blurred content (clicking through to real
+   gauges, scrolling carousels behind the blur, etc.) */
+.dash-iblock-locked-content {
+  filter: blur(6px);
+  opacity: 0.5;
+  pointer-events: none;
+  /* user-select: none — can't double-click-select blurred text */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Forces stacking context so the overlay sits cleanly on top */
+  position: relative;
+  z-index: 0;
+}
+
+/* The overlay card itself. Absolutely positioned, centered both axes,
+   visually a clean white card with the upgrade pitch + CTA. */
+.dash-iblock-locked-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  /* Subtle gradient backdrop — softens the hard edge between the blurred
+     content underneath and the overlay card. Gives the lock state a
+     sense of depth without being too dark. */
+  background: linear-gradient(
+    to bottom,
+    rgba(248, 250, 252, 0.4) 0%,
+    rgba(248, 250, 252, 0.85) 50%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+}
+
+/* Inner card with content — this is what users actually look at. */
+.dash-iblock-locked-card {
+  max-width: 480px;
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-3);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+/* Lock icon — emerald accent so it reads as iBoost brand, not a
+   generic "denied" red. Aspirational, not punitive. */
+.dash-iblock-locked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2);
+}
+
+.dash-iblock-locked-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.dash-iblock-locked-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-fg);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.dash-iblock-locked-pitch {
+  font-size: 0.95rem;
+  color: var(--color-fg-soft);
+  line-height: 1.5;
+  margin: 0 0 var(--space-3) 0;
+}
+
+/* CTA button — uses existing .btn .btn-primary classes, but we ensure
+   it's full-width on small overlays */
+.dash-iblock-locked-cta {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* Optional secondary link — "See plan details" or similar. Less prominent. */
+.dash-iblock-locked-secondary {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.dash-iblock-locked-secondary:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+}
+
+/* Mobile: shrink overlay padding + card padding so the message
+   still fits on a 375px screen */
+@media (max-width: 640px) {
+  .dash-iblock-locked-host {
+    min-height: 280px;
+  }
+  .dash-iblock-locked-overlay {
+    padding: var(--space-2);
+  }
+  .dash-iblock-locked-card {
+    padding: var(--space-3) var(--space-2);
+  }
+  .dash-iblock-locked-title {
+    font-size: 1.1rem;
+  }
+  .dash-iblock-locked-pitch {
+    font-size: 0.9rem;
+  }
+}

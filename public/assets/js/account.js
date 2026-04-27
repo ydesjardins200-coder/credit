@@ -1021,6 +1021,135 @@
   }
 
   // ---------------------------------------------------------------------
+  // Permissions: tier-based feature gating
+  //
+  // Reads data-feature attributes on elements throughout account.html
+  // and applies the right state based on the user's plan via
+  // window.iboostPermissions:
+  //
+  //   'allowed'         -> leave element alone
+  //   'locked-visible'  -> wrap element children in lock-host structure,
+  //                        inject overlay with upgrade pitch
+  //   'hidden'          -> set element.hidden = true
+  //
+  // Lock pattern (matches dash-iblock-locked-* CSS in account.css):
+  //
+  //   <element data-feature="...">                    <-- becomes lock-host
+  //     <div class="dash-iblock-locked-content">      <-- wraps children
+  //       ...original children, blurred...
+  //     </div>
+  //     <div class="dash-iblock-locked-overlay">      <-- injected
+  //       <div class="dash-iblock-locked-card">
+  //         icon + title + body + CTA
+  //       </div>
+  //     </div>
+  //   </element>
+  //
+  // Idempotent: running this multiple times produces the same result.
+  // Does NOT re-wrap an element that's already wrapped.
+  // ---------------------------------------------------------------------
+
+  function applyPermissions(profile) {
+    if (!window.iboostPermissions) {
+      console.warn('[account] iboostPermissions missing — gating disabled');
+      return;
+    }
+    var els = document.querySelectorAll('[data-feature]');
+    els.forEach(function (el) {
+      var key = el.getAttribute('data-feature');
+      if (!key) return;
+      var access = window.iboostPermissions.canAccess(key, profile);
+      applyAccessToElement(el, key, access, profile);
+    });
+  }
+
+  function applyAccessToElement(el, featureKey, access, profile) {
+    if (access === 'allowed') {
+      // Make sure no leftover lock state from a previous render
+      removeLockOverlay(el);
+      el.removeAttribute('data-locked');
+      return;
+    }
+
+    if (access === 'hidden') {
+      removeLockOverlay(el);
+      el.hidden = true;
+      el.setAttribute('data-locked', 'hidden');
+      return;
+    }
+
+    if (access === 'locked-visible') {
+      // Don't double-wrap if we've already locked this element.
+      if (el.getAttribute('data-locked') === 'visible') return;
+
+      var pitch = window.iboostPermissions.getPitch(featureKey, profile);
+      if (!pitch) {
+        // No pitch defined (e.g. score-gated feature). Caller should
+        // handle these cases with custom rendering. For now, log and
+        // skip — better than rendering an empty overlay.
+        console.warn('[account] locked-visible but no pitch for:', featureKey);
+        return;
+      }
+      wrapWithLockOverlay(el, featureKey, pitch);
+      el.setAttribute('data-locked', 'visible');
+    }
+  }
+
+  function wrapWithLockOverlay(el, featureKey, pitch) {
+    // Move existing children into a content wrapper.
+    var content = document.createElement('div');
+    content.className = 'dash-iblock-locked-content';
+    while (el.firstChild) {
+      content.appendChild(el.firstChild);
+    }
+
+    // Build overlay card with pitch copy.
+    var recommendedTier = window.iboostPermissions.recommendedTier(featureKey, profile);
+    var overlay = document.createElement('div');
+    overlay.className = 'dash-iblock-locked-overlay';
+    if (recommendedTier) overlay.setAttribute('data-recommended-tier', recommendedTier);
+
+    overlay.innerHTML =
+      '<div class="dash-iblock-locked-card">' +
+        '<div class="dash-iblock-locked-icon" aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+            '<rect x="3" y="11" width="18" height="11" rx="2"/>' +
+            '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>' +
+          '</svg>' +
+        '</div>' +
+        '<h3 class="dash-iblock-locked-title">' + escapeHtml(pitch.title) + '</h3>' +
+        '<p class="dash-iblock-locked-pitch">' + escapeHtml(pitch.body) + '</p>' +
+        '<a href="/checkout.html?plan=' + encodeURIComponent(recommendedTier || 'essential') +
+            '" class="btn btn-primary dash-iblock-locked-cta">' +
+          escapeHtml(pitch.cta) +
+        '</a>' +
+        '<a href="/pricing.html" class="dash-iblock-locked-secondary">' +
+          'See what\'s included' +
+        '</a>' +
+      '</div>';
+
+    el.classList.add('dash-iblock-locked-host');
+    el.appendChild(content);
+    el.appendChild(overlay);
+  }
+
+  function removeLockOverlay(el) {
+    if (!el.classList.contains('dash-iblock-locked-host')) return;
+    // Unwrap: move content children back up, remove overlay
+    var content = el.querySelector(':scope > .dash-iblock-locked-content');
+    var overlay = el.querySelector(':scope > .dash-iblock-locked-overlay');
+    if (content) {
+      while (content.firstChild) {
+        el.insertBefore(content.firstChild, content);
+      }
+      content.remove();
+    }
+    if (overlay) overlay.remove();
+    el.classList.remove('dash-iblock-locked-host');
+  }
+
+  // ---------------------------------------------------------------------
   // Main init
   // ---------------------------------------------------------------------
 
@@ -1039,6 +1168,24 @@
     const user = session.user;
     const firstName = deriveFirstName(user);
     const initials = deriveInitials(user);
+
+    // Fetch profile once and apply tier-based permissions BEFORE any
+    // tab content can render. Free users must never see locked content
+    // un-overlaid, even briefly. profile fetched here is shared with
+    // initProfileTab/initProfileForm later (they re-fetch internally
+    // because they're stable functions — small duplication, low cost).
+    //
+    // If profile fetch fails (network blip, RLS issue), we log + apply
+    // permissions with null profile (treats user as Free, locks everything
+    // gated). That's the safe default — better to over-lock briefly than
+    // expose paid features to a user whose profile we couldn't verify.
+    let earlyProfile = null;
+    try {
+      earlyProfile = await window.iboostAuth.getProfile();
+    } catch (e) {
+      console.error('[account] early profile fetch failed:', e);
+    }
+    applyPermissions(earlyProfile);
 
     // Email in top bar
     const emailEl = document.getElementById('user-email');
