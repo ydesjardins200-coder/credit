@@ -375,7 +375,11 @@
         entry_date: e.entry_date,
         amount_cents: Math.round(e.amount_cents),
         note: e.note ? String(e.note).trim() : null,
-        source: 'csv',
+        // Must match the budget_entries_source_check constraint from
+        // migration 0016, which allows: 'manual', 'flinks', 'csv_import'.
+        // (Past-me named it 'csv_import' to leave room for future
+        // distinct sources like 'plaid_import' etc.)
+        source: 'csv_import',
       };
     });
 
