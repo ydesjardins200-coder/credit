@@ -3866,7 +3866,18 @@
     min-height: 280px;
   }
   .dash-iblock-locked-overlay {
-    padding: var(--space-2);
+    /* On mobile, the locked panel can be 1500px+ tall (cards stacked
+       vertically). With the default vertical centering, the overlay's
+       center lands well below the fold and users have to scroll to find
+       the upgrade pitch. Pin it to the top of the host instead, with
+       enough top padding to let the panel header (~80px) peek above —
+       this preserves the "preview what you're missing" effect while
+       guaranteeing the pitch is visible without scrolling. */
+    align-items: flex-start;
+    padding-top: 88px;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    padding-bottom: var(--space-2);
   }
   .dash-iblock-locked-card {
     padding: var(--space-3) var(--space-2);
