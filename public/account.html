@@ -959,12 +959,19 @@
           <h1>Your budget</h1>
           <p class="dash-panel-sub">Track spending and keep utilization in check</p>
         </div>
-        <button type="button" class="dash-month-select">
-          April 2026
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
+        <div class="dash-month-nav" role="navigation" aria-label="Month selector">
+          <button type="button" class="dash-month-arrow" data-budget-prev-month aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <span class="dash-month-label" data-budget-month-label aria-live="polite">April 2026</span>
+          <button type="button" class="dash-month-arrow" data-budget-next-month aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Summary row.
@@ -2021,9 +2028,12 @@
              clear message. -->
         <div class="add-entry-error" id="add-entry-error" hidden role="alert"></div>
 
-        <!-- Footer: Cancel + Save. Save is the primary action and is
-             disabled while submitting. -->
+        <!-- Footer: Delete (edit mode only) + Cancel + Save. Save is the
+             primary action. Delete only shows when editing an existing
+             entry; for new entries it's hidden. -->
         <div class="add-entry-footer">
+          <button type="button" class="btn btn-danger-text" id="add-entry-delete" hidden>Delete</button>
+          <div class="add-entry-footer-spacer"></div>
           <button type="button" class="btn btn-outline" data-add-entry-close>Cancel</button>
           <button type="submit" class="btn btn-primary" id="add-entry-submit">Save entry</button>
         </div>

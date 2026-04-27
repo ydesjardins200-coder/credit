@@ -1250,7 +1250,13 @@
   // Module-level state for the budget tab (so it's not re-fetched on
   // every activation).
   var budgetTabInitialized = false;
-  var budgetCurrentMonthIso = null; // Set on first init; user can change later
+  // Phase 5b — represents the month currently being viewed in the
+  // Budget tab. Defaults to the actual current month at boot. Mutated
+  // by prev/next buttons (wireBudgetMonthNav). All budget data fetches
+  // (initBudgetTab, refreshBudgetTab) use this instead of new Date()
+  // so the user can browse historical months. Add Entry modal also
+  // consults this to pick a sensible default date for the new entry.
+  var budgetCurrentMonth = new Date();
 
   /**
    * Initialize the Budget tab. Idempotent — safe to call multiple times,
@@ -1266,9 +1272,9 @@
       return;
     }
 
-    // Use today's date to determine the current month.
-    var today = new Date();
-    budgetCurrentMonthIso = window.iboostBudget.toMonthStart(today);
+    // Use budgetCurrentMonth (module-level state) so the prev/next
+    // navigation works. Defaults to today's date at module load,
+    // mutated by month nav buttons.
 
     // 1. Ensure the user has starter categories. Idempotent (only seeds
     // if user has zero categories). For a fresh Free user, this creates
@@ -1281,7 +1287,7 @@
     }
 
     // 2. Fetch entries + summary for the current month.
-    var summaryResult = await window.iboostBudget.getMonthSummary(today);
+    var summaryResult = await window.iboostBudget.getMonthSummary(budgetCurrentMonth);
     if (summaryResult.error) {
       console.error('[account] getMonthSummary failed:', summaryResult.error);
       renderBudgetError('Failed to load your budget data.');
@@ -1291,10 +1297,11 @@
     // 3. Fetch goals for current month (separate query because UI shows
     // them differently — and a user can have goals without entries, or
     // entries without goals).
-    var goalsResult = await window.iboostBudget.getGoalsForMonth(today);
+    var goalsResult = await window.iboostBudget.getGoalsForMonth(budgetCurrentMonth);
     var goals = goalsResult.error ? [] : goalsResult.data;
 
     // 4. Render everything.
+    renderBudgetMonthLabel();
     renderBudgetSummary(summaryResult.data.summary);
     renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
@@ -1307,6 +1314,9 @@
 
     // 6. Wire the "Manage" link → Phase 4 takeover view.
     wireBudgetManageCta();
+
+    // 7. Wire prev/next month navigation (Phase 5b)
+    wireBudgetMonthNav();
   }
 
   /**
@@ -1544,7 +1554,7 @@
       }
 
       html +=
-        '<div class="dash-tx">' +
+        '<div class="dash-tx" data-entry-id="' + escapeHtml(e.id) + '" tabindex="0" role="button" aria-label="Edit entry">' +
           '<div class="dash-tx-ico" style="background:' + iconBg + ';color:' + iconColor + ';font-size:1.2rem;">' +
             emoji +
           '</div>' +
@@ -1559,6 +1569,25 @@
     });
 
     container.innerHTML = html;
+
+    // Wire row clicks to open edit modal. Stash full entry data on
+    // the row's __entryData so we can pass it to the modal without
+    // re-fetching. Cheap and avoids a roundtrip.
+    var rows = container.querySelectorAll('[data-entry-id]');
+    rows.forEach(function (rowEl, idx) {
+      var entry = recent[idx];
+      if (!entry) return;
+      rowEl.__entryData = entry;
+      rowEl.addEventListener('click', function () {
+        openEditEntryModal(rowEl.__entryData);
+      });
+      rowEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openEditEntryModal(rowEl.__entryData);
+        }
+      });
+    });
   }
 
   /**
@@ -1595,6 +1624,7 @@
     categoriesLoaded: false,      // True after first openAddEntryModal()
     submitting: false,            // True between submit click and result
     lastSuggestion: null,         // Last suggested category name (for hint)
+    editingEntryId: null,         // null = add mode; entry id = edit mode (Phase 5a)
   };
 
   function wireAddEntryCta() {
@@ -1664,12 +1694,34 @@
       form.addEventListener('submit', handleAddEntrySubmit);
     }
 
+    // Delete button (Phase 5a) — only visible in edit mode. Click
+    // confirms with the user then deletes the entry.
+    var deleteBtn = document.getElementById('add-entry-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', handleDeleteEntry);
+    }
+
     // Trap focus inside modal when open (basic accessibility — full
     // focus trap with all focusable elements is overkill for this
     // 4-input form; ESC + click-out cover most cases).
   }
 
   async function openAddEntryModal() {
+    await openEntryModal(null);
+  }
+
+  // Open in edit mode, pre-filled with the given entry's data.
+  // Phase 5a — adds the ability to fix typos / change categories
+  // / correct dates on existing entries. The entry shape matches
+  // what getMonthSummary returns (with .category nested object).
+  async function openEditEntryModal(entry) {
+    if (!entry || !entry.id) return;
+    await openEntryModal(entry);
+  }
+
+  // Shared open implementation. entry===null → add mode; entry set →
+  // edit mode (pre-fills + shows Delete button + changes title).
+  async function openEntryModal(entry) {
     var modal = document.getElementById('add-entry-modal');
     if (!modal) return;
 
@@ -1685,15 +1737,67 @@
     if (hint) hint.hidden = true;
     addEntryModalState.lastSuggestion = null;
 
-    // Set date input to today
-    var dateInput = document.getElementById('add-entry-date');
-    if (dateInput) {
-      dateInput.value = todayIsoDate();
-    }
-
-    // Populate category dropdown if not already populated
+    // Populate category dropdown if not already populated. Must
+    // happen BEFORE we try to set the category value in edit mode.
     if (!addEntryModalState.categoriesLoaded) {
       await loadAddEntryCategories();
+    }
+
+    // Mode switch
+    var titleEl = document.getElementById('add-entry-title');
+    var submitBtn = document.getElementById('add-entry-submit');
+    var deleteBtn = document.getElementById('add-entry-delete');
+    var amountInput = document.getElementById('add-entry-amount');
+    var dateInput = document.getElementById('add-entry-date');
+    var categoryEl = document.getElementById('add-entry-category');
+    var noteEl = document.getElementById('add-entry-note');
+
+    if (entry) {
+      // EDIT mode
+      addEntryModalState.editingEntryId = entry.id;
+      if (titleEl) titleEl.textContent = 'Edit entry';
+      if (submitBtn) submitBtn.textContent = 'Save changes';
+      if (deleteBtn) deleteBtn.hidden = false;
+
+      // Pre-fill all fields. Amount is in cents; the input shows dollars.
+      if (amountInput) {
+        amountInput.value = (entry.amount_cents / 100).toFixed(2);
+      }
+      if (dateInput) {
+        dateInput.value = entry.entry_date;
+      }
+      if (categoryEl && entry.category_id) {
+        categoryEl.value = entry.category_id;
+      }
+      if (noteEl) {
+        noteEl.value = entry.note || '';
+      }
+    } else {
+      // ADD mode
+      addEntryModalState.editingEntryId = null;
+      if (titleEl) titleEl.textContent = 'Add entry';
+      if (submitBtn) submitBtn.textContent = 'Save entry';
+      if (deleteBtn) deleteBtn.hidden = true;
+      // Date default: if user is viewing the current month, default
+      // to today (most common case — logging today's spending). If
+      // they're viewing a past month (browsing for typo correction
+      // OR backfilling old expenses), default to the LAST day of
+      // that month so the entry shows in the view they're looking at.
+      if (dateInput) {
+        var now = new Date();
+        var sameMonth = budgetCurrentMonth.getFullYear() === now.getFullYear() &&
+                        budgetCurrentMonth.getMonth() === now.getMonth();
+        if (sameMonth) {
+          dateInput.value = todayIsoDate();
+        } else {
+          // Last day of viewed month: set day to 0 of NEXT month → returns last day
+          var lastDay = new Date(budgetCurrentMonth.getFullYear(), budgetCurrentMonth.getMonth() + 1, 0);
+          var y = lastDay.getFullYear();
+          var m = String(lastDay.getMonth() + 1).padStart(2, '0');
+          var d = String(lastDay.getDate()).padStart(2, '0');
+          dateInput.value = y + '-' + m + '-' + d;
+        }
+      }
     }
 
     // Show modal
@@ -1702,8 +1806,10 @@
     // Focus amount input. Small timeout because the modal animation
     // can interfere with focus on some browsers; 50ms is enough.
     setTimeout(function () {
-      var amountInput = document.getElementById('add-entry-amount');
-      if (amountInput) amountInput.focus();
+      if (amountInput) {
+        amountInput.focus();
+        if (entry) amountInput.select(); // edit mode: select text for easy retype
+      }
     }, 50);
 
     // Prevent body scroll while modal is open (mobile especially)
@@ -1715,6 +1821,9 @@
     if (!modal) return;
     modal.setAttribute('hidden', '');
     document.body.style.overflow = '';
+    // Reset edit-mode state so next open is a clean add (unless
+    // openEditEntryModal is called again, which sets it).
+    addEntryModalState.editingEntryId = null;
   }
 
   // Format a Date as YYYY-MM-DD in local time. The browser-native
@@ -1868,28 +1977,38 @@
       return;
     }
 
+    // Branch on mode
+    var isEdit = !!addEntryModalState.editingEntryId;
+
     // All good — save.
     addEntryModalState.submitting = true;
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Saving…';
+      submitBtn.textContent = isEdit ? 'Saving…' : 'Saving…';
     }
 
-    var result = await window.iboostBudget.addEntry({
+    var payload = {
       category_id: categoryId,
       entry_date: dateStr,
       amount_cents: amountCents,
       note: noteEl ? noteEl.value.trim() : '',
-    });
+    };
+
+    var result;
+    if (isEdit) {
+      result = await window.iboostBudget.updateEntry(addEntryModalState.editingEntryId, payload);
+    } else {
+      result = await window.iboostBudget.addEntry(payload);
+    }
 
     addEntryModalState.submitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Save entry';
+      submitBtn.textContent = isEdit ? 'Save changes' : 'Save entry';
     }
 
     if (result.error) {
-      console.error('[account] addEntry error:', result.error);
+      console.error('[account] ' + (isEdit ? 'updateEntry' : 'addEntry') + ' error:', result.error);
       showAddEntryError(
         'Failed to save: ' + (result.error.message || 'Unknown error') + '. Please try again.'
       );
@@ -1904,6 +2023,46 @@
     //   - The new entry needs to appear in the recent-entries list
     // Doing a full re-fetch is simpler than 3 surgical updates and the
     // data is small (one DB query).
+    closeAddEntryModal();
+    refreshBudgetTab();
+  }
+
+  // Phase 5a — delete the entry currently being edited. Confirm
+  // first since this is destructive (entries are hard-deleted, unlike
+  // categories which are archived).
+  async function handleDeleteEntry() {
+    if (!addEntryModalState.editingEntryId) return;
+    if (addEntryModalState.submitting) return;
+
+    var ok = window.confirm(
+      'Delete this entry?\n\n' +
+      'This is permanent. The entry will be removed from your records.'
+    );
+    if (!ok) return;
+
+    addEntryModalState.submitting = true;
+    var deleteBtn = document.getElementById('add-entry-delete');
+    if (deleteBtn) {
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting…';
+    }
+
+    var result = await window.iboostBudget.deleteEntry(addEntryModalState.editingEntryId);
+
+    addEntryModalState.submitting = false;
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = 'Delete';
+    }
+
+    if (result.error) {
+      console.error('[account] deleteEntry error:', result.error);
+      showAddEntryError(
+        'Failed to delete: ' + (result.error.message || 'Unknown error') + '. Please try again.'
+      );
+      return;
+    }
+
     closeAddEntryModal();
     refreshBudgetTab();
   }
@@ -1929,16 +2088,16 @@
   async function refreshBudgetTab() {
     if (!window.iboostBudget) return;
 
-    var today = new Date();
-    var summaryResult = await window.iboostBudget.getMonthSummary(today);
+    var summaryResult = await window.iboostBudget.getMonthSummary(budgetCurrentMonth);
     if (summaryResult.error) {
       console.error('[account] refresh getMonthSummary error:', summaryResult.error);
       return;
     }
 
-    var goalsResult = await window.iboostBudget.getGoalsForMonth(today);
+    var goalsResult = await window.iboostBudget.getGoalsForMonth(budgetCurrentMonth);
     var goals = goalsResult.error ? [] : goalsResult.data;
 
+    renderBudgetMonthLabel();
     renderBudgetSummary(summaryResult.data.summary);
     renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
@@ -1948,6 +2107,65 @@
     // populated render. wireAddEntryCta is idempotent.
     wireAddEntryCta();
     wireBudgetManageCta();
+    wireBudgetMonthNav();
+  }
+
+  // Phase 5b — render the month label ("April 2026") and update
+  // disabled state on prev/next arrows. Next is disabled when we're
+  // already viewing the current real-world month (no point in
+  // looking at a budget for the future).
+  function renderBudgetMonthLabel() {
+    var labelEl = document.querySelector('[data-budget-month-label]');
+    if (labelEl) {
+      labelEl.textContent = budgetCurrentMonth.toLocaleDateString('en-US', {
+        month: 'long', year: 'numeric'
+      });
+    }
+
+    var nextBtn = document.querySelector('[data-budget-next-month]');
+    if (nextBtn) {
+      var now = new Date();
+      var isFuture = budgetCurrentMonth.getFullYear() > now.getFullYear() ||
+        (budgetCurrentMonth.getFullYear() === now.getFullYear() &&
+         budgetCurrentMonth.getMonth() >= now.getMonth());
+      nextBtn.disabled = isFuture;
+    }
+    // No "earliest month" check on prev button — users may have
+    // entries from any historical date. Could disable when fetching
+    // an empty month several times in a row, but that's noise. Keep
+    // simple.
+  }
+
+  // Wire the prev/next month buttons. Idempotent — safe to call from
+  // both initBudgetTab and refreshBudgetTab.
+  function wireBudgetMonthNav() {
+    var prevBtn = document.querySelector('[data-budget-prev-month]');
+    var nextBtn = document.querySelector('[data-budget-next-month]');
+
+    if (prevBtn && prevBtn.getAttribute('data-cta-wired') !== 'true') {
+      prevBtn.setAttribute('data-cta-wired', 'true');
+      prevBtn.addEventListener('click', function () {
+        // Step backwards by one month. setMonth handles year boundaries
+        // automatically (Jan -> Dec previous year).
+        var d = new Date(budgetCurrentMonth);
+        d.setDate(1); // avoid edge cases like Mar 31 → Feb 31 → Mar 3
+        d.setMonth(d.getMonth() - 1);
+        budgetCurrentMonth = d;
+        refreshBudgetTab();
+      });
+    }
+
+    if (nextBtn && nextBtn.getAttribute('data-cta-wired') !== 'true') {
+      nextBtn.setAttribute('data-cta-wired', 'true');
+      nextBtn.addEventListener('click', function () {
+        if (nextBtn.disabled) return;
+        var d = new Date(budgetCurrentMonth);
+        d.setDate(1);
+        d.setMonth(d.getMonth() + 1);
+        budgetCurrentMonth = d;
+        refreshBudgetTab();
+      });
+    }
   }
 
   // ---------------------------------------------------------------------

@@ -4633,3 +4633,139 @@
     margin-top: 4px;
   }
 }
+
+/* ===========================================================
+   Phase 5a: Edit/delete entries
+   ===========================================================
+   Recent entries rows are now clickable — opens the Add Entry
+   modal in edit mode (pre-filled with entry values + Delete
+   button). Subtle hover state cues users that rows are
+   interactive.
+
+   Modal footer gets a Delete button (left-aligned, danger
+   color). Hidden for "add new entry" flow; shown for edit.
+   =========================================================== */
+
+/* Make entry rows feel clickable */
+.dash-tx[data-entry-id] {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+.dash-tx[data-entry-id]:hover {
+  background: var(--color-surface);
+}
+
+/* Modal footer: Delete on left, Cancel+Save on right.
+   We use a flex spacer to push the right group all the way over,
+   keeping Delete visually separated from the action pair. */
+.add-entry-footer-spacer {
+  flex: 1;
+}
+
+/* Danger-text button — used for Delete in the edit modal.
+   Looks like a tertiary action (text only) until hover, where
+   it shows it's destructive. */
+.btn-danger-text {
+  background: transparent;
+  border: none;
+  color: #b91c1c;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  font-family: inherit;
+  font-size: inherit;
+}
+.btn-danger-text:hover {
+  background: #fef2f2;
+}
+.btn-danger-text:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile: Delete button stacks at the top of the column-reverse
+   footer. We want it to STAY at the top (= visually below Save+
+   Cancel since the column is reversed) but NOT take full width
+   like the primary buttons — looks weird if a destructive action
+   is as visually loud as the primary one. */
+@media (max-width: 640px) {
+  .add-entry-footer-spacer {
+    display: none; /* no need on mobile column layout */
+  }
+  .btn-danger-text {
+    width: auto;
+    align-self: center;
+    margin-top: 8px;
+  }
+}
+
+/* ===========================================================
+   Phase 5b: Multi-month navigation
+   ===========================================================
+   Replaces the previous static "April 2026 ▾" button with a
+   prev/next nav. Clean, fast, mobile-friendly.
+
+   Future enhancement: clicking the month label could open a
+   12-month picker dropdown for jumping further back. Out of
+   scope for v1.
+   =========================================================== */
+
+.dash-month-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.dash-month-arrow {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--color-fg);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  padding: 0;
+}
+.dash-month-arrow:not(:disabled):hover {
+  background: #ffffff;
+  color: var(--color-fg);
+}
+.dash-month-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.dash-month-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dash-month-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  padding: 0 12px;
+  min-width: 110px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .dash-month-label {
+    font-size: 0.85rem;
+    min-width: 95px;
+    padding: 0 8px;
+  }
+  .dash-month-arrow {
+    width: 36px;
+    height: 36px; /* bigger touch target */
+  }
+}
