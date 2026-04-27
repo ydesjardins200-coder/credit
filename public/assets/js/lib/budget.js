@@ -40,27 +40,32 @@
   // ----- Internal helpers -----
 
   /**
-   * Get the authenticated supabase client. Returns null if auth isn't
-   * ready or user isn't logged in. Callers should check.
+   * Get the authenticated supabase client + userId. Waits for auth
+   * to finish bootstrapping (sessionBootReady) before returning, so
+   * callers can fire this before init() has finished racing through
+   * requireCompleteProfile().
    *
-   * Why a helper: account.js's auth flow can be racy at page-load time.
-   * Centralizing this check means we get the same fail-fast behavior
-   * everywhere instead of scattered null checks.
+   * Why a helper: the Budget tab init can fire from two places:
+   *   1. activateTab('budget') triggered by DOMContentLoaded if URL
+   *      has ?tab=budget (BEFORE init() awaits requireCompleteProfile)
+   *   2. init() itself, after auth is ready
+   * Path 1 races the auth boot. Using getSessionSettled() makes the
+   * race safe by parking until session resolution settles.
+   *
+   * iboostAuth API contract (from public/assets/js/auth.js):
+   *   - window.iboostAuth.client                — the Supabase client (PROPERTY)
+   *   - window.iboostAuth.getSessionSettled()   — async, waits for boot, returns { session }
    */
   async function getClient() {
-    if (!window.iboostAuth || !window.iboostAuth.getClient) {
+    if (!window.iboostAuth || !window.iboostAuth.client || !window.iboostAuth.getSessionSettled) {
       console.warn('[budget] iboostAuth not ready');
       return { client: null, userId: null, error: new Error('auth not initialized') };
     }
-    const client = window.iboostAuth.getClient();
-    if (!client) {
-      return { client: null, userId: null, error: new Error('no supabase client') };
+    const { session } = await window.iboostAuth.getSessionSettled();
+    if (!session || !session.user) {
+      return { client: null, userId: null, error: new Error('not authenticated') };
     }
-    const { data: { user }, error: userErr } = await client.auth.getUser();
-    if (userErr || !user) {
-      return { client: null, userId: null, error: userErr || new Error('not authenticated') };
-    }
-    return { client: client, userId: user.id, error: null };
+    return { client: window.iboostAuth.client, userId: session.user.id, error: null };
   }
 
   /**
