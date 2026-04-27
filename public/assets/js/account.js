@@ -935,13 +935,44 @@
       }).join('');
     }
 
-    // Change plan -> /checkout.html with current plan pre-selected + mode=change
+    // Change/Upgrade plan button — content + destination differs by tier.
+    //
+    // Free users see "Upgrade plan" with an upward-arrow icon, linking
+    // directly to the Essential checkout (the recommended next tier).
+    // The visual emphasis matches the matrix doc's intent: Profile is
+    // identical for all tiers, but Free's upgrade pathway is the most
+    // important conversion surface in the dashboard, so the CTA is
+    // tuned to feel like a meaningful action.
+    //
+    // Paid users see "Change plan" without an icon, linking to checkout
+    // with mode=change so they can switch tiers (or downgrade). The
+    // mode=change query param tells checkout.html to render the
+    // "switching plans" flow rather than the new-signup flow.
     if (changeBtn) {
-      changeBtn.textContent = 'Change plan';
-      changeBtn.addEventListener('click', function () {
-        window.location.href = '/checkout.html?plan=' +
-          encodeURIComponent(plan) + '&mode=change';
-      });
+      var isFree = plan === 'free';
+
+      if (isFree) {
+        // Free user: upgrade-styled button with arrow icon
+        changeBtn.classList.add('dash-plan-cta-upgrade');
+        changeBtn.innerHTML =
+          '<span>Upgrade plan</span>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+                'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" ' +
+                'aria-hidden="true" class="dash-plan-cta-icon">' +
+            '<line x1="5" y1="12" x2="19" y2="12"/>' +
+            '<polyline points="12 5 19 12 12 19"/>' +
+          '</svg>';
+        changeBtn.addEventListener('click', function () {
+          window.location.href = '/checkout.html?plan=essential';
+        });
+      } else {
+        // Paid user: standard "Change plan" CTA
+        changeBtn.textContent = 'Change plan';
+        changeBtn.addEventListener('click', function () {
+          window.location.href = '/checkout.html?plan=' +
+            encodeURIComponent(plan) + '&mode=change';
+        });
+      }
     }
 
     // View plan history — lazy-load on first click, toggle after that.
