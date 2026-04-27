@@ -277,10 +277,9 @@
     const onfileCountry = document.getElementById('profile-onfile-country');
     const country = (profile && profile.country) || null;
     if (onfileCountry) {
-      onfileCountry.textContent =
-        country === 'CA' ? '🇨🇦 Canada' :
-        country === 'US' ? '🇺🇸 United States' :
-        'Country not set';
+      onfileCountry.textContent = country
+        ? window.iboostLocale.getDisplayLabel(country)
+        : 'Country not set';
     }
 
     // 3. Already complete? Show success, hide form, we're done.
@@ -291,23 +290,18 @@
     }
 
     // 4. Country-aware labels + DOB max date
+    // Pulls labels and placeholders from iboostLocale (CA defaults if null).
     const regionLabel = document.getElementById('profile-form-address-region-label');
     const postalLabel = document.getElementById('profile-form-address-postal-label');
     const regionInput = document.getElementById('profile-form-address-region');
     const postalInput = document.getElementById('profile-form-address-postal');
 
-    if (country === 'US') {
-      if (regionLabel) regionLabel.textContent = 'State';
-      if (postalLabel) postalLabel.textContent = 'ZIP code';
-      if (regionInput) regionInput.placeholder = 'NY';
-      if (postalInput) postalInput.placeholder = '10001';
-    } else {
-      // CA is the default
-      if (regionLabel) regionLabel.textContent = 'Province';
-      if (postalLabel) postalLabel.textContent = 'Postal code';
-      if (regionInput) regionInput.placeholder = 'QC';
-      if (postalInput) postalInput.placeholder = 'H3Z 2Y7';
-    }
+    const labels = window.iboostLocale.getAddressLabels(country);
+    const placeholders = window.iboostLocale.getAddressPlaceholders(country);
+    if (regionLabel) regionLabel.textContent = labels.region;
+    if (postalLabel) postalLabel.textContent = labels.postal;
+    if (regionInput) regionInput.placeholder = placeholders.region;
+    if (postalInput) postalInput.placeholder = placeholders.postal;
 
     // DOB max = today (ISO). Prevents picking future dates in the picker.
     const dobInput = document.getElementById('profile-form-dob');
@@ -444,10 +438,10 @@
       if (!vals.address_line1) return showErr('Please enter your street address.');
       if (!vals.address_city) return showErr('Please enter your city.');
       if (!/^[A-Za-z]{2}$/.test(vals.address_region)) {
+        const regionLabelLower = window.iboostLocale.getAddressLabels(country).region.toLowerCase();
+        const regionExample = window.iboostLocale.getAddressPlaceholders(country).region;
         return showErr(
-          country === 'US'
-            ? 'Please enter your 2-letter state code (e.g. NY).'
-            : 'Please enter your 2-letter province code (e.g. QC).'
+          'Please enter your 2-letter ' + regionLabelLower + ' code (e.g. ' + regionExample + ').'
         );
       }
       if (!vals.address_postal) return showErr('Please enter your postal/ZIP code.');
