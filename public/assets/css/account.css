@@ -3778,9 +3778,21 @@
   inset: 0;
   z-index: 2;
   display: flex;
-  align-items: center;
+  /* Top-anchored alignment with a generous offset that lets the panel
+     header peek above the card. Reasoning:
+       - The locked panel can be taller than the viewport (especially on
+         laptops with shorter viewports). Center alignment lands the card
+         in the bottom third of the visible fold — below eye level.
+       - Pinning to the top with offset puts the card at natural reading
+         position AND preserves the "preview what you're missing" effect
+         (header strip remains visible above the card, blurred).
+       - The 160px offset roughly equals the dash-panel-head height (h1
+         + sub + plan pill row, ~120-140px) plus breathing room.
+       - Mobile uses a smaller offset (~88px) because mobile headers are
+         tighter — see @media (max-width: 640px) below. */
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--space-3);
+  padding: 160px var(--space-3) var(--space-3);
   /* Subtle gradient backdrop — softens the hard edge between the blurred
      content underneath and the overlay card. Gives the lock state a
      sense of depth without being too dark. */
@@ -3860,20 +3872,14 @@
 }
 
 /* Mobile: shrink overlay padding + card padding so the message
-   still fits on a 375px screen */
+   still fits on a 375px screen. Top-anchor is inherited from base
+   rule above; we just override with a smaller offset because mobile
+   headers are tighter than desktop. */
 @media (max-width: 640px) {
   .dash-iblock-locked-host {
     min-height: 280px;
   }
   .dash-iblock-locked-overlay {
-    /* On mobile, the locked panel can be 1500px+ tall (cards stacked
-       vertically). With the default vertical centering, the overlay's
-       center lands well below the fold and users have to scroll to find
-       the upgrade pitch. Pin it to the top of the host instead, with
-       enough top padding to let the panel header (~80px) peek above —
-       this preserves the "preview what you're missing" effect while
-       guaranteeing the pitch is visible without scrolling. */
-    align-items: flex-start;
     padding-top: 88px;
     padding-left: var(--space-2);
     padding-right: var(--space-2);
