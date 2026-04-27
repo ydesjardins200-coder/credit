@@ -323,6 +323,82 @@
   }
 
   /**
+   * Bulk insert multiple entries — used by CSV import (Phase 5d).
+   *
+   * Each entry is the same shape as addEntry's input. We batch-insert
+   * up to 500 rows per Supabase request to stay well under the 1000-row
+   * default limit. For larger imports we chunk transparently.
+   *
+   * source defaults to 'csv' (vs 'manual' for addEntry) so users can
+   * tell imported entries from typed ones if they ever query directly.
+   *
+   * Returns { data: insertedRows[], error, inserted: count }. Partial
+   * success: if chunk N fails, all rows up to N-1 are committed; rows
+   * from N onward are not. We surface the error and the count actually
+   * inserted so the UI can tell the user.
+   *
+   * @param {Array<{category_id, entry_date, amount_cents, note?}>} entries
+   */
+  async function addEntriesBatch(entries) {
+    const auth = await getClient();
+    if (auth.error) return { data: [], error: auth.error, inserted: 0 };
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return { data: [], error: new Error('addEntriesBatch: entries array required'), inserted: 0 };
+    }
+
+    // Validate every row before sending. If ANY row is malformed we
+    // refuse the whole batch — partial success on validation feels
+    // worse than no success (user has to figure out which rows worked).
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (!e || !e.category_id || !e.entry_date || typeof e.amount_cents !== 'number') {
+        return {
+          data: [],
+          error: new Error('addEntriesBatch: row ' + (i + 1) + ' missing required fields'),
+          inserted: 0,
+        };
+      }
+      if (e.amount_cents < 0) {
+        return {
+          data: [],
+          error: new Error('addEntriesBatch: row ' + (i + 1) + ' has negative amount_cents'),
+          inserted: 0,
+        };
+      }
+    }
+
+    const rows = entries.map(function (e) {
+      return {
+        user_id: auth.userId,
+        category_id: e.category_id,
+        entry_date: e.entry_date,
+        amount_cents: Math.round(e.amount_cents),
+        note: e.note ? String(e.note).trim() : null,
+        source: 'csv',
+      };
+    });
+
+    const CHUNK = 500;
+    const allInserted = [];
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const chunk = rows.slice(i, i + CHUNK);
+      const { data, error } = await auth.client
+        .from('budget_entries')
+        .insert(chunk)
+        .select('id');
+      if (error) {
+        return { data: allInserted, error: error, inserted: allInserted.length };
+      }
+      if (Array.isArray(data)) {
+        for (const row of data) allInserted.push(row);
+      }
+    }
+
+    return { data: allInserted, error: null, inserted: allInserted.length };
+  }
+
+  /**
    * Update an existing entry. All fields optional.
    *
    * @param {string} entryId
@@ -603,6 +679,7 @@
     // Entries
     getEntriesForMonth: getEntriesForMonth,
     addEntry: addEntry,
+    addEntriesBatch: addEntriesBatch,
     updateEntry: updateEntry,
     deleteEntry: deleteEntry,
 

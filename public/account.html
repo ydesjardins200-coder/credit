@@ -1035,6 +1035,7 @@
           <div class="dash-card-title-row">
             <h3 class="dash-card-title">Spending by category</h3>
             <div class="dash-card-actions">
+              <button type="button" class="dash-card-action-link" data-budget-import-cta>Import</button>
               <button type="button" class="dash-card-action-link" data-budget-manage-cta>Manage</button>
               <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
             </div>
@@ -2124,6 +2125,128 @@
     </div>
   </div>
 
+  <!-- ===========================================================
+       CSV Import modal (Phase 5d of Budget tab)
+       ===========================================================
+       Three-step flow inside one modal:
+
+         Step 1 — Upload: file picker + raw preview
+         Step 2 — Map columns: dropdowns to map date/amount/desc;
+                  parsed preview re-renders below
+         Step 3 — Review & commit: parsed entries with auto-suggested
+                  categories, checkboxes to skip rows, Import button
+
+       Wider card than Add Entry / Goal modals because CSV previews
+       need horizontal room. Reuses the same backdrop + animations.
+       =========================================================== -->
+  <div id="csv-import-modal" class="csv-import-modal" hidden role="dialog" aria-modal="true" aria-labelledby="csv-import-title">
+    <div class="add-entry-modal-backdrop" data-csv-import-backdrop></div>
+    <div class="csv-import-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-csv-import-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="csv-import-title" class="add-entry-modal-title">Import from CSV</h2>
+
+      <!-- Step indicator -->
+      <div class="csv-step-indicator">
+        <div class="csv-step is-active" data-csv-step-indicator="1"><span class="csv-step-num">1</span> Upload</div>
+        <div class="csv-step" data-csv-step-indicator="2"><span class="csv-step-num">2</span> Map columns</div>
+        <div class="csv-step" data-csv-step-indicator="3"><span class="csv-step-num">3</span> Review &amp; import</div>
+      </div>
+
+      <!-- ===== Step 1: Upload ===== -->
+      <div class="csv-step-body" data-csv-step="1">
+        <p class="csv-help">
+          Upload a CSV file from your bank or credit card statement.
+          Most banks let you export transactions as CSV — look for
+          "Export" or "Download" in your account history.
+        </p>
+        <p class="csv-help csv-help-secondary">
+          Your data stays in your browser until you confirm the import.
+          We'll show you exactly what gets added before saving anything.
+        </p>
+
+        <label class="csv-file-picker">
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" hidden>
+          <div class="csv-file-picker-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div class="csv-file-picker-text">
+            <strong>Choose a CSV file</strong>
+            <span>or drag and drop</span>
+          </div>
+        </label>
+
+        <div class="csv-file-info" id="csv-file-info" hidden>
+          <div class="csv-file-info-name" id="csv-file-info-name"></div>
+          <div class="csv-file-info-meta" id="csv-file-info-meta"></div>
+        </div>
+
+        <div class="add-entry-error" id="csv-import-error" hidden role="alert"></div>
+      </div>
+
+      <!-- ===== Step 2: Map columns ===== -->
+      <div class="csv-step-body" data-csv-step="2" hidden>
+        <p class="csv-help">
+          Tell us which columns hold the date, amount, and description.
+          We've made our best guess — adjust if anything looks wrong.
+        </p>
+
+        <div class="csv-mapping-grid">
+          <div class="add-entry-field">
+            <label for="csv-map-date" class="add-entry-label">Date column</label>
+            <select id="csv-map-date" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-amount" class="add-entry-label">Amount column</label>
+            <select id="csv-map-amount" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-description" class="add-entry-label">Description column</label>
+            <select id="csv-map-description" class="add-entry-input"></select>
+          </div>
+        </div>
+
+        <p class="csv-help csv-help-secondary">
+          Preview of the first 5 rows with your mapping applied:
+        </p>
+        <div class="csv-preview-table-wrap">
+          <table class="csv-preview-table" id="csv-mapping-preview"></table>
+        </div>
+      </div>
+
+      <!-- ===== Step 3: Review & commit ===== -->
+      <div class="csv-step-body" data-csv-step="3" hidden>
+        <p class="csv-help">
+          Review the entries below. Uncheck any rows you want to skip.
+          Categories were auto-suggested based on the description —
+          you can change them inline.
+        </p>
+
+        <div class="csv-review-summary" id="csv-review-summary"></div>
+
+        <div class="csv-preview-table-wrap">
+          <table class="csv-preview-table csv-review-table" id="csv-review-table"></table>
+        </div>
+      </div>
+
+      <!-- Footer: Back / Cancel + Next / Import -->
+      <div class="add-entry-footer">
+        <button type="button" class="btn btn-outline" id="csv-back-btn" hidden>← Back</button>
+        <div class="add-entry-footer-spacer"></div>
+        <button type="button" class="btn btn-outline" data-csv-import-close>Cancel</button>
+        <button type="button" class="btn btn-primary" id="csv-next-btn" disabled>Next: Map columns</button>
+      </div>
+    </div>
+  </div>
+
 
   <script>
     // Welcome banner from ?signup=success
@@ -2170,6 +2293,7 @@
   <script src="/assets/js/lib/budget-seed.js" defer></script>
   <script src="/assets/js/lib/merchant-categories.js" defer></script>
   <script src="/assets/js/lib/budget.js" defer></script>
+  <script src="/assets/js/lib/csv-import.js" defer></script>
   <script src="/assets/js/plans-loader.js" defer></script>
   <script src="/assets/js/account.js" defer></script>
 </body>

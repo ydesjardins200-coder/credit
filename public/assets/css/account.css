@@ -4856,3 +4856,280 @@
   font-size: 0.8rem;
   color: var(--color-muted);
 }
+
+/* ===========================================================
+   Phase 5d: CSV Import modal
+   ===========================================================
+   Wider variant of the Add Entry modal because we need to show
+   tabular CSV previews. Reuses the backdrop + animations from
+   .add-entry-modal so visual identity stays consistent.
+
+   3-step flow indicators at top, content per step, sticky footer.
+   =========================================================== */
+
+.csv-import-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  animation: addEntryModalFadeIn 0.18s ease-out;
+}
+
+.csv-import-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  animation: addEntryModalSlideUp 0.22s ease-out;
+}
+
+/* Step indicator at top of modal */
+.csv-step-indicator {
+  display: flex;
+  gap: 4px;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: 4px;
+  background: var(--color-surface);
+  border-radius: 10px;
+}
+.csv-step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  border-radius: 8px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.csv-step.is-active {
+  background: #ffffff;
+  color: var(--color-fg);
+  box-shadow: var(--shadow-sm);
+}
+.csv-step.is-done {
+  color: var(--color-accent-hover);
+}
+.csv-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.csv-step.is-active .csv-step-num {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+.csv-step.is-done .csv-step-num {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+
+.csv-step-body {
+  min-height: 240px;
+}
+
+.csv-help {
+  font-size: 0.9rem;
+  color: var(--color-fg-soft);
+  line-height: 1.5;
+  margin: 0 0 var(--space-2) 0;
+}
+.csv-help-secondary {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* Step 1: file picker */
+.csv-file-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: var(--space-4) var(--space-3);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  margin: var(--space-2) 0;
+}
+.csv-file-picker:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.csv-file-picker-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+}
+.csv-file-picker-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.csv-file-picker-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.csv-file-picker-text strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+.csv-file-picker-text span {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+/* Selected-file info card after upload */
+.csv-file-info {
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: var(--space-2);
+}
+.csv-file-info-name {
+  font-weight: 600;
+  color: var(--color-fg);
+  font-size: 0.9rem;
+}
+.csv-file-info-meta {
+  font-size: 0.8rem;
+  color: var(--color-fg-soft);
+  margin-top: 2px;
+}
+
+/* Step 2: column mapping grid */
+.csv-mapping-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .csv-mapping-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Preview tables (used in steps 2 and 3) */
+.csv-preview-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  margin-top: var(--space-1);
+}
+.csv-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.csv-preview-table th,
+.csv-preview-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-surface-2);
+  white-space: nowrap;
+}
+.csv-preview-table th {
+  background: var(--color-surface);
+  font-weight: 600;
+  color: var(--color-fg-soft);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.csv-preview-table tr:last-child td {
+  border-bottom: none;
+}
+.csv-preview-table tr.is-invalid td {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+.csv-preview-table tr.is-skipped {
+  opacity: 0.4;
+}
+.csv-preview-table tr.is-skipped td:not(:first-child) {
+  text-decoration: line-through;
+}
+
+/* Step 3: review summary */
+.csv-review-summary {
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: var(--space-2);
+  font-size: 0.9rem;
+  color: var(--color-fg-soft);
+}
+.csv-review-summary strong {
+  color: var(--color-fg);
+}
+
+/* Inline category select inside review table */
+.csv-review-table select {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #ffffff;
+  font-family: inherit;
+  max-width: 200px;
+}
+.csv-review-table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+/* Mobile pass for the modal */
+@media (max-width: 640px) {
+  .csv-import-modal {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .csv-import-modal-card {
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 90vh;
+    padding: var(--space-3) var(--space-2) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .csv-step {
+    font-size: 0.78rem;
+    padding: 6px 8px;
+  }
+  .csv-step-num {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+  }
+}

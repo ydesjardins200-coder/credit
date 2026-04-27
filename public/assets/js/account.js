@@ -1320,6 +1320,9 @@
 
     // 8. Wire "Set a new goal" CTA → Phase 5c goal modal
     wireBudgetGoalCta();
+
+    // 9. Wire "Import" CTA → Phase 5d CSV import modal
+    wireBudgetImportCta();
   }
 
   /**
@@ -2428,6 +2431,574 @@
     el.hidden = true;
   }
 
+  // ---------------------------------------------------------------------
+  // Phase 5d: CSV Import modal
+  //
+  // Three-step modal flow for importing transactions from a bank CSV:
+  //
+  //   Step 1 (Upload)   — file picker; reads + parses CSV via
+  //                       window.iboostCsv. Populates importState.
+  //   Step 2 (Mapping)  — three dropdowns map columns to date/amount/
+  //                       description. Auto-detects defaults via
+  //                       iboostCsv.autoDetectMapping. Live preview
+  //                       table of first 5 rows with parsing applied.
+  //   Step 3 (Review)   — full table of parsed rows with auto-suggested
+  //                       categories (via iboostMerchants), inline
+  //                       category overrides, skip checkboxes, final
+  //                       Import button. Calls iboostBudget.addEntriesBatch.
+  //
+  // State machine: importState.step (1|2|3). Next button is the only
+  // forward-progression input. Back goes step-1; never step+1.
+  // ---------------------------------------------------------------------
+
+  var importState = {
+    wired: false,
+    step: 1,
+    file: null,           // File object
+    rawText: '',          // CSV text content
+    headers: [],          // column names from CSV header row
+    rows: [],             // 2D array of data rows
+    mapping: { date: null, amount: null, description: null },
+    parsed: [],           // [{date, amount_cents, description, valid, error, category_id, skip}]
+    submitting: false,
+  };
+
+  function wireBudgetImportCta() {
+    var ctas = document.querySelectorAll('[data-budget-import-cta]');
+    ctas.forEach(function (btn) {
+      if (btn.getAttribute('data-cta-wired') === 'true') return;
+      btn.setAttribute('data-cta-wired', 'true');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openImportModal();
+      });
+    });
+
+    if (!importState.wired) {
+      wireImportModal();
+    }
+  }
+
+  function wireImportModal() {
+    var modal = document.getElementById('csv-import-modal');
+    if (!modal) {
+      console.warn('[account] csv-import-modal element not found');
+      return;
+    }
+    importState.wired = true;
+
+    // Close handlers
+    modal.querySelectorAll('[data-csv-import-close]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeImportModal();
+      });
+    });
+
+    var backdrop = modal.querySelector('[data-csv-import-backdrop]');
+    if (backdrop) backdrop.addEventListener('click', closeImportModal);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hasAttribute('hidden')) {
+        closeImportModal();
+      }
+    });
+
+    // File picker
+    var fileInput = document.getElementById('csv-file-input');
+    if (fileInput) {
+      fileInput.addEventListener('change', handleCsvFileChosen);
+    }
+
+    // Mapping dropdowns
+    ['csv-map-date', 'csv-map-amount', 'csv-map-description'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('change', handleMappingChange);
+    });
+
+    // Step navigation buttons
+    var nextBtn = document.getElementById('csv-next-btn');
+    var backBtn = document.getElementById('csv-back-btn');
+    if (nextBtn) nextBtn.addEventListener('click', handleImportNext);
+    if (backBtn) backBtn.addEventListener('click', handleImportBack);
+  }
+
+  function openImportModal() {
+    var modal = document.getElementById('csv-import-modal');
+    if (!modal) return;
+    resetImportState();
+    showImportStep(1);
+    modal.removeAttribute('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeImportModal() {
+    var modal = document.getElementById('csv-import-modal');
+    if (!modal) return;
+    modal.setAttribute('hidden', '');
+    document.body.style.overflow = '';
+  }
+
+  function resetImportState() {
+    importState.step = 1;
+    importState.file = null;
+    importState.rawText = '';
+    importState.headers = [];
+    importState.rows = [];
+    importState.mapping = { date: null, amount: null, description: null };
+    importState.parsed = [];
+    importState.submitting = false;
+
+    // Reset DOM bits
+    var fileInput = document.getElementById('csv-file-input');
+    if (fileInput) fileInput.value = '';
+    var fileInfo = document.getElementById('csv-file-info');
+    if (fileInfo) fileInfo.hidden = true;
+    hideImportError();
+    var nextBtn = document.getElementById('csv-next-btn');
+    if (nextBtn) {
+      nextBtn.disabled = true;
+      nextBtn.textContent = 'Next: Map columns';
+    }
+    var backBtn = document.getElementById('csv-back-btn');
+    if (backBtn) backBtn.hidden = true;
+  }
+
+  function showImportStep(step) {
+    importState.step = step;
+
+    // Toggle step bodies
+    [1, 2, 3].forEach(function (n) {
+      var body = document.querySelector('[data-csv-step="' + n + '"]');
+      if (body) {
+        if (n === step) body.removeAttribute('hidden');
+        else body.setAttribute('hidden', '');
+      }
+      var indicator = document.querySelector('[data-csv-step-indicator="' + n + '"]');
+      if (indicator) {
+        indicator.classList.toggle('is-active', n === step);
+        indicator.classList.toggle('is-done', n < step);
+      }
+    });
+
+    // Update buttons
+    var nextBtn = document.getElementById('csv-next-btn');
+    var backBtn = document.getElementById('csv-back-btn');
+
+    if (backBtn) backBtn.hidden = (step === 1);
+
+    if (nextBtn) {
+      if (step === 1) {
+        nextBtn.textContent = 'Next: Map columns';
+        nextBtn.disabled = !importState.file;
+      } else if (step === 2) {
+        nextBtn.textContent = 'Next: Review entries';
+        nextBtn.disabled = !isValidMapping();
+      } else if (step === 3) {
+        var keepCount = importState.parsed.filter(function (p) { return !p.skip && p.valid; }).length;
+        nextBtn.textContent = 'Import ' + keepCount + ' ' + (keepCount === 1 ? 'entry' : 'entries');
+        nextBtn.disabled = keepCount === 0 || importState.submitting;
+      }
+    }
+  }
+
+  // ----- Step 1: file chosen -----
+
+  function handleCsvFileChosen(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    hideImportError();
+
+    if (file.size > 5 * 1024 * 1024) {
+      showImportError('File too large (limit 5MB). Try splitting your export into smaller files.');
+      return;
+    }
+
+    importState.file = file;
+
+    var reader = new FileReader();
+    reader.onload = function () {
+      importState.rawText = reader.result;
+      var result = window.iboostCsv.parseCsv(importState.rawText);
+      if (result.error) {
+        showImportError('Couldn\'t read CSV: ' + result.error);
+        importState.file = null;
+        return;
+      }
+      importState.headers = result.headers;
+      importState.rows = result.rows;
+      importState.mapping = window.iboostCsv.autoDetectMapping(result.headers, result.rows);
+
+      // Show file info card
+      var info = document.getElementById('csv-file-info');
+      var nameEl = document.getElementById('csv-file-info-name');
+      var metaEl = document.getElementById('csv-file-info-meta');
+      if (info && nameEl && metaEl) {
+        nameEl.textContent = file.name;
+        metaEl.textContent = result.rows.length + ' rows · ' +
+          result.headers.length + ' columns · ' +
+          formatBytes(file.size);
+        info.hidden = false;
+      }
+
+      var nextBtn = document.getElementById('csv-next-btn');
+      if (nextBtn) nextBtn.disabled = false;
+    };
+    reader.onerror = function () {
+      showImportError('Couldn\'t read the file. Try again or use a different file.');
+    };
+    reader.readAsText(file);
+  }
+
+  function formatBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  // ----- Step 2: mapping -----
+
+  function isValidMapping() {
+    var m = importState.mapping;
+    return m.date != null && m.amount != null && m.description != null;
+  }
+
+  function populateMappingDropdowns() {
+    var headers = importState.headers;
+    var optsHtml = '<option value="">Choose a column…</option>' +
+      headers.map(function (h, i) {
+        return '<option value="' + i + '">' + escapeHtml(h) + '</option>';
+      }).join('');
+
+    ['csv-map-date', 'csv-map-amount', 'csv-map-description'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = optsHtml;
+    });
+
+    // Apply detected defaults
+    var dateEl = document.getElementById('csv-map-date');
+    var amtEl = document.getElementById('csv-map-amount');
+    var descEl = document.getElementById('csv-map-description');
+    if (dateEl && importState.mapping.date != null) dateEl.value = String(importState.mapping.date);
+    if (amtEl && importState.mapping.amount != null) amtEl.value = String(importState.mapping.amount);
+    if (descEl && importState.mapping.description != null) descEl.value = String(importState.mapping.description);
+  }
+
+  function handleMappingChange() {
+    var dateEl = document.getElementById('csv-map-date');
+    var amtEl = document.getElementById('csv-map-amount');
+    var descEl = document.getElementById('csv-map-description');
+    importState.mapping = {
+      date: dateEl && dateEl.value !== '' ? parseInt(dateEl.value, 10) : null,
+      amount: amtEl && amtEl.value !== '' ? parseInt(amtEl.value, 10) : null,
+      description: descEl && descEl.value !== '' ? parseInt(descEl.value, 10) : null,
+    };
+
+    renderMappingPreview();
+
+    var nextBtn = document.getElementById('csv-next-btn');
+    if (nextBtn) nextBtn.disabled = !isValidMapping();
+  }
+
+  function renderMappingPreview() {
+    var table = document.getElementById('csv-mapping-preview');
+    if (!table) return;
+
+    if (!isValidMapping()) {
+      table.innerHTML = '<tbody><tr><td style="text-align:center;color:#94a3b8;padding:24px;">Pick all three columns to see a preview.</td></tr></tbody>';
+      return;
+    }
+
+    var sample = importState.rows.slice(0, 5);
+    var html = '<thead><tr><th>Date</th><th>Amount</th><th>Description</th></tr></thead><tbody>';
+    sample.forEach(function (row) {
+      var parsed = window.iboostCsv.parseRow(row, importState.mapping);
+      if (parsed.valid) {
+        html += '<tr>' +
+          '<td>' + escapeHtml(parsed.date) + '</td>' +
+          '<td>' + window.iboostBudget.formatCents(parsed.amount_cents) + '</td>' +
+          '<td>' + escapeHtml(parsed.description) + '</td>' +
+        '</tr>';
+      } else {
+        html += '<tr class="is-invalid">' +
+          '<td colspan="3">' + escapeHtml(parsed.error || 'Invalid row') + '</td>' +
+        '</tr>';
+      }
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+  }
+
+  // ----- Step 3: review -----
+
+  async function buildReviewParsedRows() {
+    // Parse every row, then run merchant suggester on description to
+    // auto-pick a category. The suggester returns a category NAME — we
+    // need to resolve to category ID via getCategories.
+    var catsResult = await window.iboostBudget.getCategories({ includeArchived: false });
+    if (catsResult.error) {
+      showImportError('Couldn\'t load your categories: ' + catsResult.error.message);
+      return;
+    }
+    var cats = catsResult.data || [];
+    var byName = {};
+    cats.forEach(function (c) { byName[c.name.toLowerCase()] = c; });
+
+    // Need a fallback category in case suggester returns null OR the
+    // returned name doesn't match any of the user's categories. Use
+    // 'Other' (variable kind) if exists; otherwise first variable
+    // category; otherwise first category overall.
+    var fallback = null;
+    for (var i = 0; i < cats.length; i++) {
+      if (cats[i].name.toLowerCase() === 'other' || cats[i].name.toLowerCase() === 'other expense') {
+        fallback = cats[i]; break;
+      }
+    }
+    if (!fallback) {
+      for (var j = 0; j < cats.length; j++) {
+        if (cats[j].kind === 'variable') { fallback = cats[j]; break; }
+      }
+    }
+    if (!fallback && cats.length) fallback = cats[0];
+
+    importState.parsed = importState.rows.map(function (row) {
+      var p = window.iboostCsv.parseRow(row, importState.mapping);
+      if (!p.valid) {
+        return Object.assign({}, p, { category_id: null, skip: true });
+      }
+
+      // For amounts: bank exports often have negative values for
+      // outflows (expenses) and positive for inflows (income/refunds).
+      // Our schema requires amount_cents >= 0. We take the absolute
+      // value here. This means we LOSE the sign information — a paid
+      // refund will look like an expense unless the user reviews it.
+      // The auto-suggested category will use the description so the
+      // sign isn't critical for categorization. Documented limitation.
+      var positiveCents = Math.abs(p.amount_cents);
+
+      var suggested = null;
+      if (window.iboostMerchants && window.iboostMerchants.suggestCategory) {
+        suggested = window.iboostMerchants.suggestCategory(p.description);
+      }
+      var matched = suggested ? byName[String(suggested).toLowerCase()] : null;
+      var categoryId = matched ? matched.id : (fallback ? fallback.id : null);
+
+      return {
+        date: p.date,
+        amount_cents: positiveCents,
+        description: p.description,
+        valid: true,
+        error: null,
+        category_id: categoryId,
+        skip: false,
+      };
+    });
+  }
+
+  async function renderReviewTable() {
+    await buildReviewParsedRows();
+
+    var table = document.getElementById('csv-review-table');
+    var summary = document.getElementById('csv-review-summary');
+    if (!table || !summary) return;
+
+    var catsResult = await window.iboostBudget.getCategories({ includeArchived: false });
+    var cats = catsResult.data || [];
+
+    // Build category options once for reuse on every row
+    var KIND_ORDER = ['income', 'fixed', 'variable', 'discretionary', 'transfer'];
+    var KIND_LABELS = { income: 'Income', fixed: 'Fixed', variable: 'Variable', discretionary: 'Discretionary', transfer: 'Transfers' };
+    var byKind = {};
+    cats.forEach(function (c) { (byKind[c.kind] = byKind[c.kind] || []).push(c); });
+    var optionsHtml = '';
+    KIND_ORDER.forEach(function (k) {
+      var group = byKind[k];
+      if (!group || !group.length) return;
+      optionsHtml += '<optgroup label="' + escapeHtml(KIND_LABELS[k]) + '">';
+      group.forEach(function (c) {
+        var emoji = c.emoji ? c.emoji + ' ' : '';
+        optionsHtml += '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(emoji + c.name) + '</option>';
+      });
+      optionsHtml += '</optgroup>';
+    });
+
+    var validCount = importState.parsed.filter(function (p) { return p.valid; }).length;
+    var invalidCount = importState.parsed.length - validCount;
+
+    summary.innerHTML = '<strong>' + validCount + '</strong> rows ready to import' +
+      (invalidCount > 0 ? ' · <strong>' + invalidCount + '</strong> rows skipped (couldn\'t parse)' : '');
+
+    var html = '<thead><tr>' +
+      '<th style="width:40px;"><input type="checkbox" id="csv-review-toggle-all" checked aria-label="Toggle all"></th>' +
+      '<th>Date</th><th>Amount</th><th>Description</th><th>Category</th>' +
+    '</tr></thead><tbody>';
+
+    importState.parsed.forEach(function (p, idx) {
+      if (!p.valid) {
+        html += '<tr class="is-invalid">' +
+          '<td>—</td>' +
+          '<td colspan="4">Row ' + (idx + 1) + ': ' + escapeHtml(p.error || 'invalid') + '</td>' +
+        '</tr>';
+        return;
+      }
+      html += '<tr data-row-idx="' + idx + '"' + (p.skip ? ' class="is-skipped"' : '') + '>' +
+        '<td><input type="checkbox" data-csv-skip="' + idx + '"' + (p.skip ? '' : ' checked') + ' aria-label="Include row"></td>' +
+        '<td>' + escapeHtml(p.date) + '</td>' +
+        '<td>' + window.iboostBudget.formatCents(p.amount_cents) + '</td>' +
+        '<td title="' + escapeHtml(p.description) + '">' +
+          escapeHtml(truncate(p.description, 40)) +
+        '</td>' +
+        '<td><select data-csv-category="' + idx + '">' + optionsHtml + '</select></td>' +
+      '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+
+    // Set initial select values
+    importState.parsed.forEach(function (p, idx) {
+      if (!p.valid) return;
+      var sel = table.querySelector('[data-csv-category="' + idx + '"]');
+      if (sel && p.category_id) sel.value = p.category_id;
+    });
+
+    // Wire interactions on the table (delegated)
+    table.addEventListener('change', handleReviewTableChange);
+    table.addEventListener('click', handleReviewTableClick);
+
+    // Update Next button label
+    showImportStep(3);
+  }
+
+  function truncate(s, n) {
+    s = String(s || '');
+    return s.length > n ? s.substring(0, n - 1) + '…' : s;
+  }
+
+  function handleReviewTableChange(e) {
+    if (e.target.matches('[data-csv-skip]')) {
+      var idx = parseInt(e.target.getAttribute('data-csv-skip'), 10);
+      importState.parsed[idx].skip = !e.target.checked;
+      var row = e.target.closest('tr');
+      if (row) row.classList.toggle('is-skipped', importState.parsed[idx].skip);
+      updateImportNextLabel();
+    } else if (e.target.matches('[data-csv-category]')) {
+      var i = parseInt(e.target.getAttribute('data-csv-category'), 10);
+      importState.parsed[i].category_id = e.target.value;
+    } else if (e.target.id === 'csv-review-toggle-all') {
+      var on = e.target.checked;
+      importState.parsed.forEach(function (p, idx) {
+        if (!p.valid) return;
+        p.skip = !on;
+        var cb = document.querySelector('[data-csv-skip="' + idx + '"]');
+        if (cb) cb.checked = on;
+        var row = document.querySelector('tr[data-row-idx="' + idx + '"]');
+        if (row) row.classList.toggle('is-skipped', !on);
+      });
+      updateImportNextLabel();
+    }
+  }
+
+  function handleReviewTableClick(e) {
+    // Reserved for future row interactions; nothing for v1
+  }
+
+  function updateImportNextLabel() {
+    var nextBtn = document.getElementById('csv-next-btn');
+    if (!nextBtn) return;
+    var keep = importState.parsed.filter(function (p) { return !p.skip && p.valid; }).length;
+    nextBtn.textContent = 'Import ' + keep + ' ' + (keep === 1 ? 'entry' : 'entries');
+    nextBtn.disabled = keep === 0 || importState.submitting;
+  }
+
+  // ----- Navigation handlers -----
+
+  async function handleImportNext() {
+    if (importState.step === 1) {
+      // -> Step 2
+      populateMappingDropdowns();
+      renderMappingPreview();
+      showImportStep(2);
+    } else if (importState.step === 2) {
+      // -> Step 3
+      await renderReviewTable();
+      // showImportStep(3) is already called inside renderReviewTable
+    } else if (importState.step === 3) {
+      // Final import
+      await commitImport();
+    }
+  }
+
+  function handleImportBack() {
+    if (importState.step === 2) showImportStep(1);
+    else if (importState.step === 3) showImportStep(2);
+  }
+
+  async function commitImport() {
+    if (importState.submitting) return;
+
+    var toImport = importState.parsed
+      .filter(function (p) { return !p.skip && p.valid && p.category_id; })
+      .map(function (p) {
+        return {
+          category_id: p.category_id,
+          entry_date: p.date,
+          amount_cents: p.amount_cents,
+          note: p.description,
+        };
+      });
+
+    if (toImport.length === 0) {
+      showImportError('Nothing to import — pick at least one row.');
+      return;
+    }
+
+    importState.submitting = true;
+    var nextBtn = document.getElementById('csv-next-btn');
+    if (nextBtn) {
+      nextBtn.disabled = true;
+      nextBtn.textContent = 'Importing…';
+    }
+
+    var result = await window.iboostBudget.addEntriesBatch(toImport);
+    importState.submitting = false;
+
+    if (result.error) {
+      console.error('[account] addEntriesBatch error:', result.error);
+      showImportError(
+        (result.inserted > 0
+          ? 'Imported ' + result.inserted + ' rows before failing. '
+          : '') +
+        'Error: ' + (result.error.message || 'Unknown error') +
+        '. The remaining rows were not saved.'
+      );
+      if (nextBtn) {
+        nextBtn.disabled = false;
+        updateImportNextLabel();
+      }
+      return;
+    }
+
+    // Success. Close modal, refresh tab.
+    closeImportModal();
+    refreshBudgetTab();
+  }
+
+  function showImportError(msg) {
+    var el = document.getElementById('csv-import-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function hideImportError() {
+    var el = document.getElementById('csv-import-error');
+    if (!el) return;
+    el.textContent = '';
+    el.hidden = true;
+  }
+
   // Re-fetches budget data and re-renders the Budget tab. Called after
   // a successful entry save. Bypasses the budgetTabInitialized flag
   // (which prevents double-init on tab switching) — this is an
@@ -2456,6 +3027,7 @@
     wireBudgetManageCta();
     wireBudgetMonthNav();
     wireBudgetGoalCta();
+    wireBudgetImportCta();
   }
 
   // Phase 5b — render the month label ("April 2026") and update
