@@ -1317,6 +1317,9 @@
 
     // 7. Wire prev/next month navigation (Phase 5b)
     wireBudgetMonthNav();
+
+    // 8. Wire "Set a new goal" CTA → Phase 5c goal modal
+    wireBudgetGoalCta();
   }
 
   /**
@@ -1431,12 +1434,28 @@
     var container = document.querySelector('[data-budget-goals]');
     if (!card || !container) return;
 
+    card.style.display = '';
+
+    // Empty state — Phase 5c shows the card with an inviting CTA
+    // instead of hiding it. Discoverability matters: users can't
+    // create goals if they don't know goals exist.
     if (!goals || goals.length === 0) {
-      card.style.display = 'none';
+      container.innerHTML =
+        '<div class="dash-goals-empty">' +
+          '<div class="dash-goals-empty-title">No goals yet</div>' +
+          '<div class="dash-goals-empty-sub">' +
+            'Set monthly limits or savings targets to stay on track.' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="dash-new-goal" data-budget-add-goal-cta>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<line x1="12" y1="5" x2="12" y2="19"/>' +
+            '<line x1="5" y1="12" x2="19" y2="12"/>' +
+          '</svg>' +
+          ' Set your first goal' +
+        '</button>';
       return;
     }
-
-    card.style.display = '';
 
     // Build a per-category-id totals map from the summary for goal progress
     var totalsByCategory = {};
@@ -1475,7 +1494,7 @@
       var emoji = g.category && g.category.emoji ? g.category.emoji + ' ' : '';
 
       html +=
-        '<div class="dash-goal ' + statusClass + '">' +
+        '<div class="dash-goal ' + statusClass + '" data-goal-id="' + escapeHtml(g.id) + '" tabindex="0" role="button" aria-label="Edit goal">' +
           '<div class="dash-goal-head">' +
             '<div class="dash-goal-name">' + emoji + escapeHtml(catName) + '</div>' +
             '<div class="dash-goal-pct">' + statusText + '</div>' +
@@ -1499,6 +1518,24 @@
       '</button>';
 
     container.innerHTML = html;
+
+    // Phase 5c — wire goal rows to open edit modal. Stash full goal
+    // data on row's __goalData (same pattern as renderBudgetEntries).
+    var goalRows = container.querySelectorAll('[data-goal-id]');
+    goalRows.forEach(function (rowEl, idx) {
+      var goal = goals[idx];
+      if (!goal) return;
+      rowEl.__goalData = goal;
+      rowEl.addEventListener('click', function () {
+        openEditGoalModal(rowEl.__goalData);
+      });
+      rowEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openEditGoalModal(rowEl.__goalData);
+        }
+      });
+    });
   }
 
   /**
@@ -2081,6 +2118,316 @@
     el.hidden = true;
   }
 
+  // ---------------------------------------------------------------------
+  // Phase 5c: Goal modal
+  //
+  // Set / edit / delete monthly goals for a category. Lifecycle mirrors
+  // the Add Entry modal:
+  //
+  //   wireBudgetGoalCta()      — wires [data-budget-add-goal-cta] CTAs
+  //   wireGoalModal()          — sets up modal handlers (close, submit,
+  //                              delete, ESC). Runs once.
+  //   openAddGoalModal()       — opens in 'add new goal' mode
+  //   openEditGoalModal(g)     — opens pre-filled, shows Delete button
+  //   openGoalModal(g|null)    — shared open implementation
+  //   closeGoalModal()         — hides modal, resets state
+  //   handleGoalSubmit()       — validates + setGoal() (upsert) + refresh
+  //   handleGoalDelete()       — confirm + deleteGoal() + refresh
+  //
+  // Goals are scoped to budgetCurrentMonth — creating a goal while
+  // viewing March 2026 creates it for March 2026.
+  // ---------------------------------------------------------------------
+
+  var goalModalState = {
+    wired: false,
+    categoriesLoaded: false,
+    submitting: false,
+    editingGoalId: null,    // null = add mode; goal id = edit mode
+  };
+
+  function wireBudgetGoalCta() {
+    var ctas = document.querySelectorAll('[data-budget-add-goal-cta]');
+    ctas.forEach(function (btn) {
+      if (btn.getAttribute('data-cta-wired') === 'true') return;
+      btn.setAttribute('data-cta-wired', 'true');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openAddGoalModal();
+      });
+    });
+
+    if (!goalModalState.wired) {
+      wireGoalModal();
+    }
+  }
+
+  function wireGoalModal() {
+    var modal = document.getElementById('add-goal-modal');
+    if (!modal) {
+      console.warn('[account] add-goal-modal element not found');
+      return;
+    }
+    goalModalState.wired = true;
+
+    modal.querySelectorAll('[data-add-goal-close]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeGoalModal();
+      });
+    });
+
+    var backdrop = modal.querySelector('[data-add-goal-backdrop]');
+    if (backdrop) backdrop.addEventListener('click', closeGoalModal);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hasAttribute('hidden')) {
+        closeGoalModal();
+      }
+    });
+
+    var form = document.getElementById('add-goal-form');
+    if (form) form.addEventListener('submit', handleGoalSubmit);
+
+    var deleteBtn = document.getElementById('add-goal-delete');
+    if (deleteBtn) deleteBtn.addEventListener('click', handleGoalDelete);
+  }
+
+  async function openAddGoalModal() {
+    await openGoalModal(null);
+  }
+
+  async function openEditGoalModal(goal) {
+    if (!goal || !goal.id) return;
+    await openGoalModal(goal);
+  }
+
+  async function openGoalModal(goal) {
+    var modal = document.getElementById('add-goal-modal');
+    if (!modal) return;
+
+    var form = document.getElementById('add-goal-form');
+    if (form) form.reset();
+
+    hideGoalError();
+
+    // Categories load once per session
+    if (!goalModalState.categoriesLoaded) {
+      await loadGoalModalCategories();
+    }
+
+    var titleEl = document.getElementById('add-goal-title');
+    var submitBtn = document.getElementById('add-goal-submit');
+    var deleteBtn = document.getElementById('add-goal-delete');
+    var categoryEl = document.getElementById('add-goal-category');
+    var targetEl = document.getElementById('add-goal-target');
+
+    if (goal) {
+      // EDIT mode
+      goalModalState.editingGoalId = goal.id;
+      if (titleEl) titleEl.textContent = 'Edit goal';
+      if (submitBtn) submitBtn.textContent = 'Save changes';
+      if (deleteBtn) deleteBtn.hidden = false;
+      if (categoryEl && goal.category_id) categoryEl.value = goal.category_id;
+      if (targetEl) targetEl.value = (goal.target_cents / 100).toFixed(2);
+
+      // Set goal_type radio. The default is 'spend_under' (set in HTML),
+      // but we override based on saved value.
+      var typeRadios = document.querySelectorAll('input[name="goal_type"]');
+      typeRadios.forEach(function (r) {
+        r.checked = (r.value === goal.goal_type);
+      });
+    } else {
+      // ADD mode
+      goalModalState.editingGoalId = null;
+      if (titleEl) titleEl.textContent = 'Set goal';
+      if (submitBtn) submitBtn.textContent = 'Save goal';
+      if (deleteBtn) deleteBtn.hidden = true;
+      // Reset radio to default 'spend_under'
+      var defaultRadio = document.querySelector('input[name="goal_type"][value="spend_under"]');
+      if (defaultRadio) defaultRadio.checked = true;
+    }
+
+    modal.removeAttribute('hidden');
+    setTimeout(function () {
+      // Focus category select first since it's the most important pick.
+      // In edit mode it's already filled, but focusing still helps users
+      // re-orient.
+      if (categoryEl) categoryEl.focus();
+    }, 50);
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGoalModal() {
+    var modal = document.getElementById('add-goal-modal');
+    if (!modal) return;
+    modal.setAttribute('hidden', '');
+    document.body.style.overflow = '';
+    goalModalState.editingGoalId = null;
+  }
+
+  async function loadGoalModalCategories() {
+    var select = document.getElementById('add-goal-category');
+    if (!select) return;
+    if (!window.iboostBudget) {
+      select.innerHTML = '<option value="">Categories unavailable</option>';
+      return;
+    }
+
+    var result = await window.iboostBudget.getCategories({ includeArchived: false });
+    if (result.error) {
+      console.error('[account] getCategories error:', result.error);
+      select.innerHTML = '<option value="">Failed to load categories</option>';
+      return;
+    }
+
+    var cats = result.data || [];
+    if (!cats.length) {
+      select.innerHTML = '<option value="">No categories available</option>';
+      return;
+    }
+
+    // Group by kind, same as Add Entry modal
+    var KIND_ORDER = ['income', 'fixed', 'variable', 'discretionary', 'transfer'];
+    var KIND_LABELS = {
+      income: 'Income',
+      fixed: 'Fixed expenses',
+      variable: 'Variable expenses',
+      discretionary: 'Discretionary',
+      transfer: 'Transfers',
+    };
+
+    var byKind = {};
+    cats.forEach(function (c) {
+      if (!byKind[c.kind]) byKind[c.kind] = [];
+      byKind[c.kind].push(c);
+    });
+
+    var html = '<option value="">Choose a category…</option>';
+    KIND_ORDER.forEach(function (kind) {
+      var group = byKind[kind];
+      if (!group || !group.length) return;
+      html += '<optgroup label="' + escapeHtml(KIND_LABELS[kind]) + '">';
+      group.forEach(function (c) {
+        var emoji = c.emoji ? c.emoji + ' ' : '';
+        html += '<option value="' + escapeHtml(c.id) + '">' +
+          escapeHtml(emoji + c.name) + '</option>';
+      });
+      html += '</optgroup>';
+    });
+
+    select.innerHTML = html;
+    goalModalState.categoriesLoaded = true;
+  }
+
+  async function handleGoalSubmit(e) {
+    e.preventDefault();
+    if (goalModalState.submitting) return;
+
+    var categoryEl = document.getElementById('add-goal-category');
+    var targetEl = document.getElementById('add-goal-target');
+    var submitBtn = document.getElementById('add-goal-submit');
+
+    hideGoalError();
+
+    var categoryId = categoryEl ? categoryEl.value : '';
+    if (!categoryId) {
+      showGoalError('Pick a category.');
+      if (categoryEl) categoryEl.focus();
+      return;
+    }
+
+    var targetStr = targetEl ? targetEl.value : '';
+    var targetCents = window.iboostBudget.parseDollarsToCents(targetStr);
+    if (targetCents == null || targetCents <= 0) {
+      showGoalError('Enter a target amount greater than $0.');
+      if (targetEl) targetEl.focus();
+      return;
+    }
+
+    var typeRadio = document.querySelector('input[name="goal_type"]:checked');
+    var goalType = typeRadio ? typeRadio.value : 'spend_under';
+
+    var isEdit = !!goalModalState.editingGoalId;
+    goalModalState.submitting = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+    }
+
+    // setGoal is upsert — same call for both add and edit.
+    // Goal is scoped to budgetCurrentMonth (whichever month user is viewing).
+    var result = await window.iboostBudget.setGoal({
+      category_id: categoryId,
+      month: budgetCurrentMonth,
+      target_cents: targetCents,
+      goal_type: goalType,
+    });
+
+    goalModalState.submitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = isEdit ? 'Save changes' : 'Save goal';
+    }
+
+    if (result.error) {
+      console.error('[account] setGoal error:', result.error);
+      showGoalError('Failed to save: ' + (result.error.message || 'Unknown error') + '. Please try again.');
+      return;
+    }
+
+    closeGoalModal();
+    refreshBudgetTab();
+  }
+
+  async function handleGoalDelete() {
+    if (!goalModalState.editingGoalId) return;
+    if (goalModalState.submitting) return;
+
+    var ok = window.confirm(
+      'Delete this goal?\n\n' +
+      'You can always create a new one later.'
+    );
+    if (!ok) return;
+
+    goalModalState.submitting = true;
+    var deleteBtn = document.getElementById('add-goal-delete');
+    if (deleteBtn) {
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting…';
+    }
+
+    var result = await window.iboostBudget.deleteGoal(goalModalState.editingGoalId);
+
+    goalModalState.submitting = false;
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = 'Delete';
+    }
+
+    if (result.error) {
+      console.error('[account] deleteGoal error:', result.error);
+      showGoalError('Failed to delete: ' + (result.error.message || 'Unknown error') + '. Please try again.');
+      return;
+    }
+
+    closeGoalModal();
+    refreshBudgetTab();
+  }
+
+  function showGoalError(msg) {
+    var el = document.getElementById('add-goal-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function hideGoalError() {
+    var el = document.getElementById('add-goal-error');
+    if (!el) return;
+    el.textContent = '';
+    el.hidden = true;
+  }
+
   // Re-fetches budget data and re-renders the Budget tab. Called after
   // a successful entry save. Bypasses the budgetTabInitialized flag
   // (which prevents double-init on tab switching) — this is an
@@ -2108,6 +2455,7 @@
     wireAddEntryCta();
     wireBudgetManageCta();
     wireBudgetMonthNav();
+    wireBudgetGoalCta();
   }
 
   // Phase 5b — render the month label ("April 2026") and update

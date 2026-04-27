@@ -2041,6 +2041,89 @@
     </div>
   </div>
 
+  <!-- ===========================================================
+       Goal modal (Phase 5c of Budget tab)
+       ===========================================================
+       Set a monthly target for a category. Three goal types:
+         - spend_under  : "Stay under $300 on dining"
+         - save_at_least: "Save at least $500" (income/transfer)
+         - spend_exactly: rare — for fixed bills you want stable
+
+       Reuses the same modal styling as Add Entry. Pre-fills in
+       edit mode (clicking an existing goal). Delete button shown
+       in edit mode.
+       =========================================================== -->
+  <div id="add-goal-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="add-goal-title">
+    <div class="add-entry-modal-backdrop" data-add-goal-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-add-goal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="add-goal-title" class="add-entry-modal-title">Set goal</h2>
+      <form id="add-goal-form" class="add-entry-form" novalidate>
+
+        <!-- Category — required first because it constrains which
+             goal types make sense. spend_under for expense kinds,
+             save_at_least for income/transfer. -->
+        <div class="add-entry-field">
+          <label for="add-goal-category" class="add-entry-label">Category</label>
+          <select id="add-goal-category" name="category" class="add-entry-input" required>
+            <option value="">Loading categories…</option>
+          </select>
+        </div>
+
+        <!-- Goal type. Radio group for clarity. -->
+        <div class="add-entry-field">
+          <label class="add-entry-label">Goal type</label>
+          <div class="add-goal-type-group">
+            <label class="add-goal-type-option">
+              <input type="radio" name="goal_type" value="spend_under" checked>
+              <span class="add-goal-type-label">
+                <span class="add-goal-type-name">Spend under</span>
+                <span class="add-goal-type-desc">Stay below this amount this month</span>
+              </span>
+            </label>
+            <label class="add-goal-type-option">
+              <input type="radio" name="goal_type" value="save_at_least">
+              <span class="add-goal-type-label">
+                <span class="add-goal-type-name">Save at least</span>
+                <span class="add-goal-type-desc">Hit this savings/income target</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Target amount — same big input style as Add Entry -->
+        <div class="add-entry-amount-row">
+          <span class="add-entry-amount-prefix" aria-hidden="true">$</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="add-goal-target"
+            name="target"
+            class="add-entry-amount-input"
+            placeholder="0.00"
+            autocomplete="off"
+            required
+            aria-label="Target amount in dollars"
+          />
+        </div>
+
+        <div class="add-entry-error" id="add-goal-error" hidden role="alert"></div>
+
+        <div class="add-entry-footer">
+          <button type="button" class="btn btn-danger-text" id="add-goal-delete" hidden>Delete</button>
+          <div class="add-entry-footer-spacer"></div>
+          <button type="button" class="btn btn-outline" data-add-goal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="add-goal-submit">Save goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <script>
     // Welcome banner from ?signup=success

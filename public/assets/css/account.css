@@ -4769,3 +4769,90 @@
     height: 36px; /* bigger touch target */
   }
 }
+
+/* ===========================================================
+   Phase 5c: Goal modal + empty state
+   ===========================================================
+   Goal modal reuses .add-entry-modal styling (same surface,
+   same animation, same mobile bottom-sheet). Adds:
+     - .dash-goal[data-goal-id] clickable + hover
+     - .dash-goals-empty for the no-goals state inside the card
+     - .add-goal-type-group styled radio cards
+   =========================================================== */
+
+/* Make existing goal rows clickable to edit */
+.dash-goal[data-goal-id] {
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.dash-goal[data-goal-id]:hover {
+  background: var(--color-surface);
+}
+
+/* Empty state inside goals card. Sits above the "Set your first
+   goal" CTA. Friendly, inviting. */
+.dash-goals-empty {
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+.dash-goals-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  margin-bottom: 4px;
+}
+.dash-goals-empty-sub {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* Goal type radio group — styled as cards rather than bare radios.
+   Each option is a click target showing the type name + description
+   inline. Selected option gets accent border + tinted background. */
+.add-goal-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.add-goal-type-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  background: #ffffff;
+}
+.add-goal-type-option:hover {
+  border-color: var(--color-border-strong);
+}
+.add-goal-type-option input[type="radio"] {
+  margin-top: 3px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+  flex-shrink: 0;
+}
+/* When the radio is checked, highlight the parent label. We use
+   :has() — supported in all modern browsers. Falls back gracefully
+   in older ones (just no highlight). */
+.add-goal-type-option:has(input[type="radio"]:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.add-goal-type-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.add-goal-type-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+.add-goal-type-desc {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
