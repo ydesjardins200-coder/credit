@@ -1996,6 +1996,19 @@
     transfer: 'Savings + credit card payments',
   };
 
+  // Kind → color. Used for the colored dot in each group header in
+  // the manage view, and reusable for any future kind-based visual
+  // indicator (Phase 5 goals will likely want this too).
+  // Colors match the iBoost design palette and the existing
+  // dash-cat-dot color choices for visual continuity.
+  var BUDGET_KIND_COLORS = {
+    income:        '#16a34a', // green — money in
+    fixed:         '#2ECC71', // emerald — committed monthly bills
+    variable:      '#0891b2', // cyan — necessary but variable
+    discretionary: '#f59e0b', // amber — wants
+    transfer:      '#8b5cf6', // purple — savings/CC payments
+  };
+
   // Module-level flag — true if manage view is currently active.
   // Used by wireBudgetManageCta to know whether to re-wire
   // (idempotency check).
