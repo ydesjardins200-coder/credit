@@ -36,9 +36,19 @@ Bureau integrations — both reading (pulling user data INTO iBoost) and reporti
 - Compliance / FCRA / PIPEDA work
 - Bureau API integration in the admin
 
+### [`tier-feature-matrix.md`](./tier-feature-matrix.md)
+Per-tab, per-feature gating decisions for `/account.html`. Records what Free vs Essential vs Complete users see across all six dashboard tabs (Welcome, Credit, Offers, Budget, Education, Profile). Covers the hybrid gating model (some tabs always-visible, some visible-locked, some tier-adaptive content), implementation phases for the permissions module, and pre-defined per-feature gates ready for a future shift to per-card lock granularity.
+
+**Read this first** if you're working on:
+- The permissions module (`lib/permissions.js`)
+- Any tier-conditional behavior on `account.html`
+- Updating `pricing.html` plan promises (must stay aligned)
+- The Plan card in Profile / upgrade-flow UX
+- Adding/removing features from any plan tier
+
 ---
 
-## How the three documents relate
+## How the four documents relate
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -60,21 +70,31 @@ Bureau integrations — both reading (pulling user data INTO iBoost) and reporti
 │  User-facing tool that consumes both the data + the BRAIN's      │
 │  recommendations                                                  │
 └──────────────────────────────────────────────────────────────────┘
+                            │
+                            │ all surfaces gated by
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  tier-feature-matrix.md                                           │
+│  Which features each subscription tier unlocks                    │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-The bureau doc is the input/output layer. The BRAIN doc is the intelligence layer. The budget doc is the user-facing layer. Each is independently buildable but they share the underlying `financial_snapshots` table and Flinks ingestion pipeline.
+The first three docs describe **what we're building**. The matrix describes **who gets to see it**. Bureau → BRAIN → Budget is the value pipeline. The matrix is the commercial layer that turns that pipeline into three different product offerings.
 
 ---
 
-## Status as of April 24, 2026
+## Status as of April 27, 2026
 
 | Spec | Status | Phase 1 buildable today? |
 |---|---|---|
 | BRAIN architecture | ✅ Spec complete | ✅ Yes (rules engine + mocked snapshots, no external deps) |
 | Budget app vision | ✅ Spec complete | ❌ Gated on Flinks contract |
 | Bureau integration | ✅ Spec complete | ❌ Gated on bureau vendor selection |
+| Tier feature matrix | ✅ Decisions complete | ✅ Yes (permissions module + lock overlay component) |
 
-The BRAIN's Phase 1 is the next-most-actionable item — it can begin without any external integrations.
+The BRAIN's Phase 1 is still the most actionable spec-level item.
+
+The tier matrix is now the most actionable **product** item — building the permissions module is ~1 day of work and unlocks per-feature gating for everything that comes later.
 
 ---
 

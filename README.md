@@ -15,6 +15,7 @@ Architectural specs and product vision live in [`docs/`](./docs/README.md).
 - [BRAIN architecture](./docs/brain-architecture.md) — the monthly intelligence pipeline (rules engine + LLM polish)
 - [Budget app vision](./docs/budget-app-vision.md) — QuickBooks-style ledger model for the Budget tab
 - [Credit bureau integration](./docs/credit-bureau-integration.md) — reading + reporting paths with each bureau
+- [Tier feature matrix](./docs/tier-feature-matrix.md) — per-tab, per-feature gating decisions for Free / Essential / Complete
 
 See [`docs/README.md`](./docs/README.md) for an index and reading order.
 
