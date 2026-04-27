@@ -2371,6 +2371,8 @@
     var listEl = document.querySelector('[data-budget-manage-list]');
     if (!listEl) return;
 
+    console.log('[reorder] DEBUG start. catId=', catId, 'direction=', direction);
+
     // Re-fetch to get current state. Cheap, ensures correctness if
     // the user has been making rapid changes.
     var result = await window.iboostBudget.getCategories({ includeArchived: false });
@@ -2381,18 +2383,31 @@
 
     var cats = result.data || [];
     var current = cats.find(function (c) { return c.id === catId; });
-    if (!current) return;
+    if (!current) {
+      console.warn('[reorder] DEBUG: current category not found in fetch result');
+      return;
+    }
+    console.log('[reorder] DEBUG: current=', current.name, 'kind=', current.kind, 'display_order=', current.display_order);
 
     // Find siblings in same kind, sorted by display_order
     var siblings = cats
       .filter(function (c) { return c.kind === current.kind; })
       .sort(function (a, b) { return (a.display_order || 0) - (b.display_order || 0); });
 
+    console.log('[reorder] DEBUG: siblings (sorted)=',
+      siblings.map(function (s) { return s.name + '(order=' + s.display_order + ')'; }).join(', '));
+
     var idx = siblings.findIndex(function (c) { return c.id === catId; });
     var swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= siblings.length) return; // already at edge
+    console.log('[reorder] DEBUG: idx=', idx, 'swapIdx=', swapIdx);
+
+    if (swapIdx < 0 || swapIdx >= siblings.length) {
+      console.log('[reorder] DEBUG: at edge, no-op');
+      return;
+    }
 
     var swapWith = siblings[swapIdx];
+    console.log('[reorder] DEBUG: swapWith=', swapWith.name, 'display_order=', swapWith.display_order);
 
     // Swap their display_order values. Both must be unique enough not
     // to collide. We use the existing values directly.
@@ -2403,8 +2418,12 @@
     // sets all to spaced values, but a user could create a new category
     // with default 99 that ties with another), nudge them apart first.
     if (currentOrder === swapOrder) {
+      console.log('[reorder] DEBUG: same display_order, nudging apart');
       currentOrder = swapOrder + (direction === 'up' ? -1 : 1);
     }
+
+    console.log('[reorder] DEBUG: about to update', current.name, 'to display_order=', swapOrder);
+    console.log('[reorder] DEBUG: about to update', swapWith.name, 'to display_order=', currentOrder);
 
     // Two updates. We could parallelize via Promise.all but sequential
     // is safer if one fails (we won't end up with half-swapped state).
@@ -2414,14 +2433,19 @@
       alert('Failed to reorder: ' + (r1.error.message || 'Unknown error'));
       return;
     }
+    console.log('[reorder] DEBUG: r1 success, returned data=', r1.data);
+
     var r2 = await window.iboostBudget.updateCategory(swapWith.id, { display_order: currentOrder });
     if (r2.error) {
       console.error('[account] reorder updateCategory error (2):', r2.error);
       alert('Reorder partially failed. Refresh the page.');
       return;
     }
+    console.log('[reorder] DEBUG: r2 success, returned data=', r2.data);
 
+    console.log('[reorder] DEBUG: re-rendering view');
     await renderManageCategoriesView();
+    console.log('[reorder] DEBUG: re-render complete');
   }
 
   // Show an "add new category" row at the bottom of a kind group.
