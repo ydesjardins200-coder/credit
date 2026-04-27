@@ -946,6 +946,14 @@
     <!-- ===================== TAB 4: BUDGET ===================== -->
     <section class="dash-panel" id="panel-budget" role="tabpanel" aria-labelledby="tab-budget" data-tab-panel="budget" hidden>
 
+      <!-- ===========================================================
+           Budget tab — MAIN VIEW
+           ===========================================================
+           The default budget content: summary, categories, goals,
+           entries. Toggled via the `hidden` attribute by account.js
+           when user enters/exits the category-management view. -->
+      <div data-budget-main-view>
+
       <div class="dash-panel-head dash-panel-head-row">
         <div>
           <h1>Your budget</h1>
@@ -1019,7 +1027,10 @@
         <article class="dash-card">
           <div class="dash-card-title-row">
             <h3 class="dash-card-title">Spending by category</h3>
-            <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
+            <div class="dash-card-actions">
+              <button type="button" class="dash-card-action-link" data-budget-manage-cta>Manage</button>
+              <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
+            </div>
           </div>
           <!-- Container replaced by account.js initBudgetTab. Mock content
                below is shown until data resolves (~100ms typical) or as
@@ -1213,6 +1224,43 @@
 
         </div>
       </article>
+
+      </div><!-- /data-budget-main-view -->
+
+      <!-- ===========================================================
+           Budget tab — MANAGE CATEGORIES VIEW (Phase 4)
+           ===========================================================
+           Shown when user clicks [data-budget-manage-cta]. Replaces
+           the main view (full-screen takeover). "Back" button returns
+           to main view. account.js renderManageCategoriesView() fills
+           in the kind groups + category rows. -->
+      <div data-budget-manage-view hidden>
+
+        <div class="dash-panel-head dash-panel-head-row">
+          <div class="dash-manage-head">
+            <button type="button" class="dash-manage-back" data-budget-manage-back aria-label="Back to budget">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+              </svg>
+              <span>Back to budget</span>
+            </button>
+            <h1>Manage categories</h1>
+            <p class="dash-panel-sub">
+              Rename, reorder, or archive categories. Archived categories
+              hide from new entries but keep their spending history.
+            </p>
+          </div>
+        </div>
+
+        <!-- Container for the rendered kind-group sections. account.js
+             builds this dynamically from getCategories({includeArchived: true})
+             so users can also see archived categories grayed out. -->
+        <div class="dash-manage-list" data-budget-manage-list>
+          <p class="dash-manage-loading">Loading your categories…</p>
+        </div>
+
+      </div><!-- /data-budget-manage-view -->
 
     </section>
 

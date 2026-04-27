@@ -1304,6 +1304,9 @@
     // for now the CTA shows a "coming soon" toast or similar lightweight
     // indication.
     wireAddEntryCta();
+
+    // 6. Wire the "Manage" link → Phase 4 takeover view.
+    wireBudgetManageCta();
   }
 
   /**
@@ -1944,6 +1947,560 @@
     // Re-wire CTAs in case the empty-state CTA got replaced by the
     // populated render. wireAddEntryCta is idempotent.
     wireAddEntryCta();
+    wireBudgetManageCta();
+  }
+
+  // ---------------------------------------------------------------------
+  // Phase 4: Manage categories view
+  //
+  // Full-screen takeover within the Budget tab. Main view (summary +
+  // categories + goals + entries) hides; manage view (kind groups +
+  // category rows) shows. Back button reverses.
+  //
+  // Lifecycle:
+  //   wireBudgetManageCta()   — runs from initBudgetTab. Wires the
+  //                             "Manage" link to openManageView.
+  //                             Idempotent.
+  //   openManageView()        — toggles visibility, fetches categories
+  //                             (incl. archived), renders the list.
+  //   closeManageView()       — reverses + calls refreshBudgetTab so
+  //                             any rename/archive/reorder reflects
+  //                             in the main Budget view.
+  //   renderManageCategories  — builds the DOM for kind groups + rows.
+  //                             Called by openManageView and after any
+  //                             mutation (rename/archive/reorder/add).
+  //
+  // Per-row interactions wired by event delegation (single listener on
+  // the list container, dispatches based on data-* attributes on the
+  // clicked element). This avoids re-wiring 30+ listeners on every
+  // re-render after a mutation.
+  // ---------------------------------------------------------------------
+
+  // Display order for kind groups. Patrick's order: income at top
+  // (where money comes from), then fixed (what you must pay), then
+  // variable (necessary but flexes), then discretionary (wants), then
+  // transfers (financial moves, not consumption).
+  var MANAGE_KIND_ORDER = ['income', 'fixed', 'variable', 'discretionary', 'transfer'];
+  var MANAGE_KIND_LABELS = {
+    income: 'Income',
+    fixed: 'Fixed expenses',
+    variable: 'Variable expenses',
+    discretionary: 'Discretionary',
+    transfer: 'Transfers',
+  };
+  var MANAGE_KIND_DESCRIPTIONS = {
+    income: 'Money coming in',
+    fixed: 'Predictable monthly bills',
+    variable: 'Necessary but variable spending',
+    discretionary: 'Wants, not needs',
+    transfer: 'Savings + credit card payments',
+  };
+
+  // Module-level flag — true if manage view is currently active.
+  // Used by wireBudgetManageCta to know whether to re-wire
+  // (idempotency check).
+  var manageViewActive = false;
+  // True once event delegation is set up on the manage list container
+  var manageListWired = false;
+
+  function wireBudgetManageCta() {
+    var ctas = document.querySelectorAll('[data-budget-manage-cta]');
+    ctas.forEach(function (btn) {
+      if (btn.getAttribute('data-cta-wired') === 'true') return;
+      btn.setAttribute('data-cta-wired', 'true');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openManageView();
+      });
+    });
+
+    var backBtn = document.querySelector('[data-budget-manage-back]');
+    if (backBtn && backBtn.getAttribute('data-cta-wired') !== 'true') {
+      backBtn.setAttribute('data-cta-wired', 'true');
+      backBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeManageView();
+      });
+    }
+  }
+
+  async function openManageView() {
+    var mainView = document.querySelector('[data-budget-main-view]');
+    var manageView = document.querySelector('[data-budget-manage-view]');
+    if (!mainView || !manageView) return;
+
+    mainView.setAttribute('hidden', '');
+    manageView.removeAttribute('hidden');
+    manageViewActive = true;
+
+    // Render the list. This handles fetching categories.
+    await renderManageCategoriesView();
+  }
+
+  async function closeManageView() {
+    var mainView = document.querySelector('[data-budget-main-view]');
+    var manageView = document.querySelector('[data-budget-manage-view]');
+    if (!mainView || !manageView) return;
+
+    manageView.setAttribute('hidden', '');
+    mainView.removeAttribute('hidden');
+    manageViewActive = false;
+
+    // Refresh main view in case categories changed (rename/archive/
+    // reorder/add all affect the main category bars + recent entries
+    // category labels).
+    refreshBudgetTab();
+  }
+
+  async function renderManageCategoriesView() {
+    var listEl = document.querySelector('[data-budget-manage-list]');
+    if (!listEl) return;
+
+    if (!window.iboostBudget) {
+      listEl.innerHTML = '<p class="dash-manage-loading">Budget library not loaded.</p>';
+      return;
+    }
+
+    // Fetch ALL categories including archived. Users want to see what
+    // they archived (greyed out + striked through) — gives them context
+    // and makes the management feel honest.
+    var result = await window.iboostBudget.getCategories({ includeArchived: true });
+    if (result.error) {
+      console.error('[account] manage view getCategories error:', result.error);
+      listEl.innerHTML = '<p class="dash-manage-loading">Failed to load categories. Please refresh.</p>';
+      return;
+    }
+
+    var cats = result.data || [];
+
+    // Group by kind. Within each kind, sort by display_order then by
+    // is_archived (active first, archived at bottom of group).
+    var byKind = {};
+    cats.forEach(function (c) {
+      if (!byKind[c.kind]) byKind[c.kind] = [];
+      byKind[c.kind].push(c);
+    });
+    Object.keys(byKind).forEach(function (kind) {
+      byKind[kind].sort(function (a, b) {
+        if (a.is_archived !== b.is_archived) {
+          return a.is_archived ? 1 : -1;
+        }
+        return (a.display_order || 0) - (b.display_order || 0);
+      });
+    });
+
+    // Build the HTML. Empty groups (no categories of this kind) still
+    // get rendered — empty state inside the group with an Add button,
+    // so the user has a path to create their first category of that kind.
+    var html = MANAGE_KIND_ORDER.map(function (kind) {
+      var group = byKind[kind] || [];
+      var activeCount = group.filter(function (c) { return !c.is_archived; }).length;
+      var color = BUDGET_KIND_COLORS[kind] || '#94a3b8';
+
+      var groupHtml = '<section class="dash-manage-group" data-manage-kind="' + escapeHtml(kind) + '">' +
+        '<div class="dash-manage-group-head">' +
+          '<h3 class="dash-manage-group-title">' +
+            '<span class="dash-manage-group-dot" style="background:' + color + '"></span>' +
+            escapeHtml(MANAGE_KIND_LABELS[kind]) +
+            '<span class="dash-manage-group-count">· ' + activeCount + ' active' +
+              (group.length > activeCount ? ' · ' + (group.length - activeCount) + ' archived' : '') +
+            '</span>' +
+          '</h3>' +
+        '</div>' +
+        '<div class="dash-manage-group-body" data-manage-group-body>';
+
+      if (!group.length) {
+        groupHtml += '<div class="dash-manage-empty">No ' + escapeHtml(kind) + ' categories yet.</div>';
+      } else {
+        // Find the indices of first/last active rows in this group, so
+        // we can disable the up/down arrows correctly. Archived rows
+        // can't reorder.
+        var activeRows = group.filter(function (c) { return !c.is_archived; });
+        var firstActiveId = activeRows.length ? activeRows[0].id : null;
+        var lastActiveId = activeRows.length ? activeRows[activeRows.length - 1].id : null;
+
+        group.forEach(function (cat) {
+          groupHtml += renderManageRow(cat, firstActiveId, lastActiveId);
+        });
+      }
+
+      groupHtml += '<button type="button" class="dash-manage-add-btn" data-manage-add="' + escapeHtml(kind) + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<line x1="12" y1="5" x2="12" y2="19"/>' +
+          '<line x1="5" y1="12" x2="19" y2="12"/>' +
+        '</svg>' +
+        'Add ' + escapeHtml(kind) + ' category' +
+      '</button>';
+
+      groupHtml += '</div></section>';
+      return groupHtml;
+    }).join('');
+
+    listEl.innerHTML = html;
+
+    // Wire up event delegation once. Every row interaction goes through
+    // a single listener on the list container, dispatched by data-action
+    // attributes. This means re-rendering after a mutation doesn't
+    // need to re-wire individual buttons.
+    if (!manageListWired) {
+      wireManageListDelegation(listEl);
+      manageListWired = true;
+    }
+  }
+
+  // Render a single category row — display state by default. Edit state
+  // is built dynamically by enterEditMode (avoids carrying around
+  // unused DOM).
+  function renderManageRow(cat, firstActiveId, lastActiveId) {
+    var emoji = cat.emoji || '•';
+    var isFirst = cat.id === firstActiveId;
+    var isLast = cat.id === lastActiveId;
+    var archivedClass = cat.is_archived ? ' is-archived' : '';
+
+    return '<div class="dash-manage-row' + archivedClass + '" data-cat-id="' + escapeHtml(cat.id) + '">' +
+      '<span class="dash-manage-row-emoji">' + escapeHtml(emoji) + '</span>' +
+      '<span class="dash-manage-row-name">' + escapeHtml(cat.name) + '</span>' +
+      '<span class="dash-manage-archived-tag">Archived</span>' +
+      (cat.is_archived ? '' :
+        '<div class="dash-manage-row-reorder">' +
+          '<button type="button" class="dash-manage-arrow-btn" data-action="move-up" ' +
+            (isFirst ? 'disabled' : '') + ' aria-label="Move up" title="Move up">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<polyline points="18 15 12 9 6 15"/>' +
+            '</svg>' +
+          '</button>' +
+          '<button type="button" class="dash-manage-arrow-btn" data-action="move-down" ' +
+            (isLast ? 'disabled' : '') + ' aria-label="Move down" title="Move down">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<polyline points="6 9 12 15 18 9"/>' +
+            '</svg>' +
+          '</button>' +
+        '</div>'
+      ) +
+      '<div class="dash-manage-row-actions">' +
+        (cat.is_archived ? '' :
+          '<button type="button" class="dash-manage-action-btn" data-action="edit" aria-label="Rename" title="Rename">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+              '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' +
+            '</svg>' +
+          '</button>' +
+          '<button type="button" class="dash-manage-action-btn is-danger" data-action="archive" aria-label="Archive" title="Archive">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<polyline points="21 8 21 21 3 21 3 8"/>' +
+              '<rect x="1" y="3" width="22" height="5"/>' +
+              '<line x1="10" y1="12" x2="14" y2="12"/>' +
+            '</svg>' +
+          '</button>'
+        ) +
+      '</div>' +
+    '</div>';
+  }
+
+  // Single delegated listener on the list container. Dispatches based
+  // on which data-action element was clicked. Built once.
+  function wireManageListDelegation(listEl) {
+    listEl.addEventListener('click', async function (e) {
+      // Closest button with a data-action — handles cases where user
+      // clicks the SVG inside the button.
+      var actionEl = e.target.closest('[data-action]');
+      var addEl = e.target.closest('[data-manage-add]');
+
+      if (actionEl) {
+        var action = actionEl.getAttribute('data-action');
+        var row = actionEl.closest('[data-cat-id]');
+        if (!row) return;
+        var catId = row.getAttribute('data-cat-id');
+
+        if (action === 'edit') {
+          enterEditMode(row, catId);
+        } else if (action === 'archive') {
+          await handleArchive(row, catId);
+        } else if (action === 'move-up') {
+          await handleReorder(catId, 'up');
+        } else if (action === 'move-down') {
+          await handleReorder(catId, 'down');
+        } else if (action === 'edit-save') {
+          await handleEditSave(row, catId);
+        } else if (action === 'edit-cancel') {
+          // Just re-render the row (or the whole view if simpler).
+          renderManageCategoriesView();
+        } else if (action === 'add-save') {
+          var addKind = row.getAttribute('data-adding-kind');
+          await handleAddSave(row, addKind);
+        } else if (action === 'add-cancel') {
+          // Re-render whole view to drop the add-row
+          renderManageCategoriesView();
+        }
+        return;
+      }
+
+      if (addEl) {
+        var kind = addEl.getAttribute('data-manage-add');
+        enterAddMode(addEl, kind);
+      }
+    });
+
+    // Keyboard: Enter inside an edit input saves; Escape cancels.
+    listEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.target.classList.contains('dash-manage-row-edit-name') || e.target.classList.contains('dash-manage-row-edit-emoji'))) {
+        e.preventDefault();
+        var row = e.target.closest('[data-cat-id]') || e.target.closest('[data-adding-kind]');
+        if (!row) return;
+        if (row.hasAttribute('data-adding-kind')) {
+          handleAddSave(row, row.getAttribute('data-adding-kind'));
+        } else {
+          handleEditSave(row, row.getAttribute('data-cat-id'));
+        }
+      } else if (e.key === 'Escape' && (e.target.classList.contains('dash-manage-row-edit-name') || e.target.classList.contains('dash-manage-row-edit-emoji'))) {
+        e.preventDefault();
+        renderManageCategoriesView();
+      }
+    });
+  }
+
+  // Swap a display-state row to edit-state. Replaces the row's HTML
+  // with edit inputs + Save/Cancel buttons. The row keeps its data-cat-id.
+  function enterEditMode(row, catId) {
+    if (!row) return;
+    // Find the category data — we re-fetch from DOM rather than
+    // keeping a JS map (simpler, single source of truth).
+    var emoji = row.querySelector('.dash-manage-row-emoji').textContent.trim();
+    var name = row.querySelector('.dash-manage-row-name').textContent.trim();
+    if (emoji === '•') emoji = ''; // placeholder, not real emoji
+
+    row.classList.add('is-editing');
+    row.innerHTML =
+      '<input type="text" class="dash-manage-row-edit-emoji" maxlength="4" placeholder="🛒" value="' + escapeHtml(emoji) + '" aria-label="Emoji">' +
+      '<input type="text" class="dash-manage-row-edit-name" maxlength="60" placeholder="Category name" value="' + escapeHtml(name) + '" aria-label="Category name">' +
+      '<div class="dash-manage-edit-actions">' +
+        '<button type="button" class="dash-manage-edit-cancel" data-action="edit-cancel">Cancel</button>' +
+        '<button type="button" class="dash-manage-edit-save" data-action="edit-save">Save</button>' +
+      '</div>';
+
+    // Focus the name input — most common edit
+    var nameInput = row.querySelector('.dash-manage-row-edit-name');
+    if (nameInput) {
+      nameInput.focus();
+      nameInput.select();
+    }
+  }
+
+  async function handleEditSave(row, catId) {
+    if (!row) return;
+    var nameInput = row.querySelector('.dash-manage-row-edit-name');
+    var emojiInput = row.querySelector('.dash-manage-row-edit-emoji');
+    var saveBtn = row.querySelector('[data-action="edit-save"]');
+
+    var newName = nameInput ? nameInput.value.trim() : '';
+    var newEmoji = emojiInput ? emojiInput.value.trim() : '';
+
+    if (!newName) {
+      // Could surface a tiny error — for now just shake or reset focus
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+    }
+
+    var result = await window.iboostBudget.updateCategory(catId, {
+      name: newName,
+      emoji: newEmoji || null,
+    });
+
+    if (result.error) {
+      console.error('[account] updateCategory error:', result.error);
+      // Show a brief inline error then re-render
+      alert('Failed to save: ' + (result.error.message || 'Unknown error'));
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save';
+      }
+      return;
+    }
+
+    // Re-render the whole view (simpler than surgical row update;
+    // rendering 30 rows is trivial DOM work).
+    await renderManageCategoriesView();
+  }
+
+  async function handleArchive(row, catId) {
+    if (!row) return;
+    var name = row.querySelector('.dash-manage-row-name').textContent.trim();
+
+    var ok = window.confirm(
+      'Archive "' + name + '"?\n\n' +
+      'It will be hidden from new entries, but past entries in this category will keep their history.'
+    );
+    if (!ok) return;
+
+    var result = await window.iboostBudget.archiveCategory(catId);
+    if (result.error) {
+      console.error('[account] archiveCategory error:', result.error);
+      alert('Failed to archive: ' + (result.error.message || 'Unknown error'));
+      return;
+    }
+
+    // Re-render — archived row will appear at bottom of group, greyed.
+    await renderManageCategoriesView();
+  }
+
+  // Reorder a category up or down within its kind group. We compute
+  // the new display_order by swapping with the neighbor.
+  //
+  // Implementation note: rather than re-numbering every row in the
+  // group, we just swap the two display_order values. Cheaper, fewer
+  // writes, no risk of overflow.
+  async function handleReorder(catId, direction) {
+    var listEl = document.querySelector('[data-budget-manage-list]');
+    if (!listEl) return;
+
+    // Re-fetch to get current state. Cheap, ensures correctness if
+    // the user has been making rapid changes.
+    var result = await window.iboostBudget.getCategories({ includeArchived: false });
+    if (result.error) {
+      console.error('[account] getCategories error:', result.error);
+      return;
+    }
+
+    var cats = result.data || [];
+    var current = cats.find(function (c) { return c.id === catId; });
+    if (!current) return;
+
+    // Find siblings in same kind, sorted by display_order
+    var siblings = cats
+      .filter(function (c) { return c.kind === current.kind; })
+      .sort(function (a, b) { return (a.display_order || 0) - (b.display_order || 0); });
+
+    var idx = siblings.findIndex(function (c) { return c.id === catId; });
+    var swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= siblings.length) return; // already at edge
+
+    var swapWith = siblings[swapIdx];
+
+    // Swap their display_order values. Both must be unique enough not
+    // to collide. We use the existing values directly.
+    var currentOrder = current.display_order;
+    var swapOrder = swapWith.display_order;
+
+    // If the two have the SAME display_order (rare but possible — seed
+    // sets all to spaced values, but a user could create a new category
+    // with default 99 that ties with another), nudge them apart first.
+    if (currentOrder === swapOrder) {
+      currentOrder = swapOrder + (direction === 'up' ? -1 : 1);
+    }
+
+    // Two updates. We could parallelize via Promise.all but sequential
+    // is safer if one fails (we won't end up with half-swapped state).
+    var r1 = await window.iboostBudget.updateCategory(catId, { display_order: swapOrder });
+    if (r1.error) {
+      console.error('[account] reorder updateCategory error (1):', r1.error);
+      alert('Failed to reorder: ' + (r1.error.message || 'Unknown error'));
+      return;
+    }
+    var r2 = await window.iboostBudget.updateCategory(swapWith.id, { display_order: currentOrder });
+    if (r2.error) {
+      console.error('[account] reorder updateCategory error (2):', r2.error);
+      alert('Reorder partially failed. Refresh the page.');
+      return;
+    }
+
+    await renderManageCategoriesView();
+  }
+
+  // Show an "add new category" row at the bottom of a kind group.
+  // The row uses similar inputs to the edit-state row but doesn't
+  // have a data-cat-id (no row exists yet) — it has data-adding-kind.
+  function enterAddMode(addBtnEl, kind) {
+    // Find the group body containing this Add button
+    var groupBody = addBtnEl.closest('[data-manage-group-body]');
+    if (!groupBody) return;
+
+    // If already in add-mode for this group, do nothing
+    if (groupBody.querySelector('.is-adding')) return;
+
+    // Default emoji per kind — gentle nudge so users don't have to
+    // pick one if they don't care
+    var DEFAULT_EMOJIS = {
+      income: '💵',
+      fixed: '🏷️',
+      variable: '🛍️',
+      discretionary: '🎉',
+      transfer: '🔁',
+    };
+    var defaultEmoji = DEFAULT_EMOJIS[kind] || '•';
+
+    // Build add-row HTML
+    var addRow = document.createElement('div');
+    addRow.className = 'dash-manage-row is-adding is-editing';
+    addRow.setAttribute('data-adding-kind', kind);
+    addRow.innerHTML =
+      '<input type="text" class="dash-manage-row-edit-emoji" maxlength="4" placeholder="🛒" value="' + escapeHtml(defaultEmoji) + '" aria-label="Emoji">' +
+      '<input type="text" class="dash-manage-row-edit-name" maxlength="60" placeholder="New ' + escapeHtml(kind) + ' category" aria-label="Category name">' +
+      '<div class="dash-manage-edit-actions">' +
+        '<button type="button" class="dash-manage-edit-cancel" data-action="add-cancel">Cancel</button>' +
+        '<button type="button" class="dash-manage-edit-save" data-action="add-save">Add</button>' +
+      '</div>';
+
+    // Insert right before the "+ Add" button
+    groupBody.insertBefore(addRow, addBtnEl);
+
+    // Focus the name input
+    var nameInput = addRow.querySelector('.dash-manage-row-edit-name');
+    if (nameInput) nameInput.focus();
+  }
+
+  async function handleAddSave(row, kind) {
+    if (!row) return;
+    var nameInput = row.querySelector('.dash-manage-row-edit-name');
+    var emojiInput = row.querySelector('.dash-manage-row-edit-emoji');
+    var saveBtn = row.querySelector('[data-action="add-save"]');
+
+    var name = nameInput ? nameInput.value.trim() : '';
+    var emoji = emojiInput ? emojiInput.value.trim() : '';
+
+    if (!name) {
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Adding…';
+    }
+
+    // Compute a display_order at the END of the kind group. Fetch
+    // existing to find max, add 10. Spacing of 10 leaves room for
+    // future inserts via reorder without renumbering.
+    var existingResult = await window.iboostBudget.getCategories({ includeArchived: false });
+    var existing = existingResult.data || [];
+    var sameKind = existing.filter(function (c) { return c.kind === kind; });
+    var maxOrder = sameKind.reduce(function (m, c) {
+      return Math.max(m, c.display_order || 0);
+    }, 0);
+    var newOrder = maxOrder + 10;
+
+    var result = await window.iboostBudget.addCategory({
+      name: name,
+      kind: kind,
+      emoji: emoji || null,
+      display_order: newOrder,
+    });
+
+    if (result.error) {
+      console.error('[account] addCategory error:', result.error);
+      alert('Failed to add: ' + (result.error.message || 'Unknown error'));
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Add';
+      }
+      return;
+    }
+
+    await renderManageCategoriesView();
   }
 
   /**

@@ -4222,3 +4222,414 @@
     width: 100%;
   }
 }
+
+/* ===========================================================
+   Phase 4: Manage categories view
+   ===========================================================
+   Full-screen takeover within the Budget tab. Shown when user
+   clicks [data-budget-manage-cta]; main view is hidden via
+   the `hidden` attribute.
+
+   Lists categories grouped by kind. Each row supports:
+     - Inline rename (click → row becomes input → save/cancel)
+     - Up/down reorder arrows (within kind only)
+     - Archive (with confirmation)
+     - Emoji change (small inline input)
+
+   "+ Add" button per kind appends a new category.
+   =========================================================== */
+
+/* The categories card has TWO actions now (Manage + Add entry).
+   Wrap them in a flex container so they sit on the same row. */
+.dash-card-actions {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+/* The "Manage" action link looks more like a tertiary action than
+   the primary "+ Add entry" button — slightly muted to keep visual
+   hierarchy clear. */
+.dash-card-action-link {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.dash-card-action-link:hover {
+  color: var(--color-fg);
+  background: var(--color-surface-2);
+}
+
+/* Manage view header — back button + title cluster */
+.dash-manage-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+.dash-manage-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px 6px 0;
+  border-radius: 6px;
+  transition: color 0.12s ease;
+}
+.dash-manage-back:hover {
+  color: var(--color-fg);
+}
+.dash-manage-back svg {
+  width: 16px;
+  height: 16px;
+}
+.dash-manage-head h1 {
+  margin: 0;
+}
+
+/* Loading state — shown while category list is being fetched.
+   Brief flash since the data is small. */
+.dash-manage-loading {
+  text-align: center;
+  padding: var(--space-4);
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+/* The list of kind groups + their categories. */
+.dash-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Each kind group (Income, Fixed, Variable, ...). Header has the
+   kind label + count of active categories. */
+.dash-manage-group {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.dash-manage-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-2) 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.dash-manage-group-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-manage-group-count {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  font-weight: 500;
+  margin-left: 4px;
+}
+/* Per-kind accent — small dot before the group name, color matches
+   the BUDGET_KIND_COLORS palette in account.js. */
+.dash-manage-group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+/* Body of the kind group — list of category rows + add button */
+.dash-manage-group-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* One category row. Default state shows: emoji + name + reorder
+   arrows + edit/archive buttons. */
+.dash-manage-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 10px var(--space-2);
+  border-bottom: 1px solid var(--color-surface-2);
+  transition: background 0.1s ease;
+}
+.dash-manage-row:last-of-type {
+  border-bottom: none;
+}
+.dash-manage-row:hover {
+  background: var(--color-surface);
+}
+
+/* Archived row — visibly de-emphasized but still interactable
+   (so user can see what they archived). */
+.dash-manage-row.is-archived {
+  opacity: 0.55;
+}
+.dash-manage-row.is-archived .dash-manage-row-name {
+  text-decoration: line-through;
+}
+.dash-manage-row.is-archived .dash-manage-archived-tag {
+  display: inline-block;
+}
+
+/* Row content layout */
+.dash-manage-row-emoji {
+  font-size: 1.2rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.dash-manage-row-name {
+  flex: 1;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  font-weight: 500;
+  /* Truncate long names */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash-manage-archived-tag {
+  display: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-surface-2);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Reorder arrows — small, stacked vertically. Disabled when at
+   top/bottom of the kind group. Up/down keyboard arrows also work
+   when row is focused. */
+.dash-manage-row-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dash-manage-arrow-btn {
+  width: 24px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+  padding: 0;
+}
+.dash-manage-arrow-btn:not(:disabled):hover {
+  background: var(--color-surface-2);
+  color: var(--color-fg);
+}
+.dash-manage-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.dash-manage-arrow-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Action buttons (edit/archive) — icon + tooltip via title */
+.dash-manage-row-actions {
+  display: flex;
+  gap: 4px;
+}
+.dash-manage-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.dash-manage-action-btn:hover {
+  background: var(--color-surface-2);
+  color: var(--color-fg);
+}
+.dash-manage-action-btn.is-danger:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.dash-manage-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* INLINE EDIT STATE — when user clicks rename, the row swaps to
+   show emoji input + name input + Save / Cancel buttons. */
+.dash-manage-row.is-editing {
+  background: var(--color-surface);
+}
+.dash-manage-row-edit-emoji {
+  width: 48px;
+  flex-shrink: 0;
+  font-size: 1rem;
+  padding: 6px 8px;
+  text-align: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  background: #ffffff;
+  font-family: inherit;
+}
+.dash-manage-row-edit-emoji:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+.dash-manage-row-edit-name {
+  flex: 1;
+  font-size: 0.95rem;
+  padding: 6px 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--color-fg);
+  font-family: inherit;
+}
+.dash-manage-row-edit-name:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+.dash-manage-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+.dash-manage-edit-save,
+.dash-manage-edit-cancel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.dash-manage-edit-save {
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+}
+.dash-manage-edit-save:hover {
+  background: var(--color-accent-hover);
+}
+.dash-manage-edit-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.dash-manage-edit-cancel {
+  background: #ffffff;
+  color: var(--color-muted);
+  border-color: var(--color-border);
+}
+.dash-manage-edit-cancel:hover {
+  color: var(--color-fg);
+  border-color: var(--color-border-strong);
+}
+
+/* "+ Add category" button at the bottom of each kind group */
+.dash-manage-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-top: 1px dashed var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+  width: 100%;
+  text-align: center;
+}
+.dash-manage-add-btn:hover {
+  background: var(--color-surface);
+  color: var(--color-accent-hover);
+}
+.dash-manage-add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Add-new row uses the same edit layout as inline rename */
+.dash-manage-row.is-adding {
+  background: var(--color-accent-soft);
+}
+
+/* Per-row error message (e.g. "Couldn't archive this category") —
+   shown briefly above the row. */
+.dash-manage-row-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-bottom: 1px solid #fecaca;
+  font-size: 0.85rem;
+  padding: 8px var(--space-2);
+}
+
+/* Empty kind group — no categories of this kind */
+.dash-manage-empty {
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .dash-manage-row {
+    padding: 12px var(--space-2);
+    gap: 8px;
+  }
+  .dash-manage-row-name {
+    font-size: 0.9rem;
+  }
+  .dash-manage-action-btn {
+    width: 36px;
+    height: 36px; /* bigger touch targets */
+  }
+  /* On mobile, hide the reorder arrows when the row is being edited
+     to reclaim space for the inputs. */
+  .dash-manage-row.is-editing .dash-manage-row-reorder {
+    display: none;
+  }
+  /* Stack edit-mode actions below the inputs on narrow screens */
+  .dash-manage-row.is-editing {
+    flex-wrap: wrap;
+  }
+  .dash-manage-row.is-editing .dash-manage-edit-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+}
