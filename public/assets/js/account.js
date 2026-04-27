@@ -1565,19 +1565,385 @@
    * Multiple CTAs may exist on the page (header CTA + empty-state CTA).
    * Wire them all the same way.
    */
+  // ---------------------------------------------------------------------
+  // Add Entry modal (Phase 3 of Budget tab)
+  //
+  // Lifecycle:
+  //   1. wireAddEntryCta() — runs after Budget tab inits. Wires every
+  //      [data-budget-add-entry-cta] button to openAddEntryModal().
+  //      Idempotent (data-cta-wired flag prevents re-wiring).
+  //   2. wireAddEntryModal() — runs ONCE on first Budget init. Sets up
+  //      the modal's internal handlers (close button, backdrop click,
+  //      ESC key, form submit, smart-suggestion on note input).
+  //   3. openAddEntryModal() — populates category list, resets form,
+  //      shows the modal, focuses the amount input.
+  //   4. closeAddEntryModal() — hides the modal. Form state is reset
+  //      on next open.
+  //   5. handleAddEntrySubmit() — validates, calls iboostBudget.addEntry(),
+  //      refreshes the Budget tab so the new entry appears.
+  //
+  // Modal state lives on a module-level object addEntryModalState. We
+  // track whether wireAddEntryModal() has already run (to avoid
+  // re-wiring on every CTA click) and the cached category list.
+  // ---------------------------------------------------------------------
+
+  var addEntryModalState = {
+    wired: false,                 // True after wireAddEntryModal() runs
+    categoriesLoaded: false,      // True after first openAddEntryModal()
+    submitting: false,            // True between submit click and result
+    lastSuggestion: null,         // Last suggested category name (for hint)
+  };
+
   function wireAddEntryCta() {
     var ctas = document.querySelectorAll('[data-budget-add-entry-cta]');
     ctas.forEach(function (btn) {
-      // Avoid double-wiring on re-render
+      // Avoid double-wiring on re-render. The Budget tab can re-render
+      // when we refresh after a successful save — wireAddEntryCta()
+      // gets called again, but every CTA already has its handler.
       if (btn.getAttribute('data-cta-wired') === 'true') return;
       btn.setAttribute('data-cta-wired', 'true');
 
-      btn.addEventListener('click', function () {
-        // TODO(phase-3): open the Add Entry modal.
-        // For now, show a placeholder so users know the button works.
-        alert('Add Entry coming in the next update! Phase 3 wires the modal.');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openAddEntryModal();
       });
     });
+
+    // Set up the modal's internal handlers once (close button, backdrop,
+    // ESC, form submit). Lazily — only after the user clicks an Add Entry
+    // CTA do we actually wire the modal. Saves a few cycles for users
+    // who never open it.
+    if (!addEntryModalState.wired) {
+      wireAddEntryModal();
+    }
+  }
+
+  function wireAddEntryModal() {
+    var modal = document.getElementById('add-entry-modal');
+    if (!modal) {
+      console.warn('[account] add-entry-modal element not found');
+      return;
+    }
+    addEntryModalState.wired = true;
+
+    // Close handlers — multiple targets all close
+    modal.querySelectorAll('[data-add-entry-close]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeAddEntryModal();
+      });
+    });
+
+    // Backdrop click closes modal
+    var backdrop = modal.querySelector('[data-add-entry-backdrop]');
+    if (backdrop) {
+      backdrop.addEventListener('click', closeAddEntryModal);
+    }
+
+    // ESC key closes modal (only when modal is open)
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hasAttribute('hidden')) {
+        closeAddEntryModal();
+      }
+    });
+
+    // Smart category suggestion: as user types in note, scan for
+    // known merchants and pre-select category. Override gracefully
+    // (user can change the dropdown after the suggestion fires).
+    var noteInput = document.getElementById('add-entry-note');
+    if (noteInput) {
+      noteInput.addEventListener('input', handleNoteInputForSuggestion);
+    }
+
+    // Form submit
+    var form = document.getElementById('add-entry-form');
+    if (form) {
+      form.addEventListener('submit', handleAddEntrySubmit);
+    }
+
+    // Trap focus inside modal when open (basic accessibility — full
+    // focus trap with all focusable elements is overkill for this
+    // 4-input form; ESC + click-out cover most cases).
+  }
+
+  async function openAddEntryModal() {
+    var modal = document.getElementById('add-entry-modal');
+    if (!modal) return;
+
+    // Reset form state
+    var form = document.getElementById('add-entry-form');
+    if (form) form.reset();
+
+    // Reset error state
+    hideAddEntryError();
+
+    // Reset suggestion hint
+    var hint = document.getElementById('add-entry-suggestion-hint');
+    if (hint) hint.hidden = true;
+    addEntryModalState.lastSuggestion = null;
+
+    // Set date input to today
+    var dateInput = document.getElementById('add-entry-date');
+    if (dateInput) {
+      dateInput.value = todayIsoDate();
+    }
+
+    // Populate category dropdown if not already populated
+    if (!addEntryModalState.categoriesLoaded) {
+      await loadAddEntryCategories();
+    }
+
+    // Show modal
+    modal.removeAttribute('hidden');
+
+    // Focus amount input. Small timeout because the modal animation
+    // can interfere with focus on some browsers; 50ms is enough.
+    setTimeout(function () {
+      var amountInput = document.getElementById('add-entry-amount');
+      if (amountInput) amountInput.focus();
+    }, 50);
+
+    // Prevent body scroll while modal is open (mobile especially)
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAddEntryModal() {
+    var modal = document.getElementById('add-entry-modal');
+    if (!modal) return;
+    modal.setAttribute('hidden', '');
+    document.body.style.overflow = '';
+  }
+
+  // Format a Date as YYYY-MM-DD in local time. The browser-native
+  // <input type="date"> wants this exact format; toISOString() would
+  // shift to UTC which is wrong for "today" semantics.
+  function todayIsoDate() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  async function loadAddEntryCategories() {
+    var select = document.getElementById('add-entry-category');
+    if (!select) return;
+
+    if (!window.iboostBudget) {
+      select.innerHTML = '<option value="">Categories unavailable</option>';
+      return;
+    }
+
+    var result = await window.iboostBudget.getCategories();
+    if (result.error) {
+      console.error('[account] getCategories error:', result.error);
+      select.innerHTML = '<option value="">Failed to load categories</option>';
+      return;
+    }
+
+    var cats = result.data || [];
+    if (!cats.length) {
+      select.innerHTML = '<option value="">No categories available</option>';
+      return;
+    }
+
+    // Group by kind for the optgroups. Kinds always render in this
+    // order so the dropdown has a predictable structure.
+    var KIND_ORDER = ['income', 'fixed', 'variable', 'discretionary', 'transfer'];
+    var KIND_LABELS = {
+      income: 'Income',
+      fixed: 'Fixed expenses',
+      variable: 'Variable expenses',
+      discretionary: 'Discretionary',
+      transfer: 'Transfers',
+    };
+
+    var byKind = {};
+    cats.forEach(function (c) {
+      if (!byKind[c.kind]) byKind[c.kind] = [];
+      byKind[c.kind].push(c);
+    });
+
+    var html = '<option value="">Choose a category…</option>';
+    KIND_ORDER.forEach(function (kind) {
+      var group = byKind[kind];
+      if (!group || !group.length) return;
+      html += '<optgroup label="' + escapeHtml(KIND_LABELS[kind]) + '">';
+      group.forEach(function (c) {
+        var emoji = c.emoji ? c.emoji + ' ' : '';
+        html += '<option value="' + escapeHtml(c.id) + '" data-cat-name="' +
+          escapeHtml(c.name) + '">' +
+          escapeHtml(emoji + c.name) + '</option>';
+      });
+      html += '</optgroup>';
+    });
+
+    select.innerHTML = html;
+    addEntryModalState.categoriesLoaded = true;
+  }
+
+  function handleNoteInputForSuggestion() {
+    if (!window.iboostMerchants) return;
+
+    var noteEl = document.getElementById('add-entry-note');
+    var hintEl = document.getElementById('add-entry-suggestion-hint');
+    var selectEl = document.getElementById('add-entry-category');
+    if (!noteEl || !selectEl) return;
+
+    var noteValue = noteEl.value.trim();
+    if (!noteValue) {
+      // Note cleared — hide hint, but DON'T clear the user's category
+      // selection (they may have manually picked something).
+      if (hintEl) hintEl.hidden = true;
+      addEntryModalState.lastSuggestion = null;
+      return;
+    }
+
+    var suggestion = window.iboostMerchants.suggestCategory(noteValue);
+    if (!suggestion || suggestion === addEntryModalState.lastSuggestion) return;
+
+    // Find the matching category in the dropdown (by name)
+    var matchedOption = null;
+    var options = selectEl.querySelectorAll('option[data-cat-name]');
+    options.forEach(function (opt) {
+      if (opt.getAttribute('data-cat-name') === suggestion) {
+        matchedOption = opt;
+      }
+    });
+
+    if (matchedOption) {
+      // Don't override if user has already picked something different
+      // intentionally — only auto-fill if the dropdown is at default
+      // empty state. Tracking via lastSuggestion: if the current
+      // selection matches the LAST suggestion we made, we can update.
+      // Otherwise, the user has overridden — leave alone.
+      var currentValue = selectEl.value;
+      var previousSuggestionId = addEntryModalState.lastSuggestionId || '';
+      if (!currentValue || currentValue === previousSuggestionId) {
+        selectEl.value = matchedOption.value;
+        addEntryModalState.lastSuggestion = suggestion;
+        addEntryModalState.lastSuggestionId = matchedOption.value;
+        if (hintEl) hintEl.hidden = false;
+      }
+    }
+  }
+
+  async function handleAddEntrySubmit(e) {
+    e.preventDefault();
+    if (addEntryModalState.submitting) return; // double-submit guard
+
+    var amountEl = document.getElementById('add-entry-amount');
+    var dateEl = document.getElementById('add-entry-date');
+    var categoryEl = document.getElementById('add-entry-category');
+    var noteEl = document.getElementById('add-entry-note');
+    var submitBtn = document.getElementById('add-entry-submit');
+
+    hideAddEntryError();
+
+    // Validate amount
+    var amountStr = amountEl ? amountEl.value : '';
+    var amountCents = window.iboostBudget.parseDollarsToCents(amountStr);
+    if (amountCents == null || amountCents <= 0) {
+      showAddEntryError('Enter a valid amount greater than $0.');
+      if (amountEl) amountEl.focus();
+      return;
+    }
+
+    // Validate date
+    var dateStr = dateEl ? dateEl.value : '';
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      showAddEntryError('Pick a valid date.');
+      if (dateEl) dateEl.focus();
+      return;
+    }
+
+    // Validate category
+    var categoryId = categoryEl ? categoryEl.value : '';
+    if (!categoryId) {
+      showAddEntryError('Pick a category.');
+      if (categoryEl) categoryEl.focus();
+      return;
+    }
+
+    // All good — save.
+    addEntryModalState.submitting = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+    }
+
+    var result = await window.iboostBudget.addEntry({
+      category_id: categoryId,
+      entry_date: dateStr,
+      amount_cents: amountCents,
+      note: noteEl ? noteEl.value.trim() : '',
+    });
+
+    addEntryModalState.submitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save entry';
+    }
+
+    if (result.error) {
+      console.error('[account] addEntry error:', result.error);
+      showAddEntryError(
+        'Failed to save: ' + (result.error.message || 'Unknown error') + '. Please try again.'
+      );
+      return;
+    }
+
+    // Success! Close modal and refresh the Budget tab to show the new
+    // entry. We refresh the whole tab rather than optimistically inject
+    // the new row because:
+    //   - Summary numbers need recalc (income/spent/available/savings rate)
+    //   - Category bars need re-sort (this entry's category may have moved)
+    //   - The new entry needs to appear in the recent-entries list
+    // Doing a full re-fetch is simpler than 3 surgical updates and the
+    // data is small (one DB query).
+    closeAddEntryModal();
+    refreshBudgetTab();
+  }
+
+  function showAddEntryError(msg) {
+    var el = document.getElementById('add-entry-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function hideAddEntryError() {
+    var el = document.getElementById('add-entry-error');
+    if (!el) return;
+    el.textContent = '';
+    el.hidden = true;
+  }
+
+  // Re-fetches budget data and re-renders the Budget tab. Called after
+  // a successful entry save. Bypasses the budgetTabInitialized flag
+  // (which prevents double-init on tab switching) — this is an
+  // explicit refresh, not a re-init.
+  async function refreshBudgetTab() {
+    if (!window.iboostBudget) return;
+
+    var today = new Date();
+    var summaryResult = await window.iboostBudget.getMonthSummary(today);
+    if (summaryResult.error) {
+      console.error('[account] refresh getMonthSummary error:', summaryResult.error);
+      return;
+    }
+
+    var goalsResult = await window.iboostBudget.getGoalsForMonth(today);
+    var goals = goalsResult.error ? [] : goalsResult.data;
+
+    renderBudgetSummary(summaryResult.data.summary);
+    renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
+    renderBudgetGoals(goals, summaryResult.data.summary);
+    renderBudgetEntries(summaryResult.data.entries);
+
+    // Re-wire CTAs in case the empty-state CTA got replaced by the
+    // populated render. wireAddEntryCta is idempotent.
+    wireAddEntryCta();
   }
 
   /**

@@ -3965,3 +3965,260 @@
     font-size: 0.9rem;
   }
 }
+
+/* ===========================================================
+   Add Entry modal (Phase 3 of Budget tab)
+   ===========================================================
+   Mobile-first design. Backdrop covers full viewport, card
+   sits centered on desktop and bottom-sheet-style on mobile.
+
+   Visual hierarchy:
+     - Amount input is the BIGGEST element (matches the
+       wireframe — entries are about money first, everything
+       else second)
+     - Date and category are equal-weight secondary
+     - Note is tertiary, with smart-suggestion hint inline
+
+   Triggered by [data-budget-add-entry-cta] click. Toggled
+   via the `hidden` attribute. account.js handles open/close.
+   =========================================================== */
+
+.add-entry-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  /* Animation: fade in. Modal is :not([hidden]) when active.
+     The `hidden` attribute does display:none; this transition
+     only matters when JS removes it. */
+  animation: addEntryModalFadeIn 0.18s ease-out;
+}
+
+@keyframes addEntryModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.add-entry-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 37, 64, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.add-entry-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  animation: addEntryModalSlideUp 0.22s ease-out;
+}
+
+@keyframes addEntryModalSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.add-entry-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.add-entry-modal-close:hover {
+  background: var(--color-surface-2);
+  color: var(--color-fg);
+}
+.add-entry-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.add-entry-modal-title {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-fg);
+}
+
+.add-entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Amount row: extra-large input. The dollar prefix is a sibling
+   element absolutely positioned, not part of the input — keeps
+   the value parseable as a clean number string. */
+.add-entry-amount-row {
+  position: relative;
+  margin-bottom: var(--space-2);
+}
+.add-entry-amount-prefix {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+.add-entry-amount-input {
+  width: 100%;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  padding: 16px 16px 16px 44px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  /* Hide spinner arrows on number inputs (we use type=text+inputmode=decimal
+     which avoids them anyway, but defensive) */
+  -moz-appearance: textfield;
+}
+.add-entry-amount-input::-webkit-outer-spin-button,
+.add-entry-amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.add-entry-amount-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: #ffffff;
+}
+.add-entry-amount-input::placeholder {
+  color: var(--color-border-strong);
+  font-weight: 600;
+}
+
+/* Smaller field rows (date, category, note) */
+.add-entry-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-entry-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fg-soft);
+}
+.add-entry-label-optional {
+  font-weight: 400;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+.add-entry-input {
+  width: 100%;
+  font-size: 1rem;
+  color: var(--color-fg);
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md, 10px);
+  transition: border-color 0.12s ease;
+  font-family: inherit;
+}
+.add-entry-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Inline hint shown when smart category suggestion fires.
+   Subtle, not pushy — confirms what the system did. */
+.add-entry-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--color-accent-hover);
+}
+.add-entry-hint svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Error region. Replaces inline-per-field errors with a single
+   clear message at the bottom of the form, just above the buttons. */
+.add-entry-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Footer with Cancel + Save buttons. Save (primary) on the right
+   on desktop (matches the natural action position). Stacks on
+   narrow screens. */
+.add-entry-footer {
+  display: flex;
+  gap: var(--space-1);
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+.add-entry-footer .btn {
+  min-width: 100px;
+}
+
+/* Submit button disabled state during save */
+.add-entry-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile: take more screen real estate, stack footer buttons. */
+@media (max-width: 640px) {
+  .add-entry-modal {
+    padding: 0;
+    /* On mobile we want bottom-sheet style — card at bottom of
+       viewport, full width. align-items: flex-end achieves this. */
+    align-items: flex-end;
+  }
+  .add-entry-modal-card {
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 90vh;
+    padding: var(--space-3) var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .add-entry-amount-input {
+    font-size: 2rem;
+    padding: 14px 14px 14px 38px;
+  }
+  .add-entry-amount-prefix {
+    font-size: 1.5rem;
+    left: 14px;
+  }
+  .add-entry-footer {
+    flex-direction: column-reverse;
+  }
+  .add-entry-footer .btn {
+    width: 100%;
+  }
+}

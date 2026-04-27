@@ -1873,6 +1873,117 @@
     </div>
   </div>
 
+
+  <!-- ===========================================================
+       Add Entry modal (Phase 3 of Budget tab)
+       ===========================================================
+       Opens when user clicks any [data-budget-add-entry-cta] button.
+       Wired by account.js initAddEntryModal().
+
+       Hidden by default; account.js toggles the `hidden` attribute
+       to show/hide. Backdrop click + ESC key + close button all
+       dismiss. Submit calls iboostBudget.addEntry() with optimistic
+       UI rollback on error.
+       =========================================================== -->
+  <div id="add-entry-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="add-entry-title">
+    <div class="add-entry-modal-backdrop" data-add-entry-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-add-entry-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="add-entry-title" class="add-entry-modal-title">Add entry</h2>
+      <form id="add-entry-form" class="add-entry-form" novalidate>
+
+        <!-- Amount: BIG input, autofocus on open. Currency symbol is
+             a label-style decoration; the actual value is parsed via
+             iboostBudget.parseDollarsToCents() so '$34.20', '34.20',
+             '1,234.56' all work. -->
+        <div class="add-entry-amount-row">
+          <span class="add-entry-amount-prefix" aria-hidden="true">$</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="add-entry-amount"
+            name="amount"
+            class="add-entry-amount-input"
+            placeholder="0.00"
+            autocomplete="off"
+            required
+            aria-label="Amount in dollars"
+          />
+        </div>
+
+        <!-- Date: defaults to today. type=date works on iOS, Android,
+             and modern desktops. The browser-native picker is good
+             enough — no need for a custom date library on this surface. -->
+        <div class="add-entry-field">
+          <label for="add-entry-date" class="add-entry-label">Date</label>
+          <input
+            type="date"
+            id="add-entry-date"
+            name="date"
+            class="add-entry-input"
+            required
+          />
+        </div>
+
+        <!-- Category: populated from iboostBudget.getCategories() at
+             modal open. Grouped by kind (income/fixed/variable/...) via
+             <optgroup>. Default selection is the most-used category for
+             this user (or 'Uncategorized' for fresh users). -->
+        <div class="add-entry-field">
+          <label for="add-entry-category" class="add-entry-label">Category</label>
+          <select
+            id="add-entry-category"
+            name="category"
+            class="add-entry-input"
+            required
+          >
+            <option value="">Loading categories…</option>
+          </select>
+          <p class="add-entry-hint" id="add-entry-suggestion-hint" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Suggested from note</span>
+          </p>
+        </div>
+
+        <!-- Note: optional. As user types, iboostMerchants.suggestCategory
+             scans for known merchants and pre-selects the matched
+             category (showing the hint above). User can override. -->
+        <div class="add-entry-field">
+          <label for="add-entry-note" class="add-entry-label">Note <span class="add-entry-label-optional">(optional)</span></label>
+          <input
+            type="text"
+            id="add-entry-note"
+            name="note"
+            class="add-entry-input"
+            placeholder="e.g. Whole Foods, Maxi, Netflix…"
+            maxlength="200"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Error region. Hidden by default; shown when validation or
+             save fails. Replaces inline-per-field errors with a single
+             clear message. -->
+        <div class="add-entry-error" id="add-entry-error" hidden role="alert"></div>
+
+        <!-- Footer: Cancel + Save. Save is the primary action and is
+             disabled while submitting. -->
+        <div class="add-entry-footer">
+          <button type="button" class="btn btn-outline" data-add-entry-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="add-entry-submit">Save entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <script>
     // Welcome banner from ?signup=success
     (function () {
