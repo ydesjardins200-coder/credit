@@ -1090,12 +1090,12 @@
         console.warn('[account] locked-visible but no pitch for:', featureKey);
         return;
       }
-      wrapWithLockOverlay(el, featureKey, pitch);
+      wrapWithLockOverlay(el, featureKey, pitch, profile);
       el.setAttribute('data-locked', 'visible');
     }
   }
 
-  function wrapWithLockOverlay(el, featureKey, pitch) {
+  function wrapWithLockOverlay(el, featureKey, pitch, profile) {
     // Move existing children into a content wrapper.
     var content = document.createElement('div');
     content.className = 'dash-iblock-locked-content';
