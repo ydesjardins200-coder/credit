@@ -2221,9 +2221,12 @@
 
       if (actionEl) {
         var action = actionEl.getAttribute('data-action');
-        var row = actionEl.closest('[data-cat-id]');
+        // Row lookup: existing categories have [data-cat-id]; the
+        // add-new row has [data-adding-kind] (no id yet, since the
+        // category doesn't exist in the DB until save). Match either.
+        var row = actionEl.closest('[data-cat-id]') || actionEl.closest('[data-adding-kind]');
         if (!row) return;
-        var catId = row.getAttribute('data-cat-id');
+        var catId = row.getAttribute('data-cat-id'); // null for add-row, that's OK
 
         if (action === 'edit') {
           enterEditMode(row, catId);
