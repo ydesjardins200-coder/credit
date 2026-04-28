@@ -1326,12 +1326,18 @@
     // 4. Render everything.
     renderBudgetMonthLabel();
     renderBudgetSummary(summaryResult.data.summary);
-    renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
+    // Phase 5o: dispatch to bars-or-calendar view based on user pref.
+    // Also computes and renders the auto-headline.
+    dispatchSpendingView(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
     renderBudgetEntries(summaryResult.data.entries);
     // Phase 5k: tier/country-aware bank-connect surfaces
     renderBudgetUpgradePitchCard(budgetProfile);
     renderBudgetBankPlaceholder(budgetProfile);
+    // Phase 5o: wire view toggle + calendar-cell click handlers.
+    // Both are idempotent.
+    wireSpendingViewToggle();
+    wireCalendarCellHandlers();
 
     // 5. Wire the "+ Add entry" CTA. The modal itself is Phase 3 work;
     // for now the CTA shows a "coming soon" toast or similar lightweight
@@ -1746,6 +1752,373 @@
     var catName = row.querySelector('.dash-cat-name');
     var label = catName ? catName.textContent.trim() : '';
     openAllEntriesModal({ categoryId: catId, categoryName: label });
+  }
+
+  // ===================================================================
+  // Phase 5o — Calendar heatmap view + auto-generated headline pattern
+  // ===================================================================
+  //
+  // A senior-analyst alternative to the bar chart: same monthly data
+  // displayed as a 7-col x 5-6-row calendar grid, each day shaded by
+  // total spending. Empty days are surface-colored, big days are deep
+  // accent. Today gets a ring outline. Click a day to see what was
+  // bought (opens All Entries modal pre-filtered to that date).
+  //
+  // The bar chart still ships as the default view (Phase 5d behavior).
+  // Users toggle via the 'Bars / Calendar' control in the card header;
+  // their choice persists across sessions via localStorage.
+  //
+  // Above whichever view is active, a one-line auto-generated headline
+  // names the most striking pattern for the month. Rule-based, no LLM.
+  // When no rule produces a confident result the banner is hidden
+  // entirely. Better silent than patronizing.
+
+  // Module-level: which view the user picked. Read on first load,
+  // written when toggled.
+  var spendingViewMode = readSpendingViewPref();
+
+  function readSpendingViewPref() {
+    try {
+      var v = window.localStorage && localStorage.getItem('iboost.budget.spendingView');
+      return v === 'calendar' ? 'calendar' : 'bars';
+    } catch (e) {
+      return 'bars';
+    }
+  }
+  function writeSpendingViewPref(value) {
+    try {
+      if (window.localStorage) localStorage.setItem('iboost.budget.spendingView', value);
+    } catch (e) { /* ignore */ }
+  }
+
+  // ----------------------------------------------------------------
+  // Headline rule engine
+  // ----------------------------------------------------------------
+  // Each rule inspects the entries + per-day totals and returns a
+  // string OR null. First rule to fire wins. Order = priority, with
+  // most informationally dense rules first.
+  //
+  // Shared invariants:
+  //   - At least 3 days in the month must have spending. Below that,
+  //     no rule fires (avoid telling someone "your biggest day was
+  //     Tuesday" when they only have one entry).
+  //   - The "current state of the month" matters: don't count future
+  //     days as "no spending" days for streak rules.
+  //   - We never echo back the obvious. If the bar chart already
+  //     answers the question, the headline is dumb.
+  function computeSpendingHeadline(entries, monthDate) {
+    if (!entries || entries.length === 0) return null;
+
+    var spendingEntries = entries.filter(function (e) {
+      var k = e.category && e.category.kind;
+      return k === 'fixed' || k === 'variable' || k === 'discretionary';
+    });
+    if (spendingEntries.length === 0) return null;
+
+    var perDay = {};
+    var totalCents = 0;
+    spendingEntries.forEach(function (e) {
+      var d = new Date(e.entry_date + 'T00:00:00');
+      var day = d.getDate();
+      var c = e.amount_cents || 0;
+      perDay[day] = (perDay[day] || 0) + c;
+      totalCents += c;
+    });
+
+    var spendingDays = Object.keys(perDay).map(Number).sort(function (a, b) { return a - b; });
+    if (spendingDays.length < 3) return null;
+
+    var elapsedDays = computeElapsedDaysInMonth(monthDate);
+    if (elapsedDays < 5) return null;
+
+    var fmt = window.iboostBudget.formatCents;
+
+    // Rule 1 — concentration ("Half your spending in N days")
+    if (spendingDays.length >= 7) {
+      var sortedAmounts = spendingDays
+        .map(function (dn) { return perDay[dn]; })
+        .sort(function (a, b) { return b - a; });
+      var cumulative = 0;
+      var n = 0;
+      for (var i = 0; i < sortedAmounts.length; i++) {
+        cumulative += sortedAmounts[i];
+        n++;
+        if (cumulative >= totalCents / 2) break;
+      }
+      if (n <= 4) {
+        var dayWord = n === 1 ? 'day' : 'days';
+        return 'Half your spending happened in ' + n + ' ' + dayWord + ' this month.';
+      }
+    }
+
+    // Rule 2 — biggest day. Fires when top day > 30% AND > $50.
+    var topDay = spendingDays[0];
+    spendingDays.forEach(function (dn) {
+      if (perDay[dn] > perDay[topDay]) topDay = dn;
+    });
+    var topAmount = perDay[topDay];
+    if (totalCents > 0 && topAmount > totalCents * 0.3 && topAmount > 5000) {
+      var dt = new Date(monthDate.getFullYear(), monthDate.getMonth(), topDay);
+      var label = dt.toLocaleDateString('en-US', {
+        weekday: 'long', month: 'short', day: 'numeric',
+      });
+      return 'Your biggest spending day was ' + label + ' — ' + fmt(topAmount) + '.';
+    }
+
+    // Rule 3 — streak (positive framing). Skip if streak starts on day 1.
+    if (elapsedDays >= 10) {
+      var longestStreak = 0;
+      var currentStreak = 0;
+      var streakStartDay = null;
+      var bestStreakStart = null;
+      for (var day = 1; day <= elapsedDays; day++) {
+        if (!perDay[day]) {
+          if (currentStreak === 0) streakStartDay = day;
+          currentStreak++;
+          if (currentStreak > longestStreak) {
+            longestStreak = currentStreak;
+            bestStreakStart = streakStartDay;
+          }
+        } else {
+          currentStreak = 0;
+        }
+      }
+      if (longestStreak >= 4 && bestStreakStart > 1) {
+        return 'You went ' + longestStreak +
+          ' days without any spending — your longest streak this month.';
+      }
+    }
+
+    // Rule 4 — top category cadence.
+    var byCat = {};
+    spendingEntries.forEach(function (e) {
+      var cid = e.category_id;
+      if (!byCat[cid]) {
+        byCat[cid] = { name: e.category && e.category.name, count: 0, total: 0 };
+      }
+      byCat[cid].count++;
+      byCat[cid].total += e.amount_cents || 0;
+    });
+    var topCat = null;
+    Object.keys(byCat).forEach(function (cid) {
+      if (!topCat || byCat[cid].total > topCat.total) topCat = byCat[cid];
+    });
+    if (topCat && topCat.count >= 4) {
+      var avg = Math.round(topCat.total / topCat.count);
+      var visitWord = topCat.count === 1 ? 'visit' : 'visits';
+      return topCat.name + ': ' + topCat.count + ' ' + visitWord +
+        ', ' + fmt(topCat.total) + '. About ' + fmt(avg) + ' per visit.';
+    }
+
+    return null;
+  }
+
+  // Helper: how many days of the given month have elapsed?
+  // Past month = full length. Current month = today's day. Future = 0.
+  function computeElapsedDaysInMonth(monthDate) {
+    var now = new Date();
+    var thisYear = now.getFullYear();
+    var thisMonth = now.getMonth();
+    var viewYear = monthDate.getFullYear();
+    var viewMonth = monthDate.getMonth();
+
+    if (viewYear < thisYear || (viewYear === thisYear && viewMonth < thisMonth)) {
+      return new Date(viewYear, viewMonth + 1, 0).getDate();
+    }
+    if (viewYear === thisYear && viewMonth === thisMonth) {
+      return now.getDate();
+    }
+    return 0;
+  }
+
+  function renderBudgetSpendingHeadline(entries) {
+    var el = document.querySelector('[data-budget-headline]');
+    if (!el) return;
+
+    var headline = computeSpendingHeadline(entries, budgetCurrentMonth);
+    if (!headline) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = headline;
+  }
+
+  // ----------------------------------------------------------------
+  // Calendar render
+  // ----------------------------------------------------------------
+  // 7-column grid, weeks Sunday-Saturday. Padding cells for partial
+  // first/last weeks rendered as empty (no day number, no click,
+  // light shading).
+  //
+  // Color shading: cells with no spending get the surface color.
+  // Cells with spending use a CSS custom property (--dash-cal-intensity,
+  // 0..1) that drives an accent overlay. Top day = 1.0.
+  function renderBudgetCalendar(entries, monthDate) {
+    var container = document.querySelector('[data-budget-categories]');
+    if (!container) return;
+
+    var spendingEntries = (entries || []).filter(function (e) {
+      var k = e.category && e.category.kind;
+      return k === 'fixed' || k === 'variable' || k === 'discretionary';
+    });
+
+    if (spendingEntries.length === 0) {
+      container.innerHTML =
+        '<div class="dash-cats-empty">' +
+          '<div class="dash-cats-empty-title">No spending entries yet</div>' +
+          '<div class="dash-cats-empty-sub">Add a spending entry to see your daily pattern.</div>' +
+        '</div>';
+      return;
+    }
+
+    var perDay = {};
+    var maxAmount = 0;
+    spendingEntries.forEach(function (e) {
+      var d = new Date(e.entry_date + 'T00:00:00');
+      var day = d.getDate();
+      var c = e.amount_cents || 0;
+      perDay[day] = (perDay[day] || 0) + c;
+      if (perDay[day] > maxAmount) maxAmount = perDay[day];
+    });
+
+    var year = monthDate.getFullYear();
+    var month = monthDate.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var firstDayOfWeek = firstDay.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    var now = new Date();
+    var todayDay = (now.getFullYear() === year && now.getMonth() === month)
+      ? now.getDate() : null;
+
+    var WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    var html = '<div class="dash-cal" role="grid" aria-label="Daily spending calendar">';
+    html += '<div class="dash-cal-weekdays" role="row">';
+    WEEKDAY_LABELS.forEach(function (label) {
+      html += '<div class="dash-cal-weekday" role="columnheader">' + label + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="dash-cal-grid">';
+
+    var totalCells = firstDayOfWeek + daysInMonth;
+    var rowsNeeded = Math.ceil(totalCells / 7);
+    var totalGridCells = rowsNeeded * 7;
+
+    for (var idx = 0; idx < totalGridCells; idx++) {
+      var dayNum = idx - firstDayOfWeek + 1;
+      var inMonth = dayNum >= 1 && dayNum <= daysInMonth;
+
+      if (!inMonth) {
+        html += '<div class="dash-cal-cell dash-cal-cell-pad" aria-hidden="true"></div>';
+        continue;
+      }
+
+      var amount = perDay[dayNum] || 0;
+      var hasSpending = amount > 0;
+      var dayOfWeek = (firstDayOfWeek + dayNum - 1) % 7;
+      var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      var isToday = dayNum === todayDay;
+
+      var intensity = hasSpending && maxAmount > 0
+        ? (amount / maxAmount).toFixed(3)
+        : '0';
+
+      var classes = ['dash-cal-cell'];
+      if (hasSpending) classes.push('dash-cal-cell-spent');
+      if (isWeekend) classes.push('dash-cal-cell-weekend');
+      if (isToday) classes.push('dash-cal-cell-today');
+
+      var iso = year + '-' +
+        String(month + 1).padStart(2, '0') + '-' +
+        String(dayNum).padStart(2, '0');
+
+      var roleAttr = hasSpending ? ' role="button" tabindex="0"' : ' role="gridcell"';
+      var labelAttr = hasSpending
+        ? ' aria-label="' + iso + ' — ' +
+            window.iboostBudget.formatCents(amount) + ', click to see entries"'
+        : ' aria-label="' + iso + ' — no spending"';
+
+      html += '<div class="' + classes.join(' ') + '"' +
+        ' style="--dash-cal-intensity: ' + intensity + ';"' +
+        ' data-cal-day="' + iso + '"' +
+        roleAttr + labelAttr + '>';
+      html += '<div class="dash-cal-day-num">' + dayNum + '</div>';
+      if (hasSpending) {
+        html += '<div class="dash-cal-day-amt">' +
+          Math.round(amount / 100) + '</div>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div></div>';
+    container.innerHTML = html;
+  }
+
+  function handleCalendarCellClick(e) {
+    var cell = e.target.closest('.dash-cal-cell-spent');
+    if (!cell) return;
+    var iso = cell.getAttribute('data-cal-day');
+    if (!iso) return;
+    openAllEntriesModal({ date: iso });
+  }
+  function handleCalendarCellKeydown(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var cell = e.target.closest('.dash-cal-cell-spent');
+    if (!cell) return;
+    e.preventDefault();
+    var iso = cell.getAttribute('data-cal-day');
+    if (iso) openAllEntriesModal({ date: iso });
+  }
+
+  // ----------------------------------------------------------------
+  // View dispatcher + toggle wiring
+  // ----------------------------------------------------------------
+  function dispatchSpendingView(summary, entries) {
+    if (spendingViewMode === 'calendar') {
+      renderBudgetCalendar(entries, budgetCurrentMonth);
+    } else {
+      renderBudgetCategories(summary, entries);
+    }
+    renderBudgetSpendingHeadline(entries);
+  }
+
+  // Click + keyboard handlers for calendar cells. Wired ONCE on the
+  // shared container; works for whichever view is currently rendered
+  // (the click selectors only match calendar cells).
+  var calendarCellHandlersWired = false;
+  function wireCalendarCellHandlers() {
+    if (calendarCellHandlersWired) return;
+    var container = document.querySelector('[data-budget-categories]');
+    if (!container) return;
+    container.addEventListener('click', handleCalendarCellClick);
+    container.addEventListener('keydown', handleCalendarCellKeydown);
+    calendarCellHandlersWired = true;
+  }
+
+  var spendingViewToggleWired = false;
+  function wireSpendingViewToggle() {
+    document.querySelectorAll('[data-spending-view]').forEach(function (btn) {
+      var mode = btn.getAttribute('data-spending-view');
+      var active = mode === spendingViewMode;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    if (spendingViewToggleWired) return;
+    spendingViewToggleWired = true;
+
+    document.querySelectorAll('[data-spending-view]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var newMode = btn.getAttribute('data-spending-view');
+        if (newMode === spendingViewMode) return;
+        spendingViewMode = newMode;
+        writeSpendingViewPref(newMode);
+        refreshBudgetTab();
+      });
+    });
   }
 
   /**
@@ -2915,22 +3288,28 @@
   // the modal title becomes "Spending: <name>" and the list is filtered
   // to entries whose category.id matches. Reset on close so the next
   // open without args goes back to the full-list view.
-  var allEntriesFilter = null;  // null | { categoryId, categoryName }
+  // Phase 5o: also supports a date filter ({ date: 'YYYY-MM-DD' }) so
+  // calendar-cell clicks can drill into a single day's entries.
+  var allEntriesFilter = null;  // null | { categoryId, categoryName } | { date }
 
   /**
-   * @param {{categoryId?: string, categoryName?: string}} [opts]
+   * @param {{categoryId?: string, categoryName?: string, date?: string}} [opts]
    *   Optional filter. When omitted, modal shows ALL current-month
-   *   entries (the original Phase 5g behavior). When provided, only
-   *   entries with category.id === categoryId are shown, and the
-   *   title reads "Spending: <categoryName>" so users see the active
-   *   filter at a glance.
+   *   entries (Phase 5g behavior). When opts.categoryId is provided,
+   *   filter by category. When opts.date (YYYY-MM-DD) is provided,
+   *   filter by that exact date. categoryId and date are mutually
+   *   exclusive — date takes priority if both are passed.
    */
   function openAllEntriesModal(opts) {
     var modal = document.getElementById('all-entries-modal');
     if (!modal) return;
-    allEntriesFilter = (opts && opts.categoryId)
-      ? { categoryId: opts.categoryId, categoryName: opts.categoryName || '' }
-      : null;
+    if (opts && opts.date) {
+      allEntriesFilter = { date: opts.date };
+    } else if (opts && opts.categoryId) {
+      allEntriesFilter = { categoryId: opts.categoryId, categoryName: opts.categoryName || '' };
+    } else {
+      allEntriesFilter = null;
+    }
     renderAllEntriesList();
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -2963,7 +3342,15 @@
     });
 
     // Title + month label adapt to whether a filter is active.
-    if (allEntriesFilter) {
+    if (allEntriesFilter && allEntriesFilter.date) {
+      // Phase 5o: date filter — show "Tuesday, Apr 27" as the title.
+      var d = new Date(allEntriesFilter.date + 'T00:00:00');
+      var dateLabel = d.toLocaleDateString('en-US', {
+        weekday: 'long', month: 'short', day: 'numeric', year: 'numeric',
+      });
+      if (titleEl) titleEl.textContent = dateLabel;
+      if (monthLabel) monthLabel.textContent = '';
+    } else if (allEntriesFilter && allEntriesFilter.categoryId) {
       if (titleEl) titleEl.textContent = 'Spending: ' + allEntriesFilter.categoryName;
       if (monthLabel) monthLabel.textContent = monthStr;
     } else {
@@ -2971,12 +3358,16 @@
       if (monthLabel) monthLabel.textContent = monthStr;
     }
 
-    // Apply category filter if active. Both shapes need handling:
-    //   - entries from getMonthSummary have e.category.id (joined)
-    //   - entries from a stale path might only have e.category_id
-    // Match either to be safe.
+    // Apply filter if active. Both filter shapes need handling:
+    //   - { categoryId } — filter to entries in that category
+    //   - { date }       — filter to entries on that exact YYYY-MM-DD
+    // Both fall through to no-filter when allEntriesFilter is null.
     var entries = budgetCurrentMonthEntries || [];
-    if (allEntriesFilter) {
+    if (allEntriesFilter && allEntriesFilter.date) {
+      entries = entries.filter(function (e) {
+        return e.entry_date === allEntriesFilter.date;
+      });
+    } else if (allEntriesFilter && allEntriesFilter.categoryId) {
       entries = entries.filter(function (e) {
         var cid = (e.category && e.category.id) || e.category_id;
         return cid === allEntriesFilter.categoryId;
@@ -2986,7 +3377,9 @@
     if (entries.length === 0) {
       listEl.innerHTML =
         '<div class="all-entries-empty">' +
-          (allEntriesFilter
+          (allEntriesFilter && allEntriesFilter.date
+            ? 'No entries on this day.'
+            : allEntriesFilter && allEntriesFilter.categoryId
             ? 'No entries in this category for ' + escapeHtml(monthStr) + '.'
             : 'No entries for this month yet.') +
         '</div>';
@@ -4227,7 +4620,8 @@
 
     renderBudgetMonthLabel();
     renderBudgetSummary(summaryResult.data.summary);
-    renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
+    // Phase 5o: dispatch to bars-or-calendar; also re-renders headline.
+    dispatchSpendingView(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
     renderBudgetEntries(summaryResult.data.entries);
     // Phase 5k: re-render tier/country-aware surfaces. Use the cached
@@ -4247,6 +4641,9 @@
     wireBudgetImportCta();
     wireBudgetSeeAllCta();
     wireOpeningBalanceCard();
+    // Phase 5o: re-apply toggle active-state + cell handlers.
+    wireSpendingViewToggle();
+    wireCalendarCellHandlers();
   }
 
   // Phase 5b — render the month label ("April 2026") and update

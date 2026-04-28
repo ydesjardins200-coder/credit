@@ -1072,11 +1072,30 @@
           <div class="dash-card-title-row">
             <h3 class="dash-card-title">Spending by category</h3>
             <div class="dash-card-actions">
+              <!-- Phase 5o: view toggle. Bars (existing) vs Calendar
+                   (new — heatmap of spending by day-of-month). User's
+                   choice persists via localStorage. Default = Bars. -->
+              <div class="dash-view-toggle" role="tablist" aria-label="Spending view">
+                <button type="button"
+                        class="dash-view-toggle-btn is-active"
+                        role="tab"
+                        aria-selected="true"
+                        data-spending-view="bars">Bars</button>
+                <button type="button"
+                        class="dash-view-toggle-btn"
+                        role="tab"
+                        aria-selected="false"
+                        data-spending-view="calendar">Calendar</button>
+              </div>
               <button type="button" class="dash-card-action-link" data-budget-import-cta>Import</button>
               <button type="button" class="dash-card-action-link" data-budget-manage-cta>Manage</button>
               <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
             </div>
           </div>
+          <!-- Phase 5o: headline pattern banner. Auto-generated above
+               the chart from a small ruleset (no LLM). Hidden when no
+               interesting pattern is found — better silence than dumb. -->
+          <div class="dash-spending-headline" data-budget-headline hidden></div>
           <!-- Container replaced by account.js initBudgetTab. Mock content
                below is shown until data resolves (~100ms typical) or as
                an empty-state placeholder for users with no entries. -->

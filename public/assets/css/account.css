@@ -1947,6 +1947,180 @@
 }
 /* ============================================================ */
 
+/* ============================================================
+   Phase 5o — Calendar heatmap + auto-headline + view toggle
+   ============================================================
+   Three groups of styles:
+     1. .dash-view-toggle — segmented Bars/Calendar control in the
+        Spending card header.
+     2. .dash-spending-headline — the auto-generated 1-line pattern
+        banner above the chart. Subtle, not loud.
+     3. .dash-cal — the calendar heatmap grid itself.
+
+   Color scheme: cells fade from --color-surface-2 (no spending) to
+   a light red (#ef4444 at low opacity) for big spending days. Red
+   reads correctly: the user is meant to notice, not panic. Today
+   gets an outline ring; weekends a slight tint difference.
+*/
+
+/* ----- 1. View toggle (segmented control) ----- */
+.dash-view-toggle {
+  display: inline-flex;
+  background: var(--color-surface-2);
+  border-radius: 8px;
+  padding: 2px;
+  margin-right: 8px;
+}
+.dash-view-toggle-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.dash-view-toggle-btn:hover {
+  color: var(--color-fg);
+}
+.dash-view-toggle-btn.is-active {
+  background: #ffffff;
+  color: var(--color-fg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/* ----- 2. Auto-headline banner ----- */
+/* Subtle. Reads as a contextual note, not a system alert. */
+.dash-spending-headline {
+  font-size: 0.85rem;
+  color: var(--color-fg-soft);
+  background: var(--color-accent-soft);
+  border-left: 3px solid var(--color-accent);
+  padding: 8px 12px;
+  margin-bottom: var(--space-2);
+  border-radius: 0 6px 6px 0;
+  line-height: 1.4;
+}
+
+/* ----- 3. Calendar heatmap grid ----- */
+.dash-cal {
+  width: 100%;
+}
+.dash-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.dash-cal-weekday {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 4px 0;
+}
+.dash-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.dash-cal-cell {
+  aspect-ratio: 1;
+  position: relative;
+  background: var(--color-surface-2);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+  /* Calculated from --dash-cal-intensity (0..1) inline. We layer a
+     translucent red over the surface-2 base; intensity 0 = invisible
+     (just the surface-2 base shows), intensity 1 = strong red. */
+  background-image:
+    linear-gradient(
+      rgba(239, 68, 68, calc(var(--dash-cal-intensity, 0) * 0.6)),
+      rgba(239, 68, 68, calc(var(--dash-cal-intensity, 0) * 0.6))
+    );
+}
+.dash-cal-cell-pad {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  opacity: 0.3;
+}
+.dash-cal-cell-spent {
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.12s ease;
+}
+.dash-cal-cell-spent:hover {
+  border-color: var(--color-fg);
+  transform: scale(1.04);
+  z-index: 1;
+}
+.dash-cal-cell-spent:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.dash-cal-cell-weekend {
+  /* Subtle — weekends shouldn't shout, just be distinguishable when
+     scanning. Adds a small additional tint via a second gradient. */
+  background-color: #f1f5f9;
+}
+.dash-cal-cell-today {
+  /* Outline ring so user sees "where am I in the month" instantly. */
+  border: 2px solid var(--color-accent);
+}
+.dash-cal-day-num {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  line-height: 1;
+}
+.dash-cal-cell-spent .dash-cal-day-num {
+  /* Spent cells get darker text since the bg is now tinted. */
+  color: var(--color-fg);
+}
+.dash-cal-day-amt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  align-self: center;
+  /* "$" prefix omitted for cell density (Patrick's convention). */
+}
+
+/* High-intensity cells get white text since the red base is dark. */
+.dash-cal-cell[style*="--dash-cal-intensity: 0.8"] .dash-cal-day-num,
+.dash-cal-cell[style*="--dash-cal-intensity: 0.9"] .dash-cal-day-num,
+.dash-cal-cell[style*="--dash-cal-intensity: 1"] .dash-cal-day-num,
+.dash-cal-cell[style*="--dash-cal-intensity: 0.8"] .dash-cal-day-amt,
+.dash-cal-cell[style*="--dash-cal-intensity: 0.9"] .dash-cal-day-amt,
+.dash-cal-cell[style*="--dash-cal-intensity: 1"] .dash-cal-day-amt {
+  /* This is a CSS-only contrast hack since we don't have JS-side
+     theming for cells. It catches the top ~20% intensity range,
+     where the red is dark enough to need light text. */
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 640px) {
+  .dash-cal-day-amt {
+    font-size: 0.75rem;
+  }
+  .dash-cal-day-num {
+    font-size: 0.6rem;
+  }
+  .dash-cal-cell {
+    padding: 3px 4px;
+  }
+}
+/* ============================================================ */
+
 .dash-sum-label {
   font-size: 0.68rem;
   font-weight: 700;
