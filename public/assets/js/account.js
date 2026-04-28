@@ -2455,10 +2455,16 @@
     wired: false,
     step: 1,
     file: null,           // File object
-    rawText: '',          // CSV text content
-    headers: [],          // column names from CSV header row
-    rows: [],             // 2D array of data rows
-    mapping: { date: null, amount: null, description: null },
+    rawText: '',          // CSV text content (decoded)
+    encoding: 'utf-8',    // detected encoding label (Phase 5f)
+    matchedPreset: null,  // bank-format preset object if auto-detected (Phase 5f)
+    headers: [],          // column names from CSV header row, OR synthetic
+                          // 'Column 1, Column 2…' for headerless files
+    rows: [],             // 2D array of data rows (excludes header row when present)
+    mapping: { date: null, amount: null, amount_in: null, description: null },
+                          // amount_in (Phase 5f) is optional second column for
+                          // two-column debit/credit banks like Desjardins, BMO.
+                          // When null, single-column path applies (Phase 5d).
     // parsed row shape (one entry per data row in importState.rows):
     //   {
     //     date, amount_cents, description, valid, error,
@@ -2533,7 +2539,7 @@
     }
 
     // Mapping dropdowns
-    ['csv-map-date', 'csv-map-amount', 'csv-map-description'].forEach(function (id) {
+    ['csv-map-date', 'csv-map-amount', 'csv-map-amount-in', 'csv-map-description'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener('change', handleMappingChange);
     });
@@ -2565,9 +2571,11 @@
     importState.step = 1;
     importState.file = null;
     importState.rawText = '';
+    importState.encoding = 'utf-8';
+    importState.matchedPreset = null;
     importState.headers = [];
     importState.rows = [];
-    importState.mapping = { date: null, amount: null, description: null };
+    importState.mapping = { date: null, amount: null, amount_in: null, description: null };
     importState.parsed = [];
     importState.stats = { inflowCount: 0, outflowCount: 0, duplicateCount: 0 };
     importState.submitting = false;
@@ -2577,6 +2585,11 @@
     if (fileInput) fileInput.value = '';
     var fileInfo = document.getElementById('csv-file-info');
     if (fileInfo) fileInfo.hidden = true;
+    var detectionEl = document.getElementById('csv-file-info-detection');
+    if (detectionEl) {
+      detectionEl.hidden = true;
+      detectionEl.innerHTML = '';
+    }
     hideImportError();
     var bannerEl = document.getElementById('csv-review-banner');
     if (bannerEl) {
@@ -2645,28 +2658,123 @@
 
     importState.file = file;
 
+    // Phase 5f: read as ArrayBuffer so we can do encoding detection.
+    // FileReader.readAsText defaults to UTF-8 and silently corrupts
+    // Windows-1252 bytes (Desjardins, fr-CA exports). decodeBytes
+    // returns { text, encoding, replaced } — we use the detected
+    // encoding label in the file-info card so users see what we did.
     var reader = new FileReader();
     reader.onload = function () {
-      importState.rawText = reader.result;
-      var result = window.iboostCsv.parseCsv(importState.rawText);
-      if (result.error) {
-        showImportError('Couldn\'t read CSV: ' + result.error);
+      var decoded = window.iboostCsv.decodeBytes(reader.result);
+      importState.rawText = decoded.text;
+      importState.encoding = decoded.encoding;
+
+      // First parse pass: NO header. We want every row including any
+      // potential header row, because preset fingerprints may inspect
+      // the entire file, and headerless presets (Desjardins) need this
+      // to recover the actual first transaction.
+      var rawParsed = window.iboostCsv.parseCsv(decoded.text, { hasHeader: false });
+      if (rawParsed.error) {
+        showImportError('Couldn\'t read CSV: ' + rawParsed.error);
         importState.file = null;
         return;
       }
-      importState.headers = result.headers;
-      importState.rows = result.rows;
-      importState.mapping = window.iboostCsv.autoDetectMapping(result.headers, result.rows);
 
-      // Show file info card
+      // Try to auto-detect a known bank format.
+      var matchedPreset = null;
+      if (window.iboostCsvPresets && window.iboostCsvPresets.detectPreset) {
+        matchedPreset = window.iboostCsvPresets.detectPreset(rawParsed.rows);
+      }
+
+      if (matchedPreset) {
+        // Preset path: use the preset's hasHeader + mapping. Re-parse
+        // with the correct hasHeader so the rows array doesn't include
+        // a header row by mistake.
+        var presetParsed = window.iboostCsv.parseCsv(decoded.text, {
+          hasHeader: !!matchedPreset.hasHeader,
+        });
+        if (presetParsed.error) {
+          // Should not happen if rawParsed succeeded, but defend
+          // against it anyway by falling through to manual mapping.
+          importState.matchedPreset = null;
+          importState.headers = rawParsed.headers;
+          importState.rows = rawParsed.rows;
+          importState.mapping = window.iboostCsv.autoDetectMapping(
+            rawParsed.headers, rawParsed.rows
+          );
+        } else {
+          importState.matchedPreset = matchedPreset;
+          importState.headers = presetParsed.headers;
+          importState.rows = presetParsed.rows;
+          // Clone the mapping object so user edits in step 2 (if they
+          // unlock it) don't mutate the preset definition.
+          importState.mapping = {
+            date: matchedPreset.mapping.date,
+            amount: matchedPreset.mapping.amount,
+            amount_in: matchedPreset.mapping.amount_in != null
+              ? matchedPreset.mapping.amount_in
+              : null,
+            description: matchedPreset.mapping.description,
+          };
+        }
+      } else {
+        // No preset matched. Re-parse assuming a header row (the
+        // common case). Manual mapping flow handles the rest.
+        var headerParsed = window.iboostCsv.parseCsv(decoded.text);
+        if (headerParsed.error) {
+          // Last resort: use the headerless parse and let the user
+          // map columns manually. Synthetic 'Column 1, 2, …' headers
+          // are not pretty but are functional.
+          importState.matchedPreset = null;
+          importState.headers = rawParsed.headers;
+          importState.rows = rawParsed.rows;
+          importState.mapping = { date: null, amount: null, amount_in: null, description: null };
+        } else {
+          importState.matchedPreset = null;
+          importState.headers = headerParsed.headers;
+          importState.rows = headerParsed.rows;
+          var auto = window.iboostCsv.autoDetectMapping(
+            headerParsed.headers, headerParsed.rows
+          );
+          importState.mapping = {
+            date: auto.date,
+            amount: auto.amount,
+            amount_in: null,
+            description: auto.description,
+          };
+        }
+      }
+
+      // Show file info card. We surface (a) detected encoding when
+      // it's not UTF-8 — users notice when accents work and want to
+      // know why; (b) the matched preset name when one was found.
       var info = document.getElementById('csv-file-info');
       var nameEl = document.getElementById('csv-file-info-name');
       var metaEl = document.getElementById('csv-file-info-meta');
+      var detectionEl = document.getElementById('csv-file-info-detection');
       if (info && nameEl && metaEl) {
         nameEl.textContent = file.name;
-        metaEl.textContent = result.rows.length + ' rows · ' +
-          result.headers.length + ' columns · ' +
-          formatBytes(file.size);
+        var metaParts = [
+          importState.rows.length + ' rows',
+          importState.headers.length + ' columns',
+          formatBytes(file.size),
+        ];
+        if (importState.encoding && importState.encoding !== 'utf-8') {
+          metaParts.push('encoding: ' + importState.encoding);
+        }
+        metaEl.textContent = metaParts.join(' · ');
+
+        if (detectionEl) {
+          if (importState.matchedPreset) {
+            detectionEl.innerHTML = '✓ Detected: <strong>' +
+              escapeHtml(importState.matchedPreset.name) +
+              '</strong>. Skipping column mapping.';
+            detectionEl.hidden = false;
+          } else {
+            detectionEl.hidden = true;
+            detectionEl.innerHTML = '';
+          }
+        }
         info.hidden = false;
       }
 
@@ -2676,7 +2784,9 @@
     reader.onerror = function () {
       showImportError('Couldn\'t read the file. Try again or use a different file.');
     };
-    reader.readAsText(file);
+    // Read as ArrayBuffer so decodeBytes can do encoding detection.
+    // readAsText would force UTF-8 and silently corrupt Windows-1252.
+    reader.readAsArrayBuffer(file);
   }
 
   function formatBytes(n) {
@@ -2689,12 +2799,24 @@
 
   function isValidMapping() {
     var m = importState.mapping;
-    return m.date != null && m.amount != null && m.description != null;
+    if (m.date == null || m.description == null) return false;
+    // Either single-amount column OR two-column debit/credit. amount_in
+    // alone (without amount) is not a valid configuration.
+    if (m.amount == null) return false;
+    if (m.amount_in != null && m.amount_in === m.amount) return false;
+    return true;
   }
 
   function populateMappingDropdowns() {
     var headers = importState.headers;
     var optsHtml = '<option value="">Choose a column…</option>' +
+      headers.map(function (h, i) {
+        return '<option value="' + i + '">' + escapeHtml(h) + '</option>';
+      }).join('');
+    // amount_in dropdown gets an explicit "(none)" so users can opt
+    // out — most banks are single-column. When the auto-detected
+    // mapping has amount_in set, the user can change it back to none.
+    var optsHtmlOptional = '<option value="">— None (single column) —</option>' +
       headers.map(function (h, i) {
         return '<option value="' + i + '">' + escapeHtml(h) + '</option>';
       }).join('');
@@ -2704,6 +2826,8 @@
       if (!el) return;
       el.innerHTML = optsHtml;
     });
+    var inEl = document.getElementById('csv-map-amount-in');
+    if (inEl) inEl.innerHTML = optsHtmlOptional;
 
     // Apply detected defaults
     var dateEl = document.getElementById('csv-map-date');
@@ -2712,18 +2836,41 @@
     if (dateEl && importState.mapping.date != null) dateEl.value = String(importState.mapping.date);
     if (amtEl && importState.mapping.amount != null) amtEl.value = String(importState.mapping.amount);
     if (descEl && importState.mapping.description != null) descEl.value = String(importState.mapping.description);
+    if (inEl) {
+      inEl.value = importState.mapping.amount_in != null
+        ? String(importState.mapping.amount_in)
+        : '';
+    }
+
+    // Update label for amount column based on whether amount_in is set.
+    // Helps users understand "amount" means "outflow column" in the
+    // two-column case.
+    updateAmountLabel();
+  }
+
+  // Adjusts the amount label between "Amount" (single-column) and
+  // "Amount (outflow / debit)" (two-column). Called when the amount_in
+  // selection changes.
+  function updateAmountLabel() {
+    var label = document.querySelector('label[for="csv-map-amount"]');
+    if (!label) return;
+    var hasIn = importState.mapping.amount_in != null;
+    label.textContent = hasIn ? 'Outflow column (debit)' : 'Amount column';
   }
 
   function handleMappingChange() {
     var dateEl = document.getElementById('csv-map-date');
     var amtEl = document.getElementById('csv-map-amount');
+    var amtInEl = document.getElementById('csv-map-amount-in');
     var descEl = document.getElementById('csv-map-description');
     importState.mapping = {
       date: dateEl && dateEl.value !== '' ? parseInt(dateEl.value, 10) : null,
       amount: amtEl && amtEl.value !== '' ? parseInt(amtEl.value, 10) : null,
+      amount_in: amtInEl && amtInEl.value !== '' ? parseInt(amtInEl.value, 10) : null,
       description: descEl && descEl.value !== '' ? parseInt(descEl.value, 10) : null,
     };
 
+    updateAmountLabel();
     renderMappingPreview();
 
     var nextBtn = document.getElementById('csv-next-btn');
@@ -2735,7 +2882,7 @@
     if (!table) return;
 
     if (!isValidMapping()) {
-      table.innerHTML = '<tbody><tr><td style="text-align:center;color:#94a3b8;padding:24px;">Pick all three columns to see a preview.</td></tr></tbody>';
+      table.innerHTML = '<tbody><tr><td style="text-align:center;color:#94a3b8;padding:24px;">Pick the date, amount, and description columns to see a preview.</td></tr></tbody>';
       return;
     }
 
@@ -3147,10 +3294,17 @@
 
   async function handleImportNext() {
     if (importState.step === 1) {
-      // -> Step 2
-      populateMappingDropdowns();
-      renderMappingPreview();
-      showImportStep(2);
+      if (importState.matchedPreset) {
+        // Phase 5f: a known bank format was auto-detected on file
+        // load. Mapping is already correct — skip the manual mapping
+        // step entirely and go straight to the review screen.
+        await renderReviewTable();
+      } else {
+        // -> Step 2 (manual mapping)
+        populateMappingDropdowns();
+        renderMappingPreview();
+        showImportStep(2);
+      }
     } else if (importState.step === 2) {
       // -> Step 3
       await renderReviewTable();
@@ -3163,7 +3317,12 @@
 
   function handleImportBack() {
     if (importState.step === 2) showImportStep(1);
-    else if (importState.step === 3) showImportStep(2);
+    // From step 3: if we got there via a preset, step 2 was skipped —
+    // return to step 1 instead of a never-shown mapping screen.
+    else if (importState.step === 3) {
+      if (importState.matchedPreset) showImportStep(1);
+      else showImportStep(2);
+    }
   }
 
   async function commitImport() {

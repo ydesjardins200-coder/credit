@@ -2187,6 +2187,7 @@
         <div class="csv-file-info" id="csv-file-info" hidden>
           <div class="csv-file-info-name" id="csv-file-info-name"></div>
           <div class="csv-file-info-meta" id="csv-file-info-meta"></div>
+          <div class="csv-file-info-detection" id="csv-file-info-detection" hidden></div>
         </div>
 
         <div class="add-entry-error" id="csv-import-error" hidden role="alert"></div>
@@ -2207,6 +2208,14 @@
           <div class="add-entry-field">
             <label for="csv-map-amount" class="add-entry-label">Amount column</label>
             <select id="csv-map-amount" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-amount-in" class="add-entry-label">
+              Inflow column (optional)
+              <span class="csv-help-inline">— pick this if your bank uses
+              separate columns for debits and credits</span>
+            </label>
+            <select id="csv-map-amount-in" class="add-entry-input"></select>
           </div>
           <div class="add-entry-field">
             <label for="csv-map-description" class="add-entry-label">Description column</label>
@@ -2295,6 +2304,7 @@
   <script src="/assets/js/lib/merchant-categories.js" defer></script>
   <script src="/assets/js/lib/budget.js" defer></script>
   <script src="/assets/js/lib/csv-import.js" defer></script>
+  <script src="/assets/js/lib/csv-presets.js" defer></script>
   <script src="/assets/js/plans-loader.js" defer></script>
   <script src="/assets/js/account.js" defer></script>
 </body>

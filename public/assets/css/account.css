@@ -5025,13 +5025,37 @@
   color: var(--color-fg-soft);
   margin-top: 2px;
 }
+/* Phase 5f: green confirmation when a known bank format is auto-detected.
+   Sits inside .csv-file-info (which has accent-soft background), so we
+   use a white background to visually separate the chip from the card. */
+.csv-file-info-detection {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #065f46;            /* emerald-800 */
+  background: #ffffff;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.csv-file-info-detection strong {
+  color: inherit;
+}
 
-/* Step 2: column mapping grid */
+/* Step 2: column mapping grid. 4 columns now that two-column banks
+   need an Inflow dropdown alongside Date / Amount / Description.
+   Collapses to single column on mobile. */
 .csv-mapping-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+}
+.csv-help-inline {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--color-fg-soft);
+  display: block;
+  margin-top: 2px;
 }
 
 @media (max-width: 640px) {
