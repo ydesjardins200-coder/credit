@@ -2459,7 +2459,29 @@
     headers: [],          // column names from CSV header row
     rows: [],             // 2D array of data rows
     mapping: { date: null, amount: null, description: null },
-    parsed: [],           // [{date, amount_cents, description, valid, error, category_id, skip}]
+    // parsed row shape (one entry per data row in importState.rows):
+    //   {
+    //     date, amount_cents, description, valid, error,
+    //     category_id, skip,
+    //     original_sign,    // 'positive' | 'negative' | 'zero' — sign of
+    //                       // the raw parsed amount BEFORE Math.abs.
+    //                       // Used for the inflow-warning banner; we store
+    //                       // amount_cents as positive (schema requires it)
+    //                       // and rely on category.kind for sign in queries.
+    //     duplicate_of,     // null | 'existing' | 'in_batch' — set when
+    //                       // dedup detects this row matches another.
+    //                       // 'existing' = same date/amount/note already in
+    //                       // the user's budget_entries; 'in_batch' = this
+    //                       // row is a copy of an earlier row in the same CSV.
+    //   }
+    parsed: [],
+    // Aggregate stats computed during buildReviewParsedRows; rendered as a
+    // banner above the review table. Reset per import.
+    stats: {
+      inflowCount: 0,        // rows with original_sign === 'positive'
+      outflowCount: 0,       // rows with original_sign === 'negative'
+      duplicateCount: 0,     // rows where duplicate_of !== null
+    },
     submitting: false,
   };
 
@@ -2547,6 +2569,7 @@
     importState.rows = [];
     importState.mapping = { date: null, amount: null, description: null };
     importState.parsed = [];
+    importState.stats = { inflowCount: 0, outflowCount: 0, duplicateCount: 0 };
     importState.submitting = false;
 
     // Reset DOM bits
@@ -2555,6 +2578,11 @@
     var fileInfo = document.getElementById('csv-file-info');
     if (fileInfo) fileInfo.hidden = true;
     hideImportError();
+    var bannerEl = document.getElementById('csv-review-banner');
+    if (bannerEl) {
+      bannerEl.hidden = true;
+      bannerEl.innerHTML = '';
+    }
     var nextBtn = document.getElementById('csv-next-btn');
     if (nextBtn) {
       nextBtn.disabled = true;
@@ -2733,6 +2761,43 @@
 
   // ----- Step 3: review -----
 
+  // -------------------------------------------------------------------
+  // Dedup helpers (Phase 5e).
+  //
+  // A "dedup key" is what we treat as the identity of a transaction for
+  // matching purposes: same date + same absolute amount + same normalized
+  // description. Banks vary in punctuation / whitespace / case across
+  // re-exports of the same data, so we normalize the description before
+  // hashing.
+  //
+  // We deliberately do NOT include category_id in the key. If the user
+  // has been auto-categorizing the same merchant differently over time,
+  // we still want to flag it as a re-import duplicate. The point of dedup
+  // is "did this transaction already get recorded", not "did it get
+  // recorded under exactly the same category".
+  //
+  // Limitations (documented, not bugs):
+  //   - A user who legitimately spent $4.75 at the same coffee shop
+  //     twice on the same day will see the second one flagged. The fix
+  //     is they uncheck "skip" in the review screen — we don't silently
+  //     drop, we surface and let the user decide.
+  //   - Note normalization is lower+collapse-whitespace, not unicode
+  //     normalization. "café" and "cafe" will not match. fr-CA users
+  //     re-importing the same file should still get exact matches
+  //     because the encoding pipeline is end-to-end UTF-8.
+  // -------------------------------------------------------------------
+
+  function normalizeNoteForDedup(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function dedupKey(isoDate, absAmountCents, note) {
+    return isoDate + '|' + absAmountCents + '|' + normalizeNoteForDedup(note);
+  }
+
   async function buildReviewParsedRows() {
     // Parse every row, then run merchant suggester on description to
     // auto-pick a category. The suggester returns a category NAME — we
@@ -2763,19 +2828,31 @@
     }
     if (!fallback && cats.length) fallback = cats[0];
 
-    importState.parsed = importState.rows.map(function (row) {
+    // First pass: parse every row, capturing the ORIGINAL sign before we
+    // collapse to abs(). The sign is used only for the inflow-warning
+    // banner (Phase 5e); the schema still stores positive amounts and
+    // sign comes from category.kind as documented in migration 0016.
+    var firstPass = importState.rows.map(function (row) {
       var p = window.iboostCsv.parseRow(row, importState.mapping);
       if (!p.valid) {
-        return Object.assign({}, p, { category_id: null, skip: true });
+        return Object.assign({}, p, {
+          category_id: null,
+          skip: true,
+          original_sign: 'zero',
+          duplicate_of: null,
+        });
       }
 
-      // For amounts: bank exports often have negative values for
-      // outflows (expenses) and positive for inflows (income/refunds).
-      // Our schema requires amount_cents >= 0. We take the absolute
-      // value here. This means we LOSE the sign information — a paid
-      // refund will look like an expense unless the user reviews it.
-      // The auto-suggested category will use the description so the
-      // sign isn't critical for categorization. Documented limitation.
+      // Capture sign before abs(). parseRow already returns signed cents
+      // (parseAmount preserves negation, parens, leading minus).
+      var sign = p.amount_cents > 0 ? 'positive'
+        : p.amount_cents < 0 ? 'negative'
+        : 'zero';
+
+      // Schema constraint: amount_cents >= 0. See migration 0016 line
+      // 169. Sign of cash flow is determined at query time by joining
+      // to budget_categories.kind. Documented architectural decision —
+      // do not "fix" by storing negative amounts.
       var positiveCents = Math.abs(p.amount_cents);
 
       var suggested = null;
@@ -2793,8 +2870,82 @@
         error: null,
         category_id: categoryId,
         skip: false,
+        original_sign: sign,
+        duplicate_of: null,
       };
     });
+
+    // Second pass: dedup. Compute the date range covered by valid rows
+    // and fetch existing entries from Supabase in that window. Anything
+    // matching by (date + abs amount + normalized note) is flagged.
+    //
+    // Performance note: we fetch the entire window once, build a Set of
+    // existing keys in memory, then check each parsed row against the
+    // Set in O(1). For a 1000-row CSV spanning 6 months, that's typically
+    // a few hundred existing entries — well under any meaningful payload
+    // size.
+    var validParsed = firstPass.filter(function (p) { return p.valid; });
+    var existingKeys = new Set();
+
+    if (validParsed.length > 0) {
+      var minDate = validParsed[0].date;
+      var maxDate = validParsed[0].date;
+      for (var k = 1; k < validParsed.length; k++) {
+        if (validParsed[k].date < minDate) minDate = validParsed[k].date;
+        if (validParsed[k].date > maxDate) maxDate = validParsed[k].date;
+      }
+
+      var existingResult = await window.iboostBudget.getEntriesInRange(minDate, maxDate);
+      if (existingResult.error) {
+        // Non-fatal: dedup is a quality-of-life feature. If the fetch
+        // fails (network blip, RLS misconfig), we still let the user
+        // import — they just won't get duplicate flagging this run.
+        // Logged so we notice in the console if this regresses silently.
+        console.warn('[csv-import] dedup fetch failed, continuing without:', existingResult.error);
+      } else {
+        (existingResult.data || []).forEach(function (e) {
+          existingKeys.add(dedupKey(e.entry_date, e.amount_cents, e.note));
+        });
+      }
+    }
+
+    // Tag each parsed row with duplicate_of if applicable. Two flavors:
+    //   'existing' — already in the user's budget_entries table
+    //   'in_batch' — a copy of an earlier row in this same CSV
+    // Both default to skip=true; user can uncheck if they really want
+    // the dupe.
+    var batchSeen = new Set();
+    var inflowCount = 0;
+    var outflowCount = 0;
+    var duplicateCount = 0;
+
+    firstPass.forEach(function (p) {
+      if (!p.valid) return;
+
+      if (p.original_sign === 'positive') inflowCount++;
+      else if (p.original_sign === 'negative') outflowCount++;
+
+      var key = dedupKey(p.date, p.amount_cents, p.description);
+
+      if (existingKeys.has(key)) {
+        p.duplicate_of = 'existing';
+        p.skip = true;
+        duplicateCount++;
+      } else if (batchSeen.has(key)) {
+        p.duplicate_of = 'in_batch';
+        p.skip = true;
+        duplicateCount++;
+      } else {
+        batchSeen.add(key);
+      }
+    });
+
+    importState.parsed = firstPass;
+    importState.stats = {
+      inflowCount: inflowCount,
+      outflowCount: outflowCount,
+      duplicateCount: duplicateCount,
+    };
   }
 
   async function renderReviewTable() {
@@ -2826,12 +2977,52 @@
 
     var validCount = importState.parsed.filter(function (p) { return p.valid; }).length;
     var invalidCount = importState.parsed.length - validCount;
+    var stats = importState.stats || { inflowCount: 0, outflowCount: 0, duplicateCount: 0 };
 
-    summary.innerHTML = '<strong>' + validCount + '</strong> rows ready to import' +
-      (invalidCount > 0 ? ' · <strong>' + invalidCount + '</strong> rows skipped (couldn\'t parse)' : '');
+    // Build summary line. Order: ready · skipped (parse) · duplicates ·
+    // inflow heads-up. Each segment hidden when its count is zero so the
+    // summary stays calm in the common case.
+    var summaryParts = ['<strong>' + validCount + '</strong> rows ready to import'];
+    if (invalidCount > 0) {
+      summaryParts.push('<strong>' + invalidCount + '</strong> couldn\'t parse');
+    }
+    if (stats.duplicateCount > 0) {
+      summaryParts.push('<strong>' + stats.duplicateCount + '</strong> possible duplicate' +
+        (stats.duplicateCount === 1 ? '' : 's') + ' (unchecked by default)');
+    }
+    summary.innerHTML = summaryParts.join(' · ');
+
+    // Inflow heads-up banner. Shown only when both signs are present
+    // and the minority side is at least 1 row — the common bank-export
+    // case is "all expenses" which we don't need to warn about, and the
+    // pure-income case (paystubs only) is also fine without a banner.
+    // The mixed case is where users get tripped up: expenses default to
+    // the merchant-suggested category, but a refund or paycheck row will
+    // ALSO get an expense category unless the user notices and changes it.
+    var bannerEl = document.getElementById('csv-review-banner');
+    if (bannerEl) {
+      if (stats.inflowCount > 0 && stats.outflowCount > 0) {
+        var minority = stats.inflowCount < stats.outflowCount ? stats.inflowCount : stats.outflowCount;
+        // Only banner when the minority is meaningful (1+ row of the
+        // less-common sign). Always meaningful in practice because if
+        // we made it here, both > 0.
+        bannerEl.innerHTML =
+          '<strong>Heads up:</strong> ' + stats.inflowCount + ' row' +
+          (stats.inflowCount === 1 ? '' : 's') + ' look' +
+          (stats.inflowCount === 1 ? 's' : '') + ' like income or refunds ' +
+          '(positive amount), and ' + stats.outflowCount + ' look' +
+          (stats.outflowCount === 1 ? 's' : '') + ' like expenses (negative). ' +
+          'The ↑ badge marks inflows — assign those to an Income or ' +
+          'Transfer category, otherwise they\'ll be counted as spending.';
+        bannerEl.hidden = false;
+      } else {
+        bannerEl.hidden = true;
+        bannerEl.innerHTML = '';
+      }
+    }
 
     var html = '<thead><tr>' +
-      '<th style="width:40px;"><input type="checkbox" id="csv-review-toggle-all" checked aria-label="Toggle all"></th>' +
+      '<th style="width:40px;"><input type="checkbox" id="csv-review-toggle-all" aria-label="Toggle all"></th>' +
       '<th>Date</th><th>Amount</th><th>Description</th><th>Category</th>' +
     '</tr></thead><tbody>';
 
@@ -2843,18 +3034,50 @@
         '</tr>';
         return;
       }
-      html += '<tr data-row-idx="' + idx + '"' + (p.skip ? ' class="is-skipped"' : '') + '>' +
+
+      // Per-row badges. Inflow gets ↑, outflow gets nothing (default
+      // case, no need to clutter). Duplicates get an "Already imported"
+      // or "Duplicate row" tag.
+      var amountBadge = '';
+      if (p.original_sign === 'positive') {
+        amountBadge = ' <span class="csv-badge csv-badge-inflow" title="Positive amount in source — likely income or refund">↑</span>';
+      }
+      var dupBadge = '';
+      if (p.duplicate_of === 'existing') {
+        dupBadge = '<span class="csv-badge csv-badge-dup" title="Matches a transaction already in your budget">Already imported</span> ';
+      } else if (p.duplicate_of === 'in_batch') {
+        dupBadge = '<span class="csv-badge csv-badge-dup" title="Same date, amount, and description as an earlier row in this CSV">Duplicate row</span> ';
+      }
+
+      var rowClass = [];
+      if (p.skip) rowClass.push('is-skipped');
+      if (p.duplicate_of) rowClass.push('is-duplicate');
+      var rowClassAttr = rowClass.length ? ' class="' + rowClass.join(' ') + '"' : '';
+
+      html += '<tr data-row-idx="' + idx + '"' + rowClassAttr + '>' +
         '<td><input type="checkbox" data-csv-skip="' + idx + '"' + (p.skip ? '' : ' checked') + ' aria-label="Include row"></td>' +
         '<td>' + escapeHtml(p.date) + '</td>' +
-        '<td>' + window.iboostBudget.formatCents(p.amount_cents) + '</td>' +
+        '<td>' + window.iboostBudget.formatCents(p.amount_cents) + amountBadge + '</td>' +
         '<td title="' + escapeHtml(p.description) + '">' +
-          escapeHtml(truncate(p.description, 40)) +
+          dupBadge + escapeHtml(truncate(p.description, 40)) +
         '</td>' +
         '<td><select data-csv-category="' + idx + '">' + optionsHtml + '</select></td>' +
       '</tr>';
     });
     html += '</tbody>';
     table.innerHTML = html;
+
+    // Toggle-all reflects current state: checked only if every valid row
+    // is included. With dedup, the default state is mixed, so we don't
+    // pre-check the master toggle — that would be misleading.
+    var toggleAll = document.getElementById('csv-review-toggle-all');
+    if (toggleAll) {
+      var anyValid = importState.parsed.some(function (p) { return p.valid; });
+      var allIncluded = anyValid && importState.parsed.every(function (p) {
+        return !p.valid || !p.skip;
+      });
+      toggleAll.checked = allIncluded;
+    }
 
     // Set initial select values
     importState.parsed.forEach(function (p, idx) {
@@ -2863,9 +3086,17 @@
       if (sel && p.category_id) sel.value = p.category_id;
     });
 
-    // Wire interactions on the table (delegated)
-    table.addEventListener('change', handleReviewTableChange);
-    table.addEventListener('click', handleReviewTableClick);
+    // Wire interactions on the table (delegated). The table element is
+    // reused across re-renders (innerHTML replacement only nukes
+    // descendants, not listeners on the table itself), so we gate on a
+    // flag to avoid stacking duplicate listeners every time the user
+    // navigates Back→Next. Was a pre-existing leak before dedup made
+    // re-renders more common.
+    if (!table.dataset.csvWired) {
+      table.addEventListener('change', handleReviewTableChange);
+      table.addEventListener('click', handleReviewTableClick);
+      table.dataset.csvWired = 'true';
+    }
 
     // Update Next button label
     showImportStep(3);

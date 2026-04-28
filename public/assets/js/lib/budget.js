@@ -289,6 +289,42 @@
   }
 
   /**
+   * Fetch entries spanning an arbitrary date range. Used by CSV import
+   * dedup (Phase 5e): a single import can span many months, and we need
+   * to compare every parsed row against every existing entry in that
+   * window to flag duplicates.
+   *
+   * Returns the same shape as getEntriesForMonth — { data, error } with
+   * each row joined to its category. Slimmer columns would be enough for
+   * dedup (just date/amount/note), but consistency with getEntriesForMonth
+   * is more valuable than the few KB saved on the wire.
+   *
+   * @param {string} startIsoDate 'YYYY-MM-DD' inclusive
+   * @param {string} endIsoDate   'YYYY-MM-DD' inclusive
+   */
+  async function getEntriesInRange(startIsoDate, endIsoDate) {
+    const auth = await getClient();
+    if (auth.error) return { data: [], error: auth.error };
+
+    if (!startIsoDate || !endIsoDate) {
+      return { data: [], error: new Error('getEntriesInRange: start/end required') };
+    }
+
+    const { data, error } = await auth.client
+      .from('budget_entries')
+      .select(`
+        *,
+        category:budget_categories (id, name, kind, emoji)
+      `)
+      .eq('user_id', auth.userId)
+      .gte('entry_date', startIsoDate)
+      .lte('entry_date', endIsoDate)
+      .order('entry_date', { ascending: false });
+
+    return { data: data || [], error: error };
+  }
+
+  /**
    * Add a single entry. Amount is in cents (integer).
    *
    * @param {{category_id: string, entry_date: string, amount_cents: number, note?: string}} input
@@ -682,6 +718,7 @@
 
     // Entries
     getEntriesForMonth: getEntriesForMonth,
+    getEntriesInRange: getEntriesInRange,
     addEntry: addEntry,
     addEntriesBatch: addEntriesBatch,
     updateEntry: updateEntry,
