@@ -611,8 +611,263 @@
    * AND the summary in one DB roundtrip. So we fetch entries once,
    * derive summary client-side. For the data volumes in question
    * (typically <100 entries/month) this is trivial.
+   *
+   * NOTE: actual function declaration is below the OPENING BALANCES
+   * section since summarize() is now invoked by resolveOpeningBalanceForMonth
+   * (to compute prior-month closings for rollover). The JSDoc lives here
+   * with the SUMMARY section header for findability.
    */
-  function summarize(entries) {
+  // ============================================================
+  // OPENING BALANCES (Phase 5j)
+  // ============================================================
+  //
+  // Per-month opening balance for the user's primary operating
+  // account. Backed by the budget_opening_balances table from
+  // migration 0017.
+  //
+  // The user-facing model:
+  //   - User can set an opening balance for any month explicitly
+  //     (source='manual'). This sticks: never auto-overwritten.
+  //   - For months with no row, the application resolves a default
+  //     by walking back to the most recent prior month with data,
+  //     projecting that month's closing forward.
+  //   - The first time we resolve a default, we PERSIST it as a
+  //     row with source='rollover'. This makes future reads O(1)
+  //     and makes the value sticky against retroactive edits to
+  //     older months. (Yan's call: predictability beats math
+  //     purity here.)
+  //
+  // Performance note: typical user has <24 months of history. The
+  // recursive resolve walks back from N to find the most recent
+  // anchor, which is at most O(months in DB). Capped implicitly by
+  // the user's signup date. No need for a smart query — a simple
+  // 'most recent prior with data' lookup is enough.
+
+  /**
+   * Read the opening balance row for a specific month, if one
+   * exists. Does NOT trigger rollover — use resolveOpeningBalanceForMonth
+   * for the full read-or-default path. Useful when you specifically
+   * want to know whether a manual value exists.
+   *
+   * @param {Date|string} month
+   * @returns {{ data: {id, opening_cents, source, month_start} | null, error }}
+   */
+  async function getOpeningBalance(month) {
+    const auth = await getClient();
+    if (auth.error) return { data: null, error: auth.error };
+
+    const monthIso = toMonthStart(month);
+    const { data, error } = await auth.client
+      .from('budget_opening_balances')
+      .select('id, opening_cents, source, month_start')
+      .eq('user_id', auth.userId)
+      .eq('month_start', monthIso)
+      .maybeSingle();
+
+    return { data: data || null, error: error };
+  }
+
+  /**
+   * Find the most recent opening balance row at or before the given
+   * month, joined with that month's entries so we can compute the
+   * closing balance and project forward.
+   *
+   * Used by resolveOpeningBalanceForMonth to walk back to the most
+   * recent anchor when the requested month has no row.
+   *
+   * Returns the prior row + its month's closing balance, or null
+   * if no prior row exists at all (i.e., user has never set an
+   * opening balance).
+   *
+   * @param {string} monthIso  YYYY-MM-01 of the month we're trying
+   *                           to resolve. The lookup excludes this
+   *                           month and looks at strictly-prior months.
+   * @returns {{ row, closing_cents } | null}
+   */
+  async function findMostRecentPriorOpening(monthIso) {
+    const auth = await getClient();
+    if (auth.error) return null;
+
+    const { data, error } = await auth.client
+      .from('budget_opening_balances')
+      .select('id, opening_cents, source, month_start')
+      .eq('user_id', auth.userId)
+      .lt('month_start', monthIso)
+      .order('month_start', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    // Compute that month's closing = its opening + its income - spent
+    // - transfers. We need that month's entries to do this. (We
+    // intentionally re-derive instead of caching closing_cents on the
+    // table — it's cheap, and caching means we'd have to invalidate
+    // every time entries in that month change.)
+    const { data: priorEntries } = await getEntriesForMonth(data.month_start);
+    const priorSummary = summarize(priorEntries || []);
+    const closing = data.opening_cents
+      + priorSummary.income_cents
+      - priorSummary.spent_cents
+      - priorSummary.transfers_cents;
+
+    return { row: data, closing_cents: closing };
+  }
+
+  /**
+   * The full read-or-default path for a month's opening balance.
+   *
+   * Returns:
+   *   { opening_cents, source, isResolved, anchorMonth }
+   *     where source is 'manual' | 'rollover' | null
+   *           isResolved is true if we have a value, false if no
+   *             prior data exists anywhere (UI shows "Not set")
+   *           anchorMonth is the YYYY-MM-01 of the original manual
+   *             row this rolled forward from, when source='rollover'.
+   *             Null otherwise.
+   *
+   * Side effect: when no row exists for the requested month but a
+   * prior anchor does, we INSERT a new row with source='rollover'
+   * so future reads skip the walk-back. The insert is best-effort:
+   * if it fails (network, RLS quirk), we still return the computed
+   * value — the user sees the right number, we just recompute next
+   * time.
+   *
+   * @param {Date|string} month
+   * @returns {{ data, error }}
+   */
+  async function resolveOpeningBalanceForMonth(month) {
+    const auth = await getClient();
+    if (auth.error) {
+      return { data: null, error: auth.error };
+    }
+
+    const monthIso = toMonthStart(month);
+
+    // 1. Direct hit?
+    const direct = await getOpeningBalance(monthIso);
+    if (direct.error) return { data: null, error: direct.error };
+    if (direct.data) {
+      return {
+        data: {
+          opening_cents: direct.data.opening_cents,
+          source: direct.data.source,
+          isResolved: true,
+          anchorMonth: direct.data.source === 'rollover' ? null : monthIso,
+        },
+        error: null,
+      };
+    }
+
+    // 2. Walk back to the most recent prior month that has a row.
+    const prior = await findMostRecentPriorOpening(monthIso);
+    if (!prior) {
+      return {
+        data: {
+          opening_cents: null,
+          source: null,
+          isResolved: false,
+          anchorMonth: null,
+        },
+        error: null,
+      };
+    }
+
+    // 3. Roll the prior month's closing forward into this month.
+    //    This is potentially many months forward — we just project
+    //    one hop. If the user views month N+5 with an anchor at N,
+    //    we'd compute N's closing and use that as the opening for
+    //    N+1 (months N+2..N+5 get filled in lazily as the user
+    //    visits them). For a smarter all-at-once fill, we'd have
+    //    to fetch all intermediate months' entries — premature
+    //    optimization. Lazy fill is fine.
+    //
+    //    BUT: if there are intermediate months between prior and
+    //    requested, we must NOT skip them. So we only roll forward
+    //    one month at a time. If prior is the previous month,
+    //    great. If not, we still anchor on prior's closing — it's
+    //    the best information we have, and intermediate-month
+    //    closings would all be derived from this same anchor
+    //    anyway (since they have no entries either, by definition).
+    const computedOpening = prior.closing_cents;
+
+    // Persist as rollover so next read is O(1) and the value is
+    // sticky against retroactive edits to the anchor month.
+    // Best-effort: if insert fails (rare race or RLS issue), we
+    // still return the computed value below.
+    await auth.client
+      .from('budget_opening_balances')
+      .insert([{
+        user_id: auth.userId,
+        month_start: monthIso,
+        opening_cents: computedOpening,
+        source: 'rollover',
+      }]);
+    // Intentionally not checking error: a unique-constraint failure
+    // here means another tab/request inserted concurrently, in which
+    // case our value is still correct. Other errors don't block the
+    // user's read.
+
+    return {
+      data: {
+        opening_cents: computedOpening,
+        source: 'rollover',
+        isResolved: true,
+        anchorMonth: prior.row.month_start,
+      },
+      error: null,
+    };
+  }
+
+  /**
+   * Set (upsert) a manual opening balance for a month. Always writes
+   * source='manual'; this never gets auto-overwritten by rollover
+   * resolution.
+   *
+   * Existing 'rollover' rows for the same month are overwritten —
+   * the user is replacing the system default with their own number.
+   *
+   * @param {Date|string} month
+   * @param {number} opening_cents  may be negative
+   * @returns {{ data, error }}
+   */
+  async function setOpeningBalance(month, opening_cents) {
+    const auth = await getClient();
+    if (auth.error) return { data: null, error: auth.error };
+
+    if (typeof opening_cents !== 'number' || isNaN(opening_cents)) {
+      return { data: null, error: new Error('setOpeningBalance: opening_cents must be a number') };
+    }
+
+    const monthIso = toMonthStart(month);
+
+    const row = {
+      user_id: auth.userId,
+      month_start: monthIso,
+      opening_cents: Math.round(opening_cents),
+      source: 'manual',
+    };
+
+    // Upsert on the unique (user_id, month_start) constraint. If a
+    // rollover row already exists for this month, this overwrites it
+    // and flips source to 'manual'.
+    const { data, error } = await auth.client
+      .from('budget_opening_balances')
+      .upsert([row], { onConflict: 'user_id,month_start' })
+      .select()
+      .single();
+
+    return { data: data, error: error };
+  }
+
+  /**
+   * Phase 5j extension to summarize: optional opening_cents parameter.
+   * When provided, summary.closing_cents is populated as
+   *   opening + income - spent - transfers
+   * (the user's projected month-end cash position). When omitted,
+   * closing_cents is null — UI distinguishes "not set" from $0.
+   */
+  function summarize(entries, opening_cents) {
     let income = 0, spent = 0, transfers = 0;
     const byCat = {};
 
@@ -653,12 +908,20 @@
     const available = income - spent;
     const savings_rate = income > 0 ? Math.max(0, (income - spent) / income) : 0;
 
+    // Phase 5j: closing balance.
+    const opening = (typeof opening_cents === 'number') ? opening_cents : null;
+    const closing = opening != null
+      ? opening + income - spent - transfers
+      : null;
+
     return {
       income_cents: income,
       spent_cents: spent,
       transfers_cents: transfers,
       available_cents: available,
       savings_rate: savings_rate,
+      opening_cents: opening,
+      closing_cents: closing,
       by_category: by_category,
     };
   }
@@ -666,12 +929,46 @@
   /**
    * Convenience function: fetch entries for a month AND compute summary
    * in one call. The most common caller flow.
+   *
+   * Phase 5j: also resolves the opening balance for this month
+   * (manual row, rolled-forward default, or null if no anchor exists)
+   * and feeds it into summarize() so closing_cents is populated.
+   *
+   * Caller can opt out of opening-balance resolution via
+   * opts.skipOpeningBalance when the cost of the extra DB call isn't
+   * worth it (e.g., prior-month walk-back during rollover resolution
+   * where we recurse).
+   *
+   * @param {Date|string} month
+   * @param {{skipOpeningBalance?: boolean}} [opts]
    */
-  async function getMonthSummary(month) {
+  async function getMonthSummary(month, opts) {
     const { data: entries, error } = await getEntriesForMonth(month);
     if (error) return { data: null, error: error };
 
-    const summary = summarize(entries);
+    let openingInfo = null;
+    if (!opts || !opts.skipOpeningBalance) {
+      const ob = await resolveOpeningBalanceForMonth(month);
+      if (!ob.error && ob.data) {
+        openingInfo = ob.data;
+      }
+    }
+
+    const opening_cents = openingInfo && openingInfo.isResolved
+      ? openingInfo.opening_cents
+      : null;
+    const summary = summarize(entries, opening_cents);
+
+    // Surface the resolution metadata too — UI uses it to show
+    // "Manual" vs "From Feb 2026" subtitles.
+    if (openingInfo) {
+      summary.opening_source = openingInfo.source;
+      summary.opening_anchor_month = openingInfo.anchorMonth;
+    } else {
+      summary.opening_source = null;
+      summary.opening_anchor_month = null;
+    }
+
     return {
       data: { entries: entries, summary: summary },
       error: null,
@@ -742,6 +1039,11 @@
     getGoalsForMonth: getGoalsForMonth,
     setGoal: setGoal,
     deleteGoal: deleteGoal,
+
+    // Opening balances (Phase 5j)
+    getOpeningBalance: getOpeningBalance,
+    setOpeningBalance: setOpeningBalance,
+    resolveOpeningBalanceForMonth: resolveOpeningBalanceForMonth,
 
     // Summary
     summarize: summarize,

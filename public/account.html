@@ -1013,8 +1013,35 @@
           <div class="dash-sum-val"><span data-budget-savings-rate>32</span><span class="dash-sum-unit">%</span></div>
           <div class="dash-sum-delta" data-budget-savings-sub>Of income saved</div>
         </article>
-        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
-        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
+        <!-- Phase 5j: Opening balance.
+             The whole card is clickable — opens edit modal. Pencil
+             icon hints at editability. When no value resolved
+             (no manual anchor exists in any prior month), shows
+             "Not set" with a "Click to add" sub-label. -->
+        <article class="dash-sum-card dash-sum-card-clickable"
+                 data-budget-opening-card
+                 role="button" tabindex="0"
+                 aria-label="Edit opening balance">
+          <div class="dash-sum-label">
+            Opening balance
+            <svg class="dash-sum-edit-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+            </svg>
+          </div>
+          <div class="dash-sum-val" data-budget-opening>—</div>
+          <div class="dash-sum-delta" data-budget-opening-sub>Click to set</div>
+        </article>
+        <!-- Phase 5j: Closing balance / Net cash flow.
+             Read-only; derived from opening + income - spent - transfers.
+             When opening isn't set, shows a hint. -->
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Closing balance</div>
+          <div class="dash-sum-val" data-budget-closing>—</div>
+          <div class="dash-sum-delta" data-budget-closing-sub>After this month</div>
+        </article>
         <article class="dash-sum-card is-empty" aria-hidden="true"></article>
       </div>
 
@@ -2178,6 +2205,70 @@
         <div class="add-entry-footer-spacer"></div>
         <button type="button" class="btn btn-outline" data-all-entries-close>Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       Opening balance modal (Phase 5j of Budget tab)
+       ===========================================================
+       Edit the opening balance for the currently-viewed budget
+       month. Single dollar input. Negative values allowed (some
+       users genuinely start months overdrawn).
+
+       Triggered by clicking the Opening balance summary card.
+       Saves to budget_opening_balances with source='manual'.
+       =========================================================== -->
+  <div id="opening-balance-modal" class="add-entry-modal" hidden
+       role="dialog" aria-modal="true" aria-labelledby="opening-balance-title">
+    <div class="add-entry-modal-backdrop" data-opening-balance-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-opening-balance-close
+              aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="opening-balance-title" class="add-entry-modal-title">
+        Opening balance
+      </h2>
+      <p class="csv-help" id="opening-balance-month-label" style="margin-bottom: var(--space-2);">
+        <!-- "for April 2026" — populated by JS -->
+      </p>
+
+      <form id="opening-balance-form" class="add-entry-form" novalidate>
+        <div class="add-entry-field">
+          <label for="opening-balance-amount" class="add-entry-label">
+            How much did you start the month with?
+          </label>
+          <div class="add-entry-amount-wrap">
+            <span class="add-entry-amount-prefix">$</span>
+            <input
+              type="text"
+              inputmode="decimal"
+              id="opening-balance-amount"
+              class="add-entry-input add-entry-amount-input"
+              placeholder="0.00"
+              autocomplete="off"
+              required
+              aria-label="Opening balance in dollars"
+            />
+          </div>
+          <p class="csv-help csv-help-secondary" style="margin-top: 6px; margin-bottom: 0;">
+            Negative values are allowed if your account started overdrawn.
+          </p>
+        </div>
+
+        <div class="add-entry-error" id="opening-balance-error" hidden role="alert"></div>
+
+        <div class="add-entry-footer">
+          <div class="add-entry-footer-spacer"></div>
+          <button type="button" class="btn btn-outline" data-opening-balance-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="opening-balance-submit">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 

@@ -1333,6 +1333,9 @@
 
     // 10. Wire "See all" link in Recent Entries card → Phase 5g modal
     wireBudgetSeeAllCta();
+
+    // 11. Wire Opening balance card → Phase 5j edit modal
+    wireOpeningBalanceCard();
   }
 
   /**
@@ -1395,6 +1398,76 @@
     setText('[data-budget-transfers-sub]',
       (summary.transfers_cents || 0) > 0 ? 'Moved this month' : 'No transfers logged');
     setText('[data-budget-savings-sub]', summary.income_cents > 0 ? 'Of income saved' : '—');
+
+    // Phase 5j: Opening balance + Closing balance cards.
+    renderOpeningBalanceCard(summary);
+    renderClosingBalanceCard(summary);
+  }
+
+  // Phase 5j — Opening balance card render. Three states:
+  //   1. Manual value set:      "$X,XXX.XX" + "Manual"
+  //   2. Rolled-over default:   "$X,XXX.XX" + "From <Anchor month>"
+  //   3. Not set:               "—"          + "Click to set"
+  function renderOpeningBalanceCard(summary) {
+    var fmt = window.iboostBudget.formatCents;
+    var valEl = document.querySelector('[data-budget-opening]');
+    var subEl = document.querySelector('[data-budget-opening-sub]');
+    if (!valEl) return;
+
+    // Reset positive/negative class — opening can be negative if
+    // user started overdrawn.
+    valEl.classList.remove('dash-sum-val-positive', 'dash-sum-val-negative');
+
+    if (summary.opening_cents == null) {
+      valEl.textContent = '—';
+      if (subEl) subEl.textContent = 'Click to set';
+      return;
+    }
+
+    valEl.textContent = fmt(summary.opening_cents);
+    if (summary.opening_cents < 0) {
+      valEl.classList.add('dash-sum-val-negative');
+    }
+
+    if (subEl) {
+      if (summary.opening_source === 'manual') {
+        subEl.textContent = 'Manual';
+      } else if (summary.opening_source === 'rollover' && summary.opening_anchor_month) {
+        // anchor_month is YYYY-MM-01; format to "Mar 2026"
+        var d = new Date(summary.opening_anchor_month + 'T00:00:00');
+        var label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        subEl.textContent = 'From ' + label;
+      } else {
+        subEl.textContent = 'Click to set';
+      }
+    }
+  }
+
+  // Phase 5j — Closing balance card render. Driven by
+  // summary.closing_cents (= opening + income - spent - transfers).
+  // When opening isn't resolved, shows a hint instead of $0 (which
+  // would be misleading — $0 is a real value, not an absence).
+  function renderClosingBalanceCard(summary) {
+    var fmt = window.iboostBudget.formatCents;
+    var valEl = document.querySelector('[data-budget-closing]');
+    var subEl = document.querySelector('[data-budget-closing-sub]');
+    if (!valEl) return;
+
+    valEl.classList.remove('dash-sum-val-positive', 'dash-sum-val-negative');
+
+    if (summary.closing_cents == null) {
+      valEl.textContent = '—';
+      if (subEl) subEl.textContent = 'Set opening balance to see';
+      return;
+    }
+
+    valEl.textContent = fmt(summary.closing_cents);
+    if (summary.closing_cents > 0) {
+      valEl.classList.add('dash-sum-val-positive');
+    } else if (summary.closing_cents < 0) {
+      valEl.classList.add('dash-sum-val-negative');
+    }
+    if (subEl) subEl.textContent = 'After this month';
   }
 
   /**
@@ -2890,6 +2963,175 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Phase 5j — Opening balance card + edit modal
+  // ---------------------------------------------------------------------
+  // Click on the Opening balance summary card opens a small modal
+  // with a single dollar-amount input. Saves to budget_opening_balances
+  // with source='manual' (overwrites any existing rollover row for
+  // the current month). Refreshes the budget tab so the closing
+  // balance card recomputes too.
+
+  var openingBalanceWired = false;
+
+  function wireOpeningBalanceCard() {
+    var card = document.querySelector('[data-budget-opening-card]');
+    if (card && card.getAttribute('data-cta-wired') !== 'true') {
+      card.setAttribute('data-cta-wired', 'true');
+      card.addEventListener('click', openOpeningBalanceModal);
+      // Keyboard: Enter or Space activates the card (since it's
+      // role=button + tabindex=0).
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openOpeningBalanceModal();
+        }
+      });
+    }
+
+    if (!openingBalanceWired) {
+      var modal = document.getElementById('opening-balance-modal');
+      if (!modal) return;
+
+      // Close handlers (X button, Cancel button, backdrop)
+      modal.querySelectorAll('[data-opening-balance-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeOpeningBalanceModal);
+      });
+      var backdrop = modal.querySelector('[data-opening-balance-backdrop]');
+      if (backdrop) backdrop.addEventListener('click', closeOpeningBalanceModal);
+
+      // ESC to close, but only when this modal is open
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) {
+          closeOpeningBalanceModal();
+        }
+      });
+
+      // Form submission
+      var form = document.getElementById('opening-balance-form');
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          handleOpeningBalanceSubmit();
+        });
+      }
+
+      openingBalanceWired = true;
+    }
+  }
+
+  function openOpeningBalanceModal() {
+    var modal = document.getElementById('opening-balance-modal');
+    if (!modal) return;
+    hideOpeningBalanceError();
+
+    // Populate month label as context (e.g. "for April 2026").
+    var monthLabel = document.getElementById('opening-balance-month-label');
+    if (monthLabel) {
+      var monthName = budgetCurrentMonth.toLocaleDateString('en-US', {
+        month: 'long', year: 'numeric',
+      });
+      monthLabel.textContent = 'for ' + monthName;
+    }
+
+    // Pre-fill input with the current opening (if resolved) so user
+    // can edit rather than re-type. Read the rendered value on the
+    // dashboard card — we already have it parsed in cents server-side
+    // but pulling from the DOM is fine here and avoids a re-fetch.
+    var input = document.getElementById('opening-balance-amount');
+    if (input) {
+      var openingEl = document.querySelector('[data-budget-opening]');
+      var current = openingEl ? openingEl.textContent.trim() : '';
+      // Strip "—", "$", commas. Keep digits, dot, minus.
+      if (current && current !== '—') {
+        input.value = current.replace(/[$,]/g, '').replace(/\s/g, '');
+      } else {
+        input.value = '';
+      }
+      // Focus + select so user can type-replace immediately.
+      setTimeout(function () {
+        input.focus();
+        input.select();
+      }, 50);
+    }
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOpeningBalanceModal() {
+    var modal = document.getElementById('opening-balance-modal');
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    hideOpeningBalanceError();
+  }
+
+  async function handleOpeningBalanceSubmit() {
+    var input = document.getElementById('opening-balance-amount');
+    var submitBtn = document.getElementById('opening-balance-submit');
+    if (!input) return;
+
+    var raw = input.value.trim();
+    if (!raw) {
+      showOpeningBalanceError('Please enter an amount.');
+      return;
+    }
+
+    // parseDollarsToCents handles "$", commas, decimals. We extend it
+    // here to allow leading minus, since opening balance can be negative.
+    var negative = false;
+    var stripped = raw;
+    if (stripped[0] === '-') {
+      negative = true;
+      stripped = stripped.substring(1).trim();
+    }
+    var cents = window.iboostBudget.parseDollarsToCents(stripped);
+    if (cents == null || isNaN(cents)) {
+      showOpeningBalanceError('That doesn\'t look like a valid amount. Try something like 5200 or 5200.50.');
+      return;
+    }
+    if (negative) cents = -cents;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+    }
+
+    var result = await window.iboostBudget.setOpeningBalance(budgetCurrentMonth, cents);
+
+    if (result.error) {
+      console.error('[account] setOpeningBalance error:', result.error);
+      showOpeningBalanceError('Couldn\'t save: ' + (result.error.message || 'Unknown error'));
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save';
+      }
+      return;
+    }
+
+    // Success. Close + refresh.
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save';
+    }
+    closeOpeningBalanceModal();
+    refreshBudgetTab();
+  }
+
+  function showOpeningBalanceError(msg) {
+    var el = document.getElementById('opening-balance-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+  function hideOpeningBalanceError() {
+    var el = document.getElementById('opening-balance-error');
+    if (!el) return;
+    el.textContent = '';
+    el.hidden = true;
+  }
+
   function wireImportModal() {
     var modal = document.getElementById('csv-import-modal');
     if (!modal) {
@@ -3813,6 +4055,7 @@
     wireBudgetGoalCta();
     wireBudgetImportCta();
     wireBudgetSeeAllCta();
+    wireOpeningBalanceCard();
   }
 
   // Phase 5b — render the month label ("April 2026") and update
