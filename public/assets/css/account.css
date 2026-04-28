@@ -1990,19 +1990,23 @@
 .dash-tx-empty-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-text);
+  /* Phase 5L: was var(--color-text) which doesn't exist — empty-state
+     titles fell back to browser default. The actual token is --color-fg. */
+  color: var(--color-fg);
   margin: 0 0 6px 0;
 }
 .dash-cats-empty-sub,
 .dash-goals-empty-sub,
 .dash-tx-empty-sub {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  /* Phase 5L: same fix — was --color-text-muted (nonexistent),
+     now --color-muted. */
+  color: var(--color-muted);
   margin: 0;
   line-height: 1.5;
 }
 .dash-cats-empty strong {
-  color: var(--color-text);
+  color: var(--color-fg);
 }
 
 .dash-sum-unit {

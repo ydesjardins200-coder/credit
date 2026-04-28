@@ -1657,10 +1657,16 @@
     });
 
     if (spendingCats.length === 0) {
+      // Phase 5L: copy tightened. Was "No spending entries yet · Add
+      // your first entry to see your spending breakdown." Both lines
+      // worked but "your first" implied commitment and the sub line
+      // was longer than it needed to be. The Spending card header
+      // already exposes + Add entry / Import / Manage CTAs, so the
+      // empty body stays text-only here.
       container.innerHTML =
         '<div class="dash-cats-empty">' +
           '<div class="dash-cats-empty-title">No spending entries yet</div>' +
-          '<div class="dash-cats-empty-sub">Add your first entry to see your spending breakdown.</div>' +
+          '<div class="dash-cats-empty-sub">Add a spending entry to see your breakdown.</div>' +
         '</div>';
       return;
     }
@@ -1762,7 +1768,11 @@
         '<div class="dash-goals-empty">' +
           '<div class="dash-goals-empty-title">No goals yet</div>' +
           '<div class="dash-goals-empty-sub">' +
-            'Set monthly limits or savings targets to stay on track.' +
+            // Phase 5L: copy tightened. Was "Set monthly limits or
+            // savings targets to stay on track" — the "stay on track"
+            // framing was vague. Now ties to the actual time scope
+            // (this month) so users understand the cadence.
+            'Set spending limits or savings targets for this month.' +
           '</div>' +
         '</div>' +
         '<button type="button" class="dash-new-goal" data-budget-add-goal-cta>' +
@@ -1878,12 +1888,17 @@
     }
 
     if (!entries || entries.length === 0) {
-      // Empty state — friendly invite to add the first entry.
+      // Phase 5L: copy tightened. Was "Track spending to see how money
+      // flows. Manual entry only — your data stays private." That had
+      // three competing jobs (welcome, set expectation, reassure
+      // privacy). Privacy reassurance is delivered better elsewhere
+      // (signup, Profile, trust section); this empty state should just
+      // invite the next action.
       container.innerHTML =
         '<div class="dash-tx-empty">' +
           '<div class="dash-tx-empty-title">No entries yet</div>' +
           '<div class="dash-tx-empty-sub">' +
-            'Track spending to see how money flows. Manual entry only — your data stays private.' +
+            'Add a transaction to track money in or out this month.' +
           '</div>' +
           '<button type="button" class="btn btn-primary" data-budget-add-entry-cta ' +
                   'style="padding:12px 24px;margin-top:16px;">' +
