@@ -1417,8 +1417,14 @@
       var entryWord = cat.entry_count === 1 ? 'entry' : 'entries';
       var emoji = cat.emoji ? '<span style="margin-right:6px;">' + cat.emoji + '</span>' : '';
 
+      // Phase 5h: each row is now a clickable drill-in. data-category-id
+      // is read by the delegated handler; role=button + tabindex make it
+      // keyboard-reachable. Chevron on the right hints at drill-in
+      // (visible always on touch, fades in on hover on desktop — see
+      // .dash-cat-chevron CSS).
       html +=
-        '<div class="dash-cat">' +
+        '<div class="dash-cat is-clickable" data-category-id="' + escapeHtml(cat.category_id) + '" ' +
+              'role="button" tabindex="0" aria-label="View ' + escapeHtml(cat.category_name) + ' transactions">' +
           '<div class="dash-cat-row">' +
             '<span class="dash-cat-name">' +
               '<span class="dash-cat-dot" style="background:' + color + '"></span>' +
@@ -1430,11 +1436,48 @@
           '<div class="dash-cat-bar">' +
             '<div class="dash-cat-fill" style="width:' + pct + '%; background:' + color + ';"></div>' +
           '</div>' +
-          '<div class="dash-cat-pct">' + pct + '% · ' + cat.entry_count + ' ' + entryWord + '</div>' +
+          '<div class="dash-cat-pct">' +
+            '<span>' + pct + '% · ' + cat.entry_count + ' ' + entryWord + '</span>' +
+            '<span class="dash-cat-chevron" aria-hidden="true">→</span>' +
+          '</div>' +
         '</div>';
     });
 
     container.innerHTML = html;
+
+    // Phase 5h: delegated click + keyboard handler on the categories
+    // container. Idempotent: gate via dataset flag so the listener isn't
+    // re-attached every time renderBudgetCategories runs (which happens
+    // on every refreshBudgetTab — month nav, post-edit, post-delete).
+    if (!container.dataset.csvCatsWired) {
+      container.addEventListener('click', handleCategoryRowClick);
+      container.addEventListener('keydown', handleCategoryRowKeydown);
+      container.dataset.csvCatsWired = 'true';
+    }
+  }
+
+  // Phase 5h: row click handler. Delegated so it survives re-renders.
+  // Routes to openAllEntriesModal with a category filter.
+  function handleCategoryRowClick(e) {
+    var row = e.target.closest('[data-category-id]');
+    if (!row) return;
+    var catId = row.getAttribute('data-category-id');
+    var catName = row.querySelector('.dash-cat-name');
+    // Strip the colored dot + emoji wrapper off the visible label so
+    // the modal title reads cleanly. textContent flattens children.
+    var label = catName ? catName.textContent.trim() : '';
+    openAllEntriesModal({ categoryId: catId, categoryName: label });
+  }
+
+  function handleCategoryRowKeydown(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target.closest('[data-category-id]');
+    if (!row) return;
+    e.preventDefault();
+    var catId = row.getAttribute('data-category-id');
+    var catName = row.querySelector('.dash-cat-name');
+    var label = catName ? catName.textContent.trim() : '';
+    openAllEntriesModal({ categoryId: catId, categoryName: label });
   }
 
   /**
@@ -2591,9 +2634,26 @@
     }
   }
 
-  function openAllEntriesModal() {
+  // Phase 5h: optional filter passed to openAllEntriesModal. When set,
+  // the modal title becomes "Spending: <name>" and the list is filtered
+  // to entries whose category.id matches. Reset on close so the next
+  // open without args goes back to the full-list view.
+  var allEntriesFilter = null;  // null | { categoryId, categoryName }
+
+  /**
+   * @param {{categoryId?: string, categoryName?: string}} [opts]
+   *   Optional filter. When omitted, modal shows ALL current-month
+   *   entries (the original Phase 5g behavior). When provided, only
+   *   entries with category.id === categoryId are shown, and the
+   *   title reads "Spending: <categoryName>" so users see the active
+   *   filter at a glance.
+   */
+  function openAllEntriesModal(opts) {
     var modal = document.getElementById('all-entries-modal');
     if (!modal) return;
+    allEntriesFilter = (opts && opts.categoryId)
+      ? { categoryId: opts.categoryId, categoryName: opts.categoryName || '' }
+      : null;
     renderAllEntriesList();
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -2604,28 +2664,54 @@
     if (!modal) return;
     modal.hidden = true;
     document.body.style.overflow = '';
+    // Clear filter so next open without args is unfiltered. This
+    // matters because the same modal serves both the See All link
+    // (no filter) and the category drill-in (filter set).
+    allEntriesFilter = null;
   }
 
-  // Renders the full list. Called on open, and re-called after each
-  // delete to reflect the mutated cache. Reads from the same
-  // budgetCurrentMonthEntries that the recent-entries card uses.
+  // Renders the full list (or the filtered subset when allEntriesFilter
+  // is set). Called on open, and re-called after each delete to reflect
+  // the mutated cache. Reads from the same budgetCurrentMonthEntries
+  // that the recent-entries card uses.
   function renderAllEntriesList() {
     var listEl = document.getElementById('all-entries-list');
     var monthLabel = document.getElementById('all-entries-month-label');
+    var titleEl = document.getElementById('all-entries-title');
     if (!listEl) return;
 
-    if (monthLabel) {
-      monthLabel.textContent = budgetCurrentMonth.toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
+    var monthStr = budgetCurrentMonth.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
+
+    // Title + month label adapt to whether a filter is active.
+    if (allEntriesFilter) {
+      if (titleEl) titleEl.textContent = 'Spending: ' + allEntriesFilter.categoryName;
+      if (monthLabel) monthLabel.textContent = monthStr;
+    } else {
+      if (titleEl) titleEl.textContent = 'All entries';
+      if (monthLabel) monthLabel.textContent = monthStr;
+    }
+
+    // Apply category filter if active. Both shapes need handling:
+    //   - entries from getMonthSummary have e.category.id (joined)
+    //   - entries from a stale path might only have e.category_id
+    // Match either to be safe.
+    var entries = budgetCurrentMonthEntries || [];
+    if (allEntriesFilter) {
+      entries = entries.filter(function (e) {
+        var cid = (e.category && e.category.id) || e.category_id;
+        return cid === allEntriesFilter.categoryId;
       });
     }
 
-    var entries = budgetCurrentMonthEntries || [];
     if (entries.length === 0) {
       listEl.innerHTML =
         '<div class="all-entries-empty">' +
-          'No entries for this month yet.' +
+          (allEntriesFilter
+            ? 'No entries in this category for ' + escapeHtml(monthStr) + '.'
+            : 'No entries for this month yet.') +
         '</div>';
       return;
     }
@@ -2691,6 +2777,27 @@
           '</div>' +
         '</div>';
     });
+
+    // When filtered, prepend a small subtotal line so users can see at
+    // a glance how much they spent in this category this month — this
+    // is usually the actual question that drove the drill-in
+    // ("how much did I really spend on groceries?").
+    if (allEntriesFilter) {
+      var subtotalCents = entries.reduce(function (sum, e) {
+        return sum + (e.amount_cents || 0);
+      }, 0);
+      var subtotalHtml =
+        '<div class="all-entries-subtotal">' +
+          '<span class="all-entries-subtotal-label">Total in ' +
+            escapeHtml(allEntriesFilter.categoryName) +
+            ' (' + entries.length + ' ' + (entries.length === 1 ? 'entry' : 'entries') + ')' +
+          '</span>' +
+          '<span class="all-entries-subtotal-val">' +
+            window.iboostBudget.formatCents(subtotalCents) +
+          '</span>' +
+        '</div>';
+      html = subtotalHtml + html;
+    }
 
     listEl.innerHTML = html;
   }

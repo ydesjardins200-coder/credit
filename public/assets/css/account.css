@@ -1955,6 +1955,50 @@
   font-size: 0.7rem;
   color: #64748b;
   margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Phase 5h: drill-in affordance on each category row.
+   - Subtle hover background + cursor:pointer signal interactivity
+   - Chevron is faint by default; brightens on hover
+   - On touch (no hover), chevron stays faintly visible always so the
+     affordance is discoverable
+   - Keyboard focus ring uses the accent color, matching the rest
+     of the app's focus styles */
+.dash-cat.is-clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding: 8px;
+  transition: background 0.12s ease;
+}
+.dash-cat.is-clickable:hover {
+  background: var(--color-surface);
+}
+.dash-cat.is-clickable:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  background: var(--color-surface);
+}
+.dash-cat.is-clickable:hover .dash-cat-chevron,
+.dash-cat.is-clickable:focus-visible .dash-cat-chevron {
+  color: var(--color-fg);
+  transform: translateX(2px);
+}
+.dash-cat-chevron {
+  color: #cbd5e1;            /* slate-300 — faint default */
+  font-weight: 700;
+  transition: color 0.12s ease, transform 0.12s ease;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+/* Touch: no hover, so keep chevron faintly visible always */
+@media (hover: none) {
+  .dash-cat-chevron {
+    color: #94a3b8;          /* slate-400 — slightly more visible on touch */
+  }
 }
 
 /* Goals */
@@ -5240,6 +5284,32 @@
   text-align: center;
   color: var(--color-fg-soft);
   font-size: 0.9rem;
+}
+
+/* Phase 5h: subtotal banner shown when the modal is filtered to a
+   single category. Sits at the top of the list, sticky so it stays
+   visible while the user scrolls through entries — that's usually
+   the number they came to see. */
+.all-entries-subtotal {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+.all-entries-subtotal-label {
+  color: var(--color-fg-soft);
+}
+.all-entries-subtotal-val {
+  color: var(--color-fg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
 }
 
 .all-entries-row {
