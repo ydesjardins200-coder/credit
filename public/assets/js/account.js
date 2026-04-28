@@ -1265,6 +1265,12 @@
   // and so delete/edit can mutate it before re-rendering.
   var budgetCurrentMonthEntries = [];
 
+  // Phase 5k: cache of the current user's profile for the Budget tab.
+  // Populated by initBudgetTab / refreshBudgetTab. Used by tier-aware
+  // and country-aware renderers (upgrade pitch card, bank-connect
+  // placeholder). Null until the first fetch completes.
+  var budgetProfile = null;
+
   /**
    * Initialize the Budget tab. Idempotent — safe to call multiple times,
    * but only does real work on first call.
@@ -1307,12 +1313,25 @@
     var goalsResult = await window.iboostBudget.getGoalsForMonth(budgetCurrentMonth);
     var goals = goalsResult.error ? [] : goalsResult.data;
 
+    // 3.5. Phase 5k: cache profile for tier/country-aware renderers.
+    // Best-effort — render still works without it (renderers fall back
+    // to free-tier / CA defaults if profile is null).
+    try {
+      budgetProfile = await window.iboostAuth.getProfile();
+    } catch (e) {
+      console.warn('[account] budget profile fetch failed:', e);
+      budgetProfile = null;
+    }
+
     // 4. Render everything.
     renderBudgetMonthLabel();
     renderBudgetSummary(summaryResult.data.summary);
     renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
     renderBudgetEntries(summaryResult.data.entries);
+    // Phase 5k: tier/country-aware bank-connect surfaces
+    renderBudgetUpgradePitchCard(budgetProfile);
+    renderBudgetBankPlaceholder(budgetProfile);
 
     // 5. Wire the "+ Add entry" CTA. The modal itself is Phase 3 work;
     // for now the CTA shows a "coming soon" toast or similar lightweight
@@ -1468,6 +1487,152 @@
       valEl.classList.add('dash-sum-val-negative');
     }
     if (subEl) subEl.textContent = 'After this month';
+  }
+
+  // ---------------------------------------------------------------------
+  // Phase 5k — region-aware bank-connect surfaces
+  //
+  // Two related pieces:
+  //
+  //   renderBudgetUpgradePitchCard(profile)
+  //     Fills the 8th summary card with a Free-tier upgrade pitch.
+  //     Region-aware: Canadian users see Flinks branding, Americans
+  //     see Plaid. Click goes to /checkout.html (the existing upgrade
+  //     path used by Profile -> Pick a plan).
+  //     For paid users, the card stays as the dashed empty placeholder.
+  //
+  //   renderBudgetBankPlaceholder(profile)
+  //     For paid users (Essential / Complete): fills the
+  //     [data-budget-bank-placeholder] section above the summary grid
+  //     with a "Coming soon — connect your bank" card branded for the
+  //     user's region. Pure visual mockup pending real Flinks / Plaid
+  //     integration. The manual Budget app stays usable below.
+  //     For Free users: section stays hidden (data-feature gate).
+  //
+  // Both pulled into renderBudgetSummary so they refresh on month nav,
+  // tab switches, and any data update.
+  // ---------------------------------------------------------------------
+
+  function renderBudgetUpgradePitchCard(profile) {
+    var card = document.querySelector('[data-budget-upgrade-pitch]');
+    if (!card) return;
+
+    if (!window.iboostPermissions || !window.iboostLocale) {
+      // Libs not loaded yet — leave the card as the dashed empty
+      // placeholder. Will resolve on the next render pass.
+      return;
+    }
+
+    var tier = window.iboostPermissions.getTier(profile);
+    if (tier !== 'free') {
+      // Paid users: revert to dashed empty placeholder. Reset any
+      // prior Free-state content so the card is visually clean if the
+      // user upgrades mid-session. (Tier change reload would also clear
+      // it, but defending against that path is cheap.)
+      card.classList.add('is-empty');
+      card.classList.remove('dash-sum-card-clickable', 'dash-sum-upgrade-pitch');
+      card.removeAttribute('role');
+      card.removeAttribute('tabindex');
+      card.setAttribute('aria-hidden', 'true');
+      card.innerHTML = '';
+      // Drop any prior click handler. The simplest cleanup is replacing
+      // the element with its clone (preserves position, drops listeners).
+      var clone = card.cloneNode(false);
+      card.parentNode.replaceChild(clone, card);
+      return;
+    }
+
+    // Free user: fill with the upgrade pitch. Pull the provider for
+    // the user's country (CA -> Flinks, US -> Plaid).
+    var country = profile && profile.country;
+    var conn = window.iboostLocale.getBankConnector(country);
+
+    card.classList.remove('is-empty');
+    card.classList.add('dash-sum-card-clickable', 'dash-sum-upgrade-pitch');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label',
+      'Upgrade to Essential for auto-import with ' + conn.name);
+    card.removeAttribute('aria-hidden');
+
+    // The upgrade pitch fits the same vertical real estate as the
+    // value-bearing cards: a small label ("UPGRADE"), a headline
+    // ("Auto-import with Flinks"), and a one-line subtitle.
+    card.innerHTML =
+      '<div class="dash-sum-label dash-sum-upgrade-label">' +
+        '<span>Upgrade</span>' +
+        '<svg class="dash-sum-edit-icon" viewBox="0 0 24 24" fill="none" ' +
+             'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" ' +
+             'stroke-linejoin="round" aria-hidden="true">' +
+          '<polyline points="9 18 15 12 9 6"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="dash-sum-upgrade-headline">' +
+        'Auto-import with <strong>' + escapeHtml(conn.name) + '</strong>' +
+      '</div>' +
+      '<div class="dash-sum-delta">Skip manual entry — upgrade to Essential</div>';
+
+    // Click + keyboard route to checkout. Idempotent via dataset flag
+    // since renderBudgetSummary runs on every month nav and we don't
+    // want to stack listeners.
+    if (!card.dataset.upgradeWired) {
+      card.addEventListener('click', goToCheckout);
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToCheckout();
+        }
+      });
+      card.dataset.upgradeWired = 'true';
+    }
+  }
+
+  function goToCheckout() {
+    window.location.href = '/checkout.html';
+  }
+
+  function renderBudgetBankPlaceholder(profile) {
+    var section = document.querySelector('[data-budget-bank-placeholder]');
+    if (!section) return;
+    if (!window.iboostPermissions || !window.iboostLocale) return;
+
+    var tier = window.iboostPermissions.getTier(profile);
+    if (tier === 'free') {
+      // Free tier: section stays hidden by the data-feature gate.
+      // Don't fill it — applyPermissions handles visibility.
+      // Clear any prior content from a cached paid render in case the
+      // user downgrades.
+      section.innerHTML = '';
+      return;
+    }
+
+    // Paid tier: render the placeholder card.
+    var country = profile && profile.country;
+    var conn = window.iboostLocale.getBankConnector(country);
+
+    // Provider logo / mark — pure CSS box with a single letter for now.
+    // When real branding ships we swap this for an SVG. Keeping the
+    // class hooks here so the swap is local (one place, not two).
+    section.innerHTML =
+      '<article class="dash-bank-card">' +
+        '<div class="dash-bank-card-mark" style="background:' +
+            escapeHtml(conn.brandColor) + ';">' +
+          escapeHtml(conn.name.charAt(0)) +
+        '</div>' +
+        '<div class="dash-bank-card-body">' +
+          '<div class="dash-bank-card-headline">' +
+            'Connect your bank with <strong>' + escapeHtml(conn.name) + '</strong>' +
+            ' <span class="dash-bank-card-pill">Coming soon</span>' +
+          '</div>' +
+          '<div class="dash-bank-card-sub">' +
+            escapeHtml(conn.trustLine) + ' Auto-import and categorize transactions ' +
+            'in seconds — no manual entry.' +
+          '</div>' +
+          '<div class="dash-bank-card-meta">' +
+            'In the meantime, you can keep using the manual budget below.' +
+          '</div>' +
+        '</div>' +
+      '</article>';
   }
 
   /**
@@ -4046,6 +4211,13 @@
     renderBudgetCategories(summaryResult.data.summary, summaryResult.data.entries);
     renderBudgetGoals(goals, summaryResult.data.summary);
     renderBudgetEntries(summaryResult.data.entries);
+    // Phase 5k: re-render tier/country-aware surfaces. Use the cached
+    // budgetProfile from initBudgetTab — refreshes don't need to re-fetch
+    // (profile doesn't change between month-nav clicks). If the cache is
+    // null (init never ran or the fetch failed) the renderers fall back
+    // to free-tier/CA defaults, which is the safer default UX anyway.
+    renderBudgetUpgradePitchCard(budgetProfile);
+    renderBudgetBankPlaceholder(budgetProfile);
 
     // Re-wire CTAs in case the empty-state CTA got replaced by the
     // populated render. wireAddEntryCta is idempotent.

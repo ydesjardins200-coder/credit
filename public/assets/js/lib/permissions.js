@@ -135,6 +135,12 @@
     // ---------- Budget ----------
     'budget.tab':                    { minTier: 'free' },
     'budget.flinks_connection':      { minTier: 'essential' },
+    // Phase 5k: provider-agnostic key. Same gate as budget.flinks_connection
+    // but used for the new Connect-your-bank placeholder card. Kept as a
+    // separate key (rather than renaming) so downstream code that may
+    // still reference budget.flinks_connection isn't broken. When real
+    // Flinks/Plaid integration ships, both keys can collapse into one.
+    'budget.auto_import':            { minTier: 'essential' },
     'budget.smart_suggestions':      { minTier: 'free', maxTier: 'free' },
     // ^ smart_suggestions is FREE-ONLY because paid tiers get auto-categorization
     // from Flinks. We don't need both running. maxTier='free' makes this gate

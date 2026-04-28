@@ -1042,35 +1042,29 @@
           <div class="dash-sum-val" data-budget-closing>—</div>
           <div class="dash-sum-delta" data-budget-closing-sub>After this month</div>
         </article>
-        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
+        <!-- Phase 5k: 8th slot is the free-tier upgrade pitch when user
+             is on Free, or stays as is-empty placeholder for paid users.
+             Renderer (account.js renderBudgetUpgradePitchCard) flips
+             classes + content based on tier + country. -->
+        <article class="dash-sum-card is-empty" data-budget-upgrade-pitch aria-hidden="true"></article>
       </div>
 
-      <!-- Accounts.
-           Gated to budget.flinks_connection (paid-tier feature). For Free
-           users, this section is hidden entirely by the permissions module.
-           When Flinks integration ships for paid users, this list becomes
-           dynamic from real bank data. -->
-      <div class="dash-accounts" data-feature="budget.flinks_connection">
-        <article class="dash-acct">
-          <div class="dash-acct-ico dash-acct-ico-visa">VISA</div>
-          <div class="dash-acct-body">
-            <div class="dash-acct-name">Visa ending 4242</div>
-            <div class="dash-acct-sub">$660 balance · $3,000 limit · 22% used</div>
-          </div>
-        </article>
-        <button type="button" class="dash-acct dash-acct-empty">
-          <div class="dash-acct-ico dash-acct-ico-connect">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </div>
-          <div class="dash-acct-body">
-            <div class="dash-acct-name">Connect another account</div>
-            <div class="dash-acct-sub">Add bank, card, or loan</div>
-          </div>
-        </button>
-      </div>
+      <!-- Phase 5k: Paid-tier auto-import placeholder.
+           For Free users this stays hidden (data-feature gate hides it).
+           For Paid users (Essential / Complete), renderer fills it with
+           a 'Coming soon' Connect-your-bank card branded for the user's
+           region (Flinks for CA, Plaid for US). The manual Budget app
+           below remains usable in the meantime — paid users can fall
+           back to manual entry until the real integration ships.
+
+           When real Flinks/Plaid integration ships, the placeholder
+           becomes a working Connect button and the manual Budget tab
+           below gets hidden for paid users.
+           -->
+      <div class="dash-bank-connect-placeholder"
+           data-feature="budget.auto_import"
+           data-budget-bank-placeholder
+           hidden></div>
 
       <!-- 2-col: categories + goals -->
       <div class="dash-grid-2">

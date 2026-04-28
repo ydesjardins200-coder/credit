@@ -37,6 +37,20 @@
       addressPlaceholders: { region: 'QC', postal: 'H3Z 2Y7' },
       flag: '🇨🇦',
       name: 'Canada',
+      // Auto-import provider used by paid-tier Budget tab (Phase 5k+).
+      // For Canadian users we use Flinks (the Canadian-bank-coverage
+      // leader). Free tier sees the same name in the upgrade pitch so
+      // users know what they'd get.
+      bankConnector: {
+        id: 'flinks',
+        name: 'Flinks',
+        // Trust signal copy for the upgrade pitch / placeholder.
+        // Users in CA generally know the name — Flinks powers many
+        // Canadian fintechs (KOHO, Wealthsimple, Mogo, etc.).
+        trustLine: 'Used by KOHO, Wealthsimple, and most major Canadian fintechs.',
+        // Brand color (hex). Used for the placeholder card accent.
+        brandColor: '#0066ff',
+      },
     },
     US: {
       currency: 'usd',
@@ -45,6 +59,14 @@
       addressPlaceholders: { region: 'NY', postal: '10001' },
       flag: '🇺🇸',
       name: 'United States',
+      // For US users we use Plaid — the dominant US bank-aggregation
+      // provider. Same trust-signal pattern as Flinks above.
+      bankConnector: {
+        id: 'plaid',
+        name: 'Plaid',
+        trustLine: 'Used by Venmo, Robinhood, Chime, and 12,000+ US apps.',
+        brandColor: '#000000',
+      },
     },
   };
 
@@ -138,6 +160,21 @@
     return COUNTRY_RULES[upper].flag + ' ' + COUNTRY_RULES[upper].name;
   }
 
+  /**
+   * Returns the bank-aggregation provider config for the given country.
+   *   { id, name, trustLine, brandColor }
+   * CA -> Flinks, US -> Plaid. Falls back to CA default for unknown.
+   *
+   * Used by Budget tab Phase 5k:
+   *   - Free tier: upgrade pitch on the 8th summary card
+   *     ("Upgrade for auto-import with <name>")
+   *   - Paid tier: placeholder Connect-your-bank card pre-Flinks/Plaid
+   *     integration ("Coming soon — <name> integration in progress")
+   */
+  function getBankConnector(country) {
+    return getRules(country).bankConnector;
+  }
+
   // ----- Expose globally -----
 
   window.iboostLocale = {
@@ -150,5 +187,6 @@
     getFlag: getFlag,
     getCountryName: getCountryName,
     getDisplayLabel: getDisplayLabel,
+    getBankConnector: getBankConnector,
   };
 })();

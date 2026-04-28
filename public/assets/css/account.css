@@ -1800,6 +1800,153 @@
   color: var(--color-fg);
 }
 
+/* ============================================================
+   Phase 5k — bank-connect surfaces
+   ============================================================
+   Two styles in this block:
+     (1) .dash-sum-upgrade-pitch — fills the 8th summary card on
+         Free tier with a region-aware upgrade pitch ("Auto-import
+         with Flinks/Plaid"). Paid tier reverts to the dashed empty
+         card via the .is-empty class still being present.
+     (2) .dash-bank-card — fills the [data-budget-bank-placeholder]
+         section above the summary grid for paid users with a
+         "Coming soon" connect-your-bank card. The provider mark on
+         the left uses the brand color from iboostLocale.
+
+   Color note: we don't add new CSS variables for warning/info
+   tokens — the existing palette is good enough. Accent green
+   (--color-accent) is overloaded but works for the pitch arrow.
+*/
+
+/* (1) Upgrade pitch card — Free tier, 8th summary slot ----------- */
+.dash-sum-upgrade-pitch {
+  /* Soft accent background so it reads as a CTA without screaming.
+     Border stays solid (not dashed) — this card has real content. */
+  background: linear-gradient(135deg, var(--color-accent-soft) 0%, #ffffff 70%);
+  border: 1px solid var(--color-accent);
+  /* Override .is-empty's dashed border + transparent bg if both
+     classes are momentarily present during a tier-flip render. */
+  border-style: solid;
+}
+.dash-sum-upgrade-pitch:hover {
+  border-color: var(--color-accent-hover);
+  background: linear-gradient(135deg, var(--color-accent-soft) 0%, #ffffff 50%);
+}
+.dash-sum-upgrade-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-accent);
+}
+.dash-sum-upgrade-label .dash-sum-edit-icon {
+  /* The chevron in the upgrade label is bigger / more visible than
+     the pencil in the opening-balance card. */
+  color: var(--color-accent);
+  width: 14px;
+  height: 14px;
+  margin-left: 0;
+}
+.dash-sum-upgrade-pitch:hover .dash-sum-upgrade-label .dash-sum-edit-icon {
+  color: var(--color-accent-hover);
+}
+.dash-sum-upgrade-headline {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.dash-sum-upgrade-headline strong {
+  font-weight: 800;
+}
+
+/* (2) Paid-tier bank-connect placeholder ------------------------- */
+/* Outer wrapper — full-width band above the 2x4 summary grid. */
+.dash-bank-connect-placeholder {
+  margin-bottom: var(--space-2);
+}
+.dash-bank-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+/* Provider mark: solid colored square with a single letter for now.
+   Swappable for a real SVG when we have one. */
+.dash-bank-card-mark {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.dash-bank-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.dash-bank-card-headline {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.dash-bank-card-headline strong {
+  font-weight: 800;
+}
+.dash-bank-card-pill {
+  /* "Coming soon" pill — amber so it reads as a status badge, not
+     a call to action. Same amber tones used in 5e dedup banner
+     for visual consistency. */
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dash-bank-card-sub {
+  font-size: 0.85rem;
+  color: var(--color-fg-soft);
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+.dash-bank-card-meta {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .dash-bank-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dash-bank-card-mark {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+}
+/* ============================================================ */
+
 .dash-sum-label {
   font-size: 0.68rem;
   font-weight: 700;
