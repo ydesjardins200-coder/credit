@@ -98,12 +98,109 @@
   };
 
   // -----------------------------------------------------------------
+  // RBC (Royal Bank of Canada) — major Canadian bank.
+  //
+  // Format observed (April 2026 export, encoding UTF-8 with BOM):
+  //   - Has header row.
+  //   - 8 columns:
+  //       0: Account Type        ("Chequing", "Savings", "Visa", ...)
+  //       1: Account Number      ("01651-5229737")
+  //       2: Transaction Date    ("4/13/2026" — M/D/YYYY, NOT zero-padded)
+  //       3: Cheque Number       (mostly empty, populated for cheques)
+  //       4: Description 1       ("VISA DIRECT DEPOSIT STRIPE")
+  //       5: Description 2       (mostly empty, used for transfer/foreign details)
+  //       6: CAD$                (signed: negative=outflow, positive=inflow)
+  //       7: USD$                (mostly empty; only populated on foreign txns)
+  //
+  // Sign convention: signed amounts in a single CAD$ column. This is
+  // a SINGLE-amount-column format (Phase 5d original path), unlike
+  // Desjardins which is two-column XOR debit/credit. The existing
+  // parser handles signed amounts — no parser changes needed for the
+  // amount logic.
+  //
+  // Description handling: we concatenate Description 1 + Description 2
+  // via the array form of mapping.description (parser extension, this
+  // commit). Most rows only populate Description 1, but transfers
+  // sometimes use both. " · " separator keeps the parts visually
+  // distinct without looking like noise.
+  //
+  // KNOWN LIMITATIONS (v1):
+  //   - USD-only rows (CAD$ empty, USD$ populated) will show up in
+  //     the review queue as "Couldn't parse amount". User skips or
+  //     manually fixes. Acceptable trade-off for v1: zero USD rows
+  //     in our sample data, no way to test a fallback safely. If/when
+  //     real users hit this, we add mapping.amount_fallback support.
+  //   - Multi-account exports (one CSV containing rows from chequing
+  //     AND credit card AND savings) are imported as a flat list. We
+  //     don't parse the Account Type column — all rows go into the
+  //     same Budget app, same month, no per-account separation. This
+  //     matches Phase 5j's deliberate single-account model. When paid-
+  //     tier multi-account ships, we revisit.
+  //   - Cheque numbers are dropped entirely. Rebuilding-credit users
+  //     rarely write cheques, and the description usually conveys
+  //     "CHEQUE #1234" anyway.
+  //
+  // Fingerprint logic: when parsed with hasHeader:false, the FIRST
+  // row contains the header strings. We check for the literal header
+  // names since they're stable across RBC accounts. Belt-and-suspenders:
+  // also verify column count.
+  // -----------------------------------------------------------------
+  var rbcPreset = {
+    id: 'rbc',
+    name: 'RBC (Royal Bank of Canada)',
+    hasHeader: true,
+
+    fingerprint: function (rawRows) {
+      // Need at least the header row + one data row.
+      if (!rawRows || rawRows.length < 2) return false;
+      var header = rawRows[0];
+      if (!header || header.length !== 8) return false;
+
+      // Normalize and check the header column names. Trim each cell
+      // because the BOM-stripping has already happened (decodeBytes)
+      // but spaces inside header cells should be preserved.
+      var normalize = function (s) { return String(s || '').trim().toLowerCase(); };
+      var expected = [
+        'account type',
+        'account number',
+        'transaction date',
+        'cheque number',
+        'description 1',
+        'description 2',
+        'cad$',
+        'usd$',
+      ];
+      for (var i = 0; i < expected.length; i++) {
+        if (normalize(header[i]) !== expected[i]) return false;
+      }
+
+      // Belt-and-suspenders: confirm the first DATA row (index 1) has
+      // a date in column 2 that looks like M/D/YYYY or MM/DD/YYYY.
+      // This guards against the unlikely case of a CSV from a
+      // different bank that happens to have identical headers.
+      var firstData = rawRows[1];
+      if (!firstData) return false;
+      var dateCell = String(firstData[2] || '').trim();
+      if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateCell)) return false;
+
+      return true;
+    },
+
+    mapping: {
+      date: 2,
+      amount: 6,                  // CAD$ signed
+      description: [4, 5],        // concatenate Description 1 + 2
+    },
+  };
+
+  // -----------------------------------------------------------------
   // Preset registry. Order matters: the first matching fingerprint
   // wins. Put more specific presets earlier and more permissive ones
   // later.
   // -----------------------------------------------------------------
   var PRESETS = [
     desjardinsPreset,
+    rbcPreset,
   ];
 
   /**

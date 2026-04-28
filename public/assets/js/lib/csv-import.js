@@ -430,7 +430,24 @@
     }
 
     var rawDate = mapping.date != null ? row[mapping.date] : '';
-    var rawDesc = mapping.description != null ? (row[mapping.description] || '') : '';
+
+    // Description: support either a single column index OR an array
+    // of indices (some banks split description across e.g. "Description 1"
+    // and "Description 2"). When array, concatenate non-empty values
+    // with " · " separator. Empty parts are skipped so single-description
+    // rows don't get a trailing separator.
+    var rawDesc = '';
+    if (Array.isArray(mapping.description)) {
+      var parts = [];
+      for (var di = 0; di < mapping.description.length; di++) {
+        var idx = mapping.description[di];
+        var v = idx != null ? String(row[idx] || '').trim() : '';
+        if (v) parts.push(v);
+      }
+      rawDesc = parts.join(' · ');
+    } else if (mapping.description != null) {
+      rawDesc = row[mapping.description] || '';
+    }
 
     var cents = null;
     var amountError = null;
