@@ -1050,21 +1050,20 @@
       </div>
 
       <!-- Phase 5k: Paid-tier auto-import placeholder.
-           For Free users this stays hidden (data-feature gate hides it).
-           For Paid users (Essential / Complete), renderer fills it with
-           a 'Coming soon' Connect-your-bank card branded for the user's
-           region (Flinks for CA, Plaid for US). The manual Budget app
-           below remains usable in the meantime — paid users can fall
-           back to manual entry until the real integration ships.
+           Visibility is driven entirely by renderBudgetBankPlaceholder
+           (sets element.hidden based on tier), NOT by the data-feature
+           gating system. Why: applyAccessToElement('allowed') doesn't
+           unhide elements, so a static hidden attribute would stick
+           even for paid users. Renderer-driven visibility avoids that
+           pitfall. Free users see nothing here; paid users get a
+           Coming-soon Flinks/Plaid card.
 
            When real Flinks/Plaid integration ships, the placeholder
            becomes a working Connect button and the manual Budget tab
            below gets hidden for paid users.
            -->
       <div class="dash-bank-connect-placeholder"
-           data-feature="budget.auto_import"
-           data-budget-bank-placeholder
-           hidden></div>
+           data-budget-bank-placeholder></div>
 
       <!-- 2-col: categories + goals -->
       <div class="dash-grid-2">

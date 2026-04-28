@@ -1598,15 +1598,19 @@
 
     var tier = window.iboostPermissions.getTier(profile);
     if (tier === 'free') {
-      // Free tier: section stays hidden by the data-feature gate.
-      // Don't fill it — applyPermissions handles visibility.
-      // Clear any prior content from a cached paid render in case the
-      // user downgrades.
+      // Free tier: hide the section entirely. We drive visibility from
+      // the renderer (not the data-feature gating system) because
+      // applyAccessToElement('allowed') doesn't unhide elements that
+      // were hidden in markup — so a static hidden attribute would
+      // stick on paid users too. Renderer-driven hidden flips reliably
+      // both ways.
+      section.hidden = true;
       section.innerHTML = '';
       return;
     }
 
-    // Paid tier: render the placeholder card.
+    // Paid tier: show the placeholder card.
+    section.hidden = false;
     var country = profile && profile.country;
     var conn = window.iboostLocale.getBankConnector(country);
 
