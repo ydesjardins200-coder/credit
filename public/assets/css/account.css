@@ -1740,7 +1740,9 @@
   color: #64748b;
 }
 
-/* Summary cards row */
+/* Summary cards row.
+   Phase 5i: 8 cards laid out as 2 rows of 4 (grid auto-flows after
+   the 4th item). Was 4 cards / 1 row in earlier phases. */
 .dash-sumrow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1753,6 +1755,20 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px 18px;
+}
+
+/* Phase 5i: empty placeholder cells in row 2. Visually quiet —
+   same dimensions and border so the grid stays balanced, but no
+   content and no hover affordance. Reserved for upcoming features
+   (Opening balance, Net cash flow). When those ship, just remove
+   the .is-empty class and add the content. */
+.dash-sum-card.is-empty {
+  background: transparent;
+  border-style: dashed;
+  border-color: #e5e7eb;
+  /* Match the height of populated cards so row alignment is clean.
+     Min-height matches the 16+18+padding+content of a real card. */
+  min-height: 84px;
 }
 
 .dash-sum-label {
@@ -2711,6 +2727,11 @@
   .dash-edu-stat { text-align: left; }
   .dash-edu-continue { grid-template-columns: 1fr; }
   .dash-sumrow { grid-template-columns: 1fr 1fr; }
+  /* Phase 5i: hide reserved-feature empty cards below the 4-column
+     breakpoint. They earn their grid slot only on desktop where the
+     2x4 layout is symmetric. On 2-column layouts they'd just be
+     dead space at the bottom. */
+  .dash-sum-card.is-empty { display: none; }
   .dash-edu-rec-row { grid-template-columns: 1fr 1fr; }
   .dash-edu-rec-row > *:last-child { grid-column: 1 / -1; }
 }

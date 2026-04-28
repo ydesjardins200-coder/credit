@@ -585,13 +585,27 @@
    *     income_cents:      sum of entries where category.kind = 'income'
    *     spent_cents:       sum where kind in ('fixed','variable','discretionary')
    *     transfers_cents:   sum where kind = 'transfer'
-   *     available_cents:   income - spent - transfers
+   *     available_cents:   income - spent (NOT minus transfers — see below)
    *     savings_rate:      (income - spent) / income, as 0..1 fraction
    *     by_category: [
    *       { category_id, category_name, kind, emoji, total_cents, entry_count },
    *       ...
    *     ]
    *   }
+   *
+   * Why available_cents = income - spent (and not also - transfers):
+   *   Phase 5i decision. Transfers are money you've MOVED (CC payment,
+   *   savings contribution, RRSP contribution). Subtracting them from
+   *   "Available" produced a confusing UI where contributing to savings
+   *   made Available go down — users read "I saved more, why is my
+   *   available money less?" The dashboard subtitle promised "Income
+   *   minus spending" while the math actually did "income - spent -
+   *   transfers", so the label and the value disagreed.
+   *
+   *   Now: Available = income - spent, matching the on-screen subtitle
+   *   and consistent with savings_rate (which already used that
+   *   formula). Transfers get their own summary card so users can
+   *   still see at a glance how much they've moved this month.
    *
    * Why a separate function (not a SQL view): we want the entries list
    * AND the summary in one DB roundtrip. So we fetch entries once,
@@ -636,7 +650,7 @@
       return b.total_cents - a.total_cents;
     });
 
-    const available = income - spent - transfers;
+    const available = income - spent;
     const savings_rate = income > 0 ? Math.max(0, (income - spent) / income) : 0;
 
     return {

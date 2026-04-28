@@ -975,9 +975,18 @@
       </div>
 
       <!-- Summary row.
+           Phase 5i: 2x4 grid (was 1x4 in 5d/earlier).
+             Row 1 — current state of money this month:
+                Income · Spent · Available · Transfers
+             Row 2 — performance / future feature slots:
+                Savings rate · (empty — Opening balance, next session)
+                             · (empty — Net cash flow, next session)
+                             · (empty — reserved)
+           Empty cells deliberately shown as is-empty cards so the
+           grid stays balanced and so we don't ship fake placeholder
+           features that imply something is coming sooner than it is.
            Values populated by account.js initBudgetTab via lib/budget.js.
-           Empty state: all $0. Mock values are placeholder until real
-           data resolves. -->
+           Mock values are placeholder until real data resolves. -->
       <div class="dash-sumrow" data-budget-summary>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Income</div>
@@ -991,14 +1000,22 @@
         </article>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Available</div>
-          <div class="dash-sum-val dash-sum-val-positive" data-budget-available>$1,353</div>
+          <div class="dash-sum-val" data-budget-available>$1,353</div>
           <div class="dash-sum-delta" data-budget-available-sub>Income minus spending</div>
+        </article>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Transfers</div>
+          <div class="dash-sum-val" data-budget-transfers>$0</div>
+          <div class="dash-sum-delta" data-budget-transfers-sub>Moved this month</div>
         </article>
         <article class="dash-sum-card">
           <div class="dash-sum-label">Savings rate</div>
           <div class="dash-sum-val"><span data-budget-savings-rate>32</span><span class="dash-sum-unit">%</span></div>
           <div class="dash-sum-delta" data-budget-savings-sub>Of income saved</div>
         </article>
+        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
+        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
+        <article class="dash-sum-card is-empty" aria-hidden="true"></article>
       </div>
 
       <!-- Accounts.

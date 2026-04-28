@@ -1361,6 +1361,24 @@
     setText('[data-budget-income]', fmt(summary.income_cents));
     setText('[data-budget-spent]', fmt(summary.spent_cents));
     setText('[data-budget-available]', fmt(summary.available_cents));
+    setText('[data-budget-transfers]', fmt(summary.transfers_cents || 0));
+
+    // Phase 5i: Available card flips green/red based on the actual
+    // value. Was hardcoded to dash-sum-val-positive in static HTML
+    // (a Phase 5d bug — the negative class existed in CSS but was
+    // never applied). Now driven by available_cents sign:
+    //   > 0 -> green   (you've got room left this month)
+    //   < 0 -> red     (you've overspent income)
+    //   = 0 -> neutral (default fg color, no class)
+    var availEl = document.querySelector('[data-budget-available]');
+    if (availEl) {
+      availEl.classList.remove('dash-sum-val-positive', 'dash-sum-val-negative');
+      if (summary.available_cents > 0) {
+        availEl.classList.add('dash-sum-val-positive');
+      } else if (summary.available_cents < 0) {
+        availEl.classList.add('dash-sum-val-negative');
+      }
+    }
 
     // Savings rate is shown as a whole number percentage (e.g., "32" with
     // the % symbol added by surrounding HTML). The lib gives us a 0..1
@@ -1374,6 +1392,8 @@
     setText('[data-budget-income-sub]', 'This month');
     setText('[data-budget-spent-sub]', summary.spent_cents > 0 ? 'This month' : 'No spending logged yet');
     setText('[data-budget-available-sub]', summary.income_cents > 0 ? 'Income minus spending' : 'Add income to track');
+    setText('[data-budget-transfers-sub]',
+      (summary.transfers_cents || 0) > 0 ? 'Moved this month' : 'No transfers logged');
     setText('[data-budget-savings-sub]', summary.income_cents > 0 ? 'Of income saved' : '—');
   }
 
