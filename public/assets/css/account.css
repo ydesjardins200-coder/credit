@@ -5202,3 +5202,168 @@
     font-size: 0.7rem;
   }
 }
+
+/* ===========================================================
+   Phase 5g — All Entries modal
+   ===========================================================
+   Wider than the add-entry/goal modals because the row layout
+   needs horizontal room for the action buttons. Inherits the
+   add-entry-modal* base styles for the backdrop, close button,
+   slide-up animation, and footer. Only overrides what's specific
+   to the list view: card width, list scrolling, row layout, and
+   action buttons. */
+.all-entries-card {
+  /* Wider than the default 480px add-entry modal. Matches the
+     general dashboard reading width. */
+  max-width: 640px;
+}
+
+.all-entries-month-label {
+  font-size: 0.85rem;
+  color: var(--color-fg-soft);
+  margin-bottom: var(--space-2);
+}
+
+.all-entries-list {
+  /* Scroll the list, keep the title + close + footer fixed-feeling.
+     Cap height so very long months (Desjardins re-import: 56+ rows)
+     don't push the close button off-screen. */
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.all-entries-empty {
+  padding: var(--space-3);
+  text-align: center;
+  color: var(--color-fg-soft);
+  font-size: 0.9rem;
+}
+
+.all-entries-row {
+  display: grid;
+  /* icon · body (flex grow) · value · actions */
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.all-entries-row:last-child {
+  border-bottom: none;
+}
+
+.all-entries-row-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.all-entries-row-body {
+  min-width: 0; /* allow text truncation */
+}
+.all-entries-row-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.all-entries-row-sub {
+  font-size: 0.78rem;
+  color: var(--color-fg-soft);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.all-entries-row-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  /* Ensure consistent right-alignment regardless of dollar amount
+     length so the action buttons line up vertically across rows. */
+  text-align: right;
+  min-width: 70px;
+}
+
+.all-entries-actions {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.all-entries-action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-fg-soft);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.all-entries-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.all-entries-action-btn:hover {
+  background: #ffffff;
+  border-color: var(--color-border);
+  color: var(--color-fg);
+}
+.all-entries-action-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.all-entries-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* Trash icon hover turns red so destructive intent is obvious.
+   Using a literal red because main.css doesn't have a --color-danger
+   token yet — same pattern as the amber literals in csv-review-banner. */
+.all-entries-action-danger:hover {
+  background: #fef2f2;        /* red-50 */
+  border-color: #fca5a5;      /* red-300 */
+  color: #b91c1c;             /* red-700 */
+}
+
+/* Mobile: bottom-sheet treatment to match other modals, and a slightly
+   denser row layout because horizontal space is at a premium. */
+@media (max-width: 640px) {
+  .all-entries-card {
+    max-width: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 90vh;
+    padding: var(--space-3) var(--space-2) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .all-entries-row {
+    grid-template-columns: 32px 1fr auto auto;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .all-entries-row-ico {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
+  }
+  .all-entries-action-btn {
+    width: 30px;
+    height: 30px;
+  }
+  .all-entries-list {
+    max-height: 65vh;
+  }
+}

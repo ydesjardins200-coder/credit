@@ -1258,6 +1258,13 @@
   // consults this to pick a sensible default date for the new entry.
   var budgetCurrentMonth = new Date();
 
+  // Phase 5g: cache of the current month's entries, populated by
+  // initBudgetTab / refreshBudgetTab. Source of truth for both the
+  // recent-entries card (top 5) and the All Entries modal (full list).
+  // Living at module scope so the modal can read without a re-fetch
+  // and so delete/edit can mutate it before re-rendering.
+  var budgetCurrentMonthEntries = [];
+
   /**
    * Initialize the Budget tab. Idempotent — safe to call multiple times,
    * but only does real work on first call.
@@ -1323,6 +1330,9 @@
 
     // 9. Wire "Import" CTA → Phase 5d CSV import modal
     wireBudgetImportCta();
+
+    // 10. Wire "See all" link in Recent Entries card → Phase 5g modal
+    wireBudgetSeeAllCta();
   }
 
   /**
@@ -1547,6 +1557,20 @@
   function renderBudgetEntries(entries) {
     var container = document.querySelector('[data-budget-tx-list]');
     if (!container) return;
+
+    // Phase 5g: cache for the All Entries modal. Done unconditionally
+    // (including the empty case) so the modal can show its own
+    // empty-state instead of a stale list if the user opens it.
+    budgetCurrentMonthEntries = entries || [];
+
+    // The "See all" link should only be useful when there's something
+    // beyond the 5 we render below. Hide it otherwise so users don't
+    // click into an empty/redundant modal.
+    var seeAllLink = document.querySelector('[data-budget-see-all]');
+    if (seeAllLink) {
+      var hasMore = (entries || []).length > 5;
+      seeAllLink.hidden = !hasMore;
+    }
 
     if (!entries || entries.length === 0) {
       // Empty state — friendly invite to add the first entry.
@@ -2507,6 +2531,238 @@
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Phase 5g — All Entries modal
+  // ---------------------------------------------------------------------
+  // Opens from the "See all →" link on the Recent Entries card. Renders
+  // every entry in the current month with edit/delete icons inline.
+  // Edits open the existing edit-entry modal (handleEntryEdit). Deletes
+  // confirm via window.confirm and re-render the list in place; the
+  // modal stays open so users can clean up multiple entries in one go.
+  //
+  // No new data fetch: reads from budgetCurrentMonthEntries which is
+  // populated by renderBudgetEntries.
+
+  var allEntriesWired = false;
+
+  function wireBudgetSeeAllCta() {
+    var link = document.querySelector('[data-budget-see-all]');
+    if (link && link.getAttribute('data-cta-wired') !== 'true') {
+      link.setAttribute('data-cta-wired', 'true');
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        openAllEntriesModal();
+      });
+    }
+
+    if (!allEntriesWired) {
+      var modal = document.getElementById('all-entries-modal');
+      if (!modal) {
+        // Markup missing — log once and bail. Don't throw.
+        if (!window.__iboostNoAllEntriesWarned) {
+          console.warn('[account] all-entries-modal element not found');
+          window.__iboostNoAllEntriesWarned = true;
+        }
+        return;
+      }
+      // Close handlers (X button + backdrop click + Cancel button)
+      modal.querySelectorAll('[data-all-entries-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeAllEntriesModal);
+      });
+      var backdrop = modal.querySelector('[data-all-entries-backdrop]');
+      if (backdrop) backdrop.addEventListener('click', closeAllEntriesModal);
+
+      // ESC to close — only when modal is open
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.hidden) {
+          closeAllEntriesModal();
+        }
+      });
+
+      // Delegated click handler for the row icons. Delegated rather
+      // than per-row attached because the list re-renders after every
+      // delete and we don't want to re-attach N listeners each time.
+      var listEl = document.getElementById('all-entries-list');
+      if (listEl) {
+        listEl.addEventListener('click', handleAllEntriesListClick);
+      }
+
+      allEntriesWired = true;
+    }
+  }
+
+  function openAllEntriesModal() {
+    var modal = document.getElementById('all-entries-modal');
+    if (!modal) return;
+    renderAllEntriesList();
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAllEntriesModal() {
+    var modal = document.getElementById('all-entries-modal');
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  // Renders the full list. Called on open, and re-called after each
+  // delete to reflect the mutated cache. Reads from the same
+  // budgetCurrentMonthEntries that the recent-entries card uses.
+  function renderAllEntriesList() {
+    var listEl = document.getElementById('all-entries-list');
+    var monthLabel = document.getElementById('all-entries-month-label');
+    if (!listEl) return;
+
+    if (monthLabel) {
+      monthLabel.textContent = budgetCurrentMonth.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+
+    var entries = budgetCurrentMonthEntries || [];
+    if (entries.length === 0) {
+      listEl.innerHTML =
+        '<div class="all-entries-empty">' +
+          'No entries for this month yet.' +
+        '</div>';
+      return;
+    }
+
+    var fmt = window.iboostBudget.formatCents;
+    var html = '';
+    entries.forEach(function (e) {
+      var d = new Date(e.entry_date + 'T00:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      var catName = e.category && e.category.name ? e.category.name : 'Uncategorized';
+      var emoji = e.category && e.category.emoji ? e.category.emoji : '💵';
+      var note = e.note ? escapeHtml(e.note) : escapeHtml(catName);
+      var kind = e.category && e.category.kind ? e.category.kind : 'variable';
+
+      // Same color logic as recent-entries card so the two views are
+      // visually consistent.
+      var iconBg, iconColor, valPrefix, valColor;
+      if (kind === 'income') {
+        iconBg = '#dcfce7'; iconColor = '#15803d';
+        valPrefix = '+ '; valColor = '#15803d';
+      } else if (kind === 'transfer') {
+        iconBg = '#dbeafe'; iconColor = '#1d4ed8';
+        valPrefix = ''; valColor = '#1d4ed8';
+      } else {
+        iconBg = '#fef3c7'; iconColor = '#b45309';
+        valPrefix = ''; valColor = '#0A2540';
+      }
+
+      // Edit (pencil) and delete (trash) icons. Both are <button>s
+      // for accessibility — keyboard-focusable, screen-reader-friendly
+      // with aria-label. data-action distinguishes them in the
+      // delegated click handler.
+      html +=
+        '<div class="all-entries-row" data-entry-id="' + escapeHtml(e.id) + '">' +
+          '<div class="all-entries-row-ico" style="background:' + iconBg + ';color:' + iconColor + ';">' +
+            emoji +
+          '</div>' +
+          '<div class="all-entries-row-body">' +
+            '<div class="all-entries-row-name">' + note + '</div>' +
+            '<div class="all-entries-row-sub">' + dateStr + ' · ' + escapeHtml(catName) + '</div>' +
+          '</div>' +
+          '<div class="all-entries-row-val" style="color:' + valColor + ';">' +
+            valPrefix + fmt(e.amount_cents) +
+          '</div>' +
+          '<div class="all-entries-actions">' +
+            '<button type="button" class="all-entries-action-btn" data-action="edit" aria-label="Edit entry" title="Edit">' +
+              // Pencil icon
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                '<path d="M12 20h9"/>' +
+                '<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>' +
+              '</svg>' +
+            '</button>' +
+            '<button type="button" class="all-entries-action-btn all-entries-action-danger" data-action="delete" aria-label="Delete entry" title="Delete">' +
+              // Trash icon
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                '<polyline points="3 6 5 6 21 6"/>' +
+                '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>' +
+                '<path d="M10 11v6M14 11v6"/>' +
+                '<path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>' +
+              '</svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    });
+
+    listEl.innerHTML = html;
+  }
+
+  // Delegated handler for clicks inside the All Entries list. Routes
+  // edit clicks to the existing edit modal; delete clicks to a
+  // confirm + iboostBudget.deleteEntry pipeline that re-renders the
+  // list in place on success.
+  async function handleAllEntriesListClick(e) {
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+
+    var row = btn.closest('[data-entry-id]');
+    if (!row) return;
+    var entryId = row.getAttribute('data-entry-id');
+    var entry = budgetCurrentMonthEntries.find(function (x) { return x.id === entryId; });
+    if (!entry) return;
+
+    var action = btn.getAttribute('data-action');
+
+    if (action === 'edit') {
+      // Close All Entries first so the edit modal isn't stacked on
+      // top — feels cleaner. The user comes back to the budget tab
+      // after editing; if they want to keep cleaning up, one click
+      // re-opens All Entries.
+      closeAllEntriesModal();
+      openEditEntryModal(entry);
+      return;
+    }
+
+    if (action === 'delete') {
+      // Same confirm copy as the existing in-modal delete to keep
+      // the UX consistent.
+      var ok = window.confirm(
+        'Delete this entry?\n\n' +
+        'This is permanent. The entry will be removed from your records.'
+      );
+      if (!ok) return;
+
+      // Visual feedback: dim the row + disable both buttons during
+      // the network call. If the call fails we re-enable; if it
+      // succeeds the row is gone after re-render.
+      row.style.opacity = '0.5';
+      row.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+
+      var result = await window.iboostBudget.deleteEntry(entryId);
+
+      if (result.error) {
+        console.error('[account] deleteEntry from all-entries:', result.error);
+        row.style.opacity = '';
+        row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+        window.alert('Failed to delete: ' + (result.error.message || 'Unknown error'));
+        return;
+      }
+
+      // Mutate the cache locally so re-render shows the deletion
+      // without a Supabase round-trip. refreshBudgetTab below will
+      // re-fetch and overwrite this anyway, but doing it locally
+      // first keeps the modal feeling instant.
+      budgetCurrentMonthEntries = budgetCurrentMonthEntries.filter(function (x) {
+        return x.id !== entryId;
+      });
+      renderAllEntriesList();
+
+      // Refresh the rest of the Budget tab in the background so the
+      // summary numbers, category bars, and recent-entries card all
+      // reflect the deletion when the user closes the modal.
+      refreshBudgetTab();
+      return;
+    }
+  }
+
   function wireImportModal() {
     var modal = document.getElementById('csv-import-modal');
     if (!modal) {
@@ -3429,6 +3685,7 @@
     wireBudgetMonthNav();
     wireBudgetGoalCta();
     wireBudgetImportCta();
+    wireBudgetSeeAllCta();
   }
 
   // Phase 5b — render the month label ("April 2026") and update

@@ -1143,7 +1143,7 @@
       <article class="dash-card">
         <div class="dash-card-title-row">
           <h3>Recent entries</h3>
-          <a href="#" class="dash-card-action">See all →</a>
+          <a href="#" class="dash-card-action" data-budget-see-all hidden>See all →</a>
         </div>
         <!-- Container replaced by account.js initBudgetTab. -->
         <div class="dash-tx-list" data-budget-tx-list>
@@ -2122,6 +2122,45 @@
           <button type="submit" class="btn btn-primary" id="add-goal-submit">Save goal</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       All Entries modal (Phase 5g of Budget tab)
+       ===========================================================
+       Read-only list of every entry in the current month, with
+       inline edit (pencil) and delete (trash) icons at the end of
+       each row. Triggered by the 'See all →' link on the Recent
+       Entries card. Reuses the existing edit-entry modal for edits;
+       delete uses window.confirm() + iboostBudget.deleteEntry()
+       and re-renders this list in place (modal stays open) so
+       users can clean up batches of entries in one sitting.
+
+       Scope: current month only — same window the rest of the
+       Budget tab shows. Cross-month browsing happens via the
+       prev/next arrows on the Budget tab itself.
+       =========================================================== -->
+  <div id="all-entries-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="all-entries-title">
+    <div class="add-entry-modal-backdrop" data-all-entries-backdrop></div>
+    <div class="add-entry-modal-card all-entries-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-all-entries-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="all-entries-title" class="add-entry-modal-title">All entries</h2>
+      <div class="all-entries-month-label" id="all-entries-month-label"></div>
+
+      <!-- Populated by renderAllEntriesList(). One .all-entries-row
+           per entry, with .all-entries-actions containing pencil +
+           trash. -->
+      <div class="all-entries-list" id="all-entries-list"></div>
+
+      <div class="add-entry-footer">
+        <div class="add-entry-footer-spacer"></div>
+        <button type="button" class="btn btn-outline" data-all-entries-close>Close</button>
+      </div>
     </div>
   </div>
 
