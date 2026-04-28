@@ -194,13 +194,85 @@
   };
 
   // -----------------------------------------------------------------
+  // CIBC (Canadian Imperial Bank of Commerce) — major Canadian bank,
+  // strong Quebec retail presence.
+  //
+  // Format observed (April 2026 export, 226 rows of real data):
+  //   - Encoding: plain ASCII, no BOM
+  //   - Headerless. First row IS a transaction.
+  //   - 4 columns, all rows consistent:
+  //       0: Date              ISO format YYYY-MM-DD
+  //       1: Description       single column, no embedded commas
+  //       2: Debit amount      positive number, empty if inflow
+  //       3: Credit amount     positive number, empty if outflow
+  //   - Sign is implied by which amount column is populated. XOR
+  //     across all 226 rows in the test file (114 outflows, 112
+  //     inflows, no row has both or neither populated).
+  //
+  // This is the same XOR pattern as Desjardins, just with completely
+  // different fingerprint signals (4 cols vs 14, ISO dashes vs slashes,
+  // simpler description). Reuses the existing two-column amount path
+  // in csv-import.js (mapping.amount + mapping.amount_in).
+  //
+  // CIBC notably DOES NOT quote descriptions even though they're free-
+  // text. The bank's exporter is careful to omit commas from the
+  // description field, so the naive comma-split parser handles all
+  // 226 test rows cleanly without needing CSV quoting support.
+  //
+  // Fingerprint logic: 4 columns, headerless, ISO-date in col 0, XOR
+  // numeric in cols 2/3. The 4-col + ISO date + XOR amount shape is
+  // narrow enough that we don't expect false positives — but if some
+  // future user's non-CIBC export happens to match, the data still
+  // parses correctly (just with a slightly wrong "Detected: CIBC"
+  // label). Acceptable trade-off.
+  // -----------------------------------------------------------------
+  var cibcPreset = {
+    id: 'cibc',
+    name: 'CIBC (Canadian Imperial Bank of Commerce)',
+    hasHeader: false,
+
+    fingerprint: function (rawRows) {
+      if (!rawRows || rawRows.length < 1) return false;
+      var first = rawRows[0];
+      // Column count: every CIBC row has exactly 4 columns.
+      if (!first || first.length !== 4) return false;
+      // Date in column 0, format YYYY-MM-DD (ISO).
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(first[0] || '').trim())) return false;
+      // Column 2 OR column 3 must be a positive numeric string. Same
+      // XOR pattern as Desjardins: exactly one of debit/credit, never
+      // both, never neither.
+      var col2 = String(first[2] || '').trim();
+      var col3 = String(first[3] || '').trim();
+      var col2num = col2 !== '' && /^\d+(\.\d+)?$/.test(col2);
+      var col3num = col3 !== '' && /^\d+(\.\d+)?$/.test(col3);
+      if (col2num === col3num) return false;
+      return true;
+    },
+
+    mapping: {
+      date: 0,
+      amount: 2,           // debit / outflow
+      amount_in: 3,        // credit / inflow
+      description: 1,
+    },
+  };
+
+  // -----------------------------------------------------------------
   // Preset registry. Order matters: the first matching fingerprint
   // wins. Put more specific presets earlier and more permissive ones
   // later.
+  //
+  // Current order rationale:
+  //   - desjardins: 14-col headerless. Specific.
+  //   - rbc: 8-col with named headers. Specific.
+  //   - cibc: 4-col headerless. Most generic shape (could
+  //     theoretically false-match a similar 4-col XOR export).
+  //     Listed last so more specific shapes are tried first.
   // -----------------------------------------------------------------
   var PRESETS = [
     desjardinsPreset,
     rbcPreset,
+    cibcPreset,
   ];
 
   /**
