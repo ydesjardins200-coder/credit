@@ -47,6 +47,13 @@
   status = 301
   force = true
 
+[[redirects]]
+  from = "/account.html"
+  query = { tab = "budget" }
+  to = "/account/budget"
+  status = 301
+  force = true
+
 # ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------

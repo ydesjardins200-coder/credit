@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Budget — iBoost</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
+  <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/shared/account-shell.css" />
+  <link rel="stylesheet" href="/assets/css/account/budget.css" />
+</head>
+<body class="dash-body">
+
+  <!-- DEV MODE banner — same content as the monolith account.html. -->
+  <div class="dash-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Some features are still in preview</strong>
+    <span>&mdash; real credit data appears after your first monthly report</span>
+  </div>
+
+  <header class="dash-topbar">
+    <a href="/" class="dash-logo-link" aria-label="iBoost home">
+      <img
+        src="/assets/img/brand/logo-horizontal-80.png"
+        srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+        alt="iBoost"
+        width="140"
+        height="48"
+      />
+    </a>
+    <div class="dash-user">
+      <div class="dash-user-avatar" id="user-avatar" aria-hidden="true">—</div>
+      <div class="dash-user-info">
+        <div class="dash-user-name" id="user-name">Welcome</div>
+        <div class="dash-user-email" id="user-email">…</div>
+      </div>
+      <button type="button" id="signout-btn" class="dash-signout">Sign out</button>
+    </div>
+  </header>
+
+  <!-- TAB NAV: Budget is the active page. Other tabs link back to the
+       monolith with ?tab= query param (Welcome and Credit) or to per-page
+       URLs (Education, Profile, Offers). -->
+  <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+    <a href="/account.html?tab=welcome" class="dash-tab" role="tab" aria-selected="false">Welcome</a>
+    <a href="/account.html?tab=credit" class="dash-tab" role="tab" aria-selected="false">Credit</a>
+    <a href="/account/offers" class="dash-tab" role="tab" aria-selected="false">Offers</a>
+    <a href="/account/budget" class="dash-tab is-active" role="tab" aria-selected="true" aria-current="page">Budget</a>
+    <a href="/account/education" class="dash-tab" role="tab" aria-selected="false">Education</a>
+    <a href="/account/profile" class="dash-tab" role="tab" aria-selected="false">Profile</a>
+  </nav>
+
+  <main class="dash-main">
+
+      <!-- ===========================================================
+           Budget tab — MAIN VIEW
+           ===========================================================
+           The default budget content: summary, categories, goals,
+           entries. Toggled via the `hidden` attribute by account.js
+           when user enters/exits the category-management view. -->
+      <div data-budget-main-view>
+
+      <div class="dash-panel-head dash-panel-head-row">
+        <div>
+          <h1>Your budget</h1>
+          <p class="dash-panel-sub">Track spending and keep utilization in check</p>
+        </div>
+        <div class="dash-month-nav" role="navigation" aria-label="Month selector">
+          <button type="button" class="dash-month-arrow" data-budget-prev-month aria-label="Previous month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <span class="dash-month-label" data-budget-month-label aria-live="polite">April 2026</span>
+          <button type="button" class="dash-month-arrow" data-budget-next-month aria-label="Next month">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary row.
+           Phase 5i: 2x4 grid (was 1x4 in 5d/earlier).
+             Row 1 — current state of money this month:
+                Income · Spent · Available · Transfers
+             Row 2 — performance / future feature slots:
+                Savings rate · (empty — Opening balance, next session)
+                             · (empty — Net cash flow, next session)
+                             · (empty — reserved)
+           Empty cells deliberately shown as is-empty cards so the
+           grid stays balanced and so we don't ship fake placeholder
+           features that imply something is coming sooner than it is.
+           Values populated by account.js initBudgetTab via lib/budget.js.
+           Mock values are placeholder until real data resolves. -->
+      <div class="dash-sumrow" data-budget-summary>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Income</div>
+          <div class="dash-sum-val" data-budget-income>$4,200</div>
+          <div class="dash-sum-delta" data-budget-income-sub>This month</div>
+        </article>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Spent</div>
+          <div class="dash-sum-val" data-budget-spent>$2,847</div>
+          <div class="dash-sum-delta" data-budget-spent-sub>This month</div>
+        </article>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Available</div>
+          <div class="dash-sum-val" data-budget-available>$1,353</div>
+          <div class="dash-sum-delta" data-budget-available-sub>Income minus spending</div>
+        </article>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Transfers</div>
+          <div class="dash-sum-val" data-budget-transfers>$0</div>
+          <div class="dash-sum-delta" data-budget-transfers-sub>Moved this month</div>
+        </article>
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Savings rate</div>
+          <div class="dash-sum-val"><span data-budget-savings-rate>32</span><span class="dash-sum-unit">%</span></div>
+          <div class="dash-sum-delta" data-budget-savings-sub>Of income saved</div>
+        </article>
+        <!-- Phase 5j: Opening balance.
+             The whole card is clickable — opens edit modal. Pencil
+             icon hints at editability. When no value resolved
+             (no manual anchor exists in any prior month), shows
+             "Not set" with a "Click to add" sub-label. -->
+        <article class="dash-sum-card dash-sum-card-clickable"
+                 data-budget-opening-card
+                 role="button" tabindex="0"
+                 aria-label="Edit opening balance">
+          <div class="dash-sum-label">
+            Opening balance
+            <svg class="dash-sum-edit-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+            </svg>
+          </div>
+          <div class="dash-sum-val" data-budget-opening>—</div>
+          <div class="dash-sum-delta" data-budget-opening-sub>Click to set</div>
+        </article>
+        <!-- Phase 5j: Closing balance / Net cash flow.
+             Read-only; derived from opening + income - spent - transfers.
+             When opening isn't set, shows a hint. -->
+        <article class="dash-sum-card">
+          <div class="dash-sum-label">Closing balance</div>
+          <div class="dash-sum-val" data-budget-closing>—</div>
+          <div class="dash-sum-delta" data-budget-closing-sub>After this month</div>
+        </article>
+        <!-- Phase 5k: 8th slot is the free-tier upgrade pitch when user
+             is on Free, or stays as is-empty placeholder for paid users.
+             Renderer (account.js renderBudgetUpgradePitchCard) flips
+             classes + content based on tier + country. -->
+        <article class="dash-sum-card is-empty" data-budget-upgrade-pitch aria-hidden="true"></article>
+      </div>
+
+      <!-- Phase 5k: Paid-tier auto-import placeholder.
+           Visibility is driven entirely by renderBudgetBankPlaceholder
+           (sets element.hidden based on tier), NOT by the data-feature
+           gating system. Why: applyAccessToElement('allowed') doesn't
+           unhide elements, so a static hidden attribute would stick
+           even for paid users. Renderer-driven visibility avoids that
+           pitfall. Free users see nothing here; paid users get a
+           Coming-soon Flinks/Plaid card.
+
+           When real Flinks/Plaid integration ships, the placeholder
+           becomes a working Connect button and the manual Budget tab
+           below gets hidden for paid users.
+           -->
+      <div class="dash-bank-connect-placeholder"
+           data-budget-bank-placeholder></div>
+
+      <!-- 2-col: categories + goals -->
+      <div class="dash-grid-2">
+
+        <article class="dash-card">
+          <div class="dash-card-title-row">
+            <h3 class="dash-card-title">Spending by category</h3>
+            <div class="dash-card-actions">
+              <!-- Phase 5o: view toggle. Bars (existing) vs Calendar
+                   (new — heatmap of spending by day-of-month). User's
+                   choice persists via localStorage. Default = Bars. -->
+              <div class="dash-view-toggle" role="tablist" aria-label="Spending view">
+                <button type="button"
+                        class="dash-view-toggle-btn is-active"
+                        role="tab"
+                        aria-selected="true"
+                        data-spending-view="bars">Bars</button>
+                <button type="button"
+                        class="dash-view-toggle-btn"
+                        role="tab"
+                        aria-selected="false"
+                        data-spending-view="calendar">Calendar</button>
+              </div>
+              <button type="button" class="dash-card-action-link" data-budget-import-cta>Import</button>
+              <button type="button" class="dash-card-action-link" data-budget-manage-cta>Manage</button>
+              <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
+            </div>
+          </div>
+          <!-- Phase 5o: headline pattern banner. Auto-generated above
+               the chart from a small ruleset (no LLM). Hidden when no
+               interesting pattern is found — better silence than dumb. -->
+          <div class="dash-spending-headline" data-budget-headline hidden></div>
+          <!-- Container replaced by account.js initBudgetTab. Mock content
+               below is shown until data resolves (~100ms typical) or as
+               an empty-state placeholder for users with no entries. -->
+          <div class="dash-cats" data-budget-categories>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#2ECC71"></span>Housing</span>
+                <span class="dash-cat-val">$1,200</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:100%; background:#2ECC71"></div></div>
+              <div class="dash-cat-pct">42% of spending</div>
+            </div>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#0891b2"></span>Groceries</span>
+                <span class="dash-cat-val">$480</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:40%; background:#0891b2"></div></div>
+              <div class="dash-cat-pct">17% · Avg $15 per trip</div>
+            </div>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#f59e0b"></span>Dining out</span>
+                <span class="dash-cat-val">$340</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:28%; background:#f59e0b"></div></div>
+              <div class="dash-cat-pct">12% · 14 meals this month</div>
+            </div>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#8b5cf6"></span>Transport</span>
+                <span class="dash-cat-val">$285</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:24%; background:#8b5cf6"></div></div>
+              <div class="dash-cat-pct">10% · Gas + parking</div>
+            </div>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#ec4899"></span>Subscriptions</span>
+                <span class="dash-cat-val">$172</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:14%; background:#ec4899"></div></div>
+              <div class="dash-cat-pct">6% · 8 active subscriptions</div>
+            </div>
+            <div class="dash-cat">
+              <div class="dash-cat-row">
+                <span class="dash-cat-name"><span class="dash-cat-dot" style="background:#94a3b8"></span>Other</span>
+                <span class="dash-cat-val">$370</span>
+              </div>
+              <div class="dash-cat-bar"><div class="dash-cat-fill" style="width:31%; background:#94a3b8"></div></div>
+              <div class="dash-cat-pct">13%</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="dash-card" data-budget-goals-card>
+          <div class="dash-card-title-row">
+            <h3>Your goals</h3>
+            <a href="#" class="dash-card-action">All goals →</a>
+          </div>
+          <!-- Container replaced by account.js initBudgetTab. Mock content
+               below is only shown until data resolves. -->
+          <div class="dash-goals" data-budget-goals>
+            <div class="dash-goal dash-goal-ontrack">
+              <div class="dash-goal-head">
+                <div class="dash-goal-name">Keep utilization &lt; 30%</div>
+                <div class="dash-goal-pct">On track</div>
+              </div>
+              <div class="dash-goal-bar"><div class="dash-goal-fill" style="width:22%"></div></div>
+              <div class="dash-goal-meta"><span>22% current</span><span>Target 30%</span></div>
+            </div>
+            <div class="dash-goal dash-goal-alert">
+              <div class="dash-goal-head">
+                <div class="dash-goal-name">Dining out under $300</div>
+                <div class="dash-goal-pct">113% used</div>
+              </div>
+              <div class="dash-goal-bar"><div class="dash-goal-fill" style="width:100%"></div></div>
+              <div class="dash-goal-meta"><span>$340 spent</span><span>$300 budget</span></div>
+            </div>
+            <div class="dash-goal dash-goal-ontrack">
+              <div class="dash-goal-head">
+                <div class="dash-goal-name">Save $500/month</div>
+                <div class="dash-goal-pct">71% done</div>
+              </div>
+              <div class="dash-goal-bar"><div class="dash-goal-fill" style="width:71%"></div></div>
+              <div class="dash-goal-meta"><span>$354 saved</span><span>$500 goal</span></div>
+            </div>
+            <button type="button" class="dash-new-goal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Set a new goal
+            </button>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Transactions -->
+      <article class="dash-card">
+        <div class="dash-card-title-row">
+          <h3>Recent entries</h3>
+          <a href="#" class="dash-card-action" data-budget-see-all hidden>See all →</a>
+        </div>
+        <!-- Container replaced by account.js initBudgetTab. -->
+        <div class="dash-tx-list" data-budget-tx-list>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#fef3c7; color:#b45309">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 9h18M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9M3 9l2-5h14l2 5"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">Joe's Diner</div>
+              <div class="dash-tx-meta"><span>Dining</span><span>·</span><span>Today</span></div>
+            </div>
+            <div class="dash-tx-amount">−$34.20</div>
+          </div>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#e7f7ee; color:#16a34a">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">Payroll deposit</div>
+              <div class="dash-tx-meta"><span>Income</span><span>·</span><span>Apr 15</span></div>
+            </div>
+            <div class="dash-tx-amount dash-tx-amount-income">+$2,100.00</div>
+          </div>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#dbeafe; color:#0891b2">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">Whole Foods</div>
+              <div class="dash-tx-meta"><span>Groceries</span><span>·</span><span>Apr 14</span></div>
+            </div>
+            <div class="dash-tx-amount">−$87.45</div>
+          </div>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#f3e8ff; color:#8b5cf6">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">iBoost subscription</div>
+              <div class="dash-tx-meta"><span>Subscriptions</span><span>·</span><span>Apr 12</span></div>
+            </div>
+            <div class="dash-tx-amount">−$15.00</div>
+          </div>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#fce7f3; color:#ec4899">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">Shell Gas</div>
+              <div class="dash-tx-meta"><span>Transport</span><span>·</span><span>Apr 11</span></div>
+            </div>
+            <div class="dash-tx-amount">−$52.80</div>
+          </div>
+
+          <div class="dash-tx">
+            <div class="dash-tx-ico" style="background:#fef3c7; color:#b45309">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 9h18M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9M3 9l2-5h14l2 5"/>
+              </svg>
+            </div>
+            <div class="dash-tx-body">
+              <div class="dash-tx-merchant">Starbucks</div>
+              <div class="dash-tx-meta"><span>Dining</span><span>·</span><span>Apr 10</span></div>
+            </div>
+            <div class="dash-tx-amount">−$6.75</div>
+          </div>
+
+        </div>
+      </article>
+
+      </div><!-- /data-budget-main-view -->
+
+      <!-- ===========================================================
+           Budget tab — MANAGE CATEGORIES VIEW (Phase 4)
+           ===========================================================
+           Shown when user clicks [data-budget-manage-cta]. Replaces
+           the main view (full-screen takeover). "Back" button returns
+           to main view. account.js renderManageCategoriesView() fills
+           in the kind groups + category rows. -->
+      <div data-budget-manage-view hidden>
+
+        <div class="dash-panel-head dash-panel-head-row">
+          <div class="dash-manage-head">
+            <button type="button" class="dash-manage-back" data-budget-manage-back aria-label="Back to budget">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+              </svg>
+              <span>Back to budget</span>
+            </button>
+            <h1>Manage categories</h1>
+            <p class="dash-panel-sub">
+              Rename, reorder, or archive categories. Archived categories
+              hide from new entries but keep their spending history.
+            </p>
+          </div>
+        </div>
+
+        <!-- Container for the rendered kind-group sections. account.js
+             builds this dynamically from getCategories({includeArchived: true})
+             so users can also see archived categories grayed out. -->
+        <div class="dash-manage-list" data-budget-manage-list>
+          <p class="dash-manage-loading">Loading your categories…</p>
+        </div>
+
+      </div><!-- /data-budget-manage-view -->
+
+  </main>
+
+  <!-- ===========================================================
+       Add Entry modal (Phase 3 of Budget tab)
+       ===========================================================
+       Opens when user clicks any [data-budget-add-entry-cta] button.
+       Wired by account.js initAddEntryModal().
+
+       Hidden by default; account.js toggles the `hidden` attribute
+       to show/hide. Backdrop click + ESC key + close button all
+       dismiss. Submit calls iboostBudget.addEntry() with optimistic
+       UI rollback on error.
+       =========================================================== -->
+  <div id="add-entry-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="add-entry-title">
+    <div class="add-entry-modal-backdrop" data-add-entry-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-add-entry-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="add-entry-title" class="add-entry-modal-title">Add entry</h2>
+      <form id="add-entry-form" class="add-entry-form" novalidate>
+
+        <!-- Amount: BIG input, autofocus on open. Currency symbol is
+             a label-style decoration; the actual value is parsed via
+             iboostBudget.parseDollarsToCents() so '$34.20', '34.20',
+             '1,234.56' all work. -->
+        <div class="add-entry-amount-row">
+          <span class="add-entry-amount-prefix" aria-hidden="true">$</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="add-entry-amount"
+            name="amount"
+            class="add-entry-amount-input"
+            placeholder="0.00"
+            autocomplete="off"
+            required
+            aria-label="Amount in dollars"
+          />
+        </div>
+
+        <!-- Date: defaults to today. type=date works on iOS, Android,
+             and modern desktops. The browser-native picker is good
+             enough — no need for a custom date library on this surface. -->
+        <div class="add-entry-field">
+          <label for="add-entry-date" class="add-entry-label">Date</label>
+          <input
+            type="date"
+            id="add-entry-date"
+            name="date"
+            class="add-entry-input"
+            required
+          />
+        </div>
+
+        <!-- Category: populated from iboostBudget.getCategories() at
+             modal open. Grouped by kind (income/fixed/variable/...) via
+             <optgroup>. Default selection is the most-used category for
+             this user (or 'Uncategorized' for fresh users). -->
+        <div class="add-entry-field">
+          <label for="add-entry-category" class="add-entry-label">Category</label>
+          <select
+            id="add-entry-category"
+            name="category"
+            class="add-entry-input"
+            required
+          >
+            <option value="">Loading categories…</option>
+          </select>
+          <p class="add-entry-hint" id="add-entry-suggestion-hint" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Suggested from note</span>
+          </p>
+        </div>
+
+        <!-- Note: optional. As user types, iboostMerchants.suggestCategory
+             scans for known merchants and pre-selects the matched
+             category (showing the hint above). User can override. -->
+        <div class="add-entry-field">
+          <label for="add-entry-note" class="add-entry-label">Note <span class="add-entry-label-optional">(optional)</span></label>
+          <input
+            type="text"
+            id="add-entry-note"
+            name="note"
+            class="add-entry-input"
+            placeholder="e.g. Whole Foods, Maxi, Netflix…"
+            maxlength="200"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Error region. Hidden by default; shown when validation or
+             save fails. Replaces inline-per-field errors with a single
+             clear message. -->
+        <div class="add-entry-error" id="add-entry-error" hidden role="alert"></div>
+
+        <!-- Footer: Delete (edit mode only) + Cancel + Save. Save is the
+             primary action. Delete only shows when editing an existing
+             entry; for new entries it's hidden. -->
+        <div class="add-entry-footer">
+          <button type="button" class="btn btn-danger-text" id="add-entry-delete" hidden>Delete</button>
+          <div class="add-entry-footer-spacer"></div>
+          <button type="button" class="btn btn-outline" data-add-entry-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="add-entry-submit">Save entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       Goal modal (Phase 5c of Budget tab)
+       ===========================================================
+       Set a monthly target for a category. Three goal types:
+         - spend_under  : "Stay under $300 on dining"
+         - save_at_least: "Save at least $500" (income/transfer)
+         - spend_exactly: rare — for fixed bills you want stable
+
+       Reuses the same modal styling as Add Entry. Pre-fills in
+       edit mode (clicking an existing goal). Delete button shown
+       in edit mode.
+       =========================================================== -->
+  <div id="add-goal-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="add-goal-title">
+    <div class="add-entry-modal-backdrop" data-add-goal-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-add-goal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="add-goal-title" class="add-entry-modal-title">Set goal</h2>
+      <form id="add-goal-form" class="add-entry-form" novalidate>
+
+        <!-- Category — required first because it constrains which
+             goal types make sense. spend_under for expense kinds,
+             save_at_least for income/transfer. -->
+        <div class="add-entry-field">
+          <label for="add-goal-category" class="add-entry-label">Category</label>
+          <select id="add-goal-category" name="category" class="add-entry-input" required>
+            <option value="">Loading categories…</option>
+          </select>
+        </div>
+
+        <!-- Goal type. Radio group for clarity. -->
+        <div class="add-entry-field">
+          <label class="add-entry-label">Goal type</label>
+          <div class="add-goal-type-group">
+            <label class="add-goal-type-option">
+              <input type="radio" name="goal_type" value="spend_under" checked>
+              <span class="add-goal-type-label">
+                <span class="add-goal-type-name">Spend under</span>
+                <span class="add-goal-type-desc">Stay below this amount this month</span>
+              </span>
+            </label>
+            <label class="add-goal-type-option">
+              <input type="radio" name="goal_type" value="save_at_least">
+              <span class="add-goal-type-label">
+                <span class="add-goal-type-name">Save at least</span>
+                <span class="add-goal-type-desc">Hit this savings/income target</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Target amount — same big input style as Add Entry -->
+        <div class="add-entry-amount-row">
+          <span class="add-entry-amount-prefix" aria-hidden="true">$</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            id="add-goal-target"
+            name="target"
+            class="add-entry-amount-input"
+            placeholder="0.00"
+            autocomplete="off"
+            required
+            aria-label="Target amount in dollars"
+          />
+        </div>
+
+        <div class="add-entry-error" id="add-goal-error" hidden role="alert"></div>
+
+        <div class="add-entry-footer">
+          <button type="button" class="btn btn-danger-text" id="add-goal-delete" hidden>Delete</button>
+          <div class="add-entry-footer-spacer"></div>
+          <button type="button" class="btn btn-outline" data-add-goal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="add-goal-submit">Save goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       All Entries modal (Phase 5g of Budget tab)
+       ===========================================================
+       Read-only list of every entry in the current month, with
+       inline edit (pencil) and delete (trash) icons at the end of
+       each row. Triggered by the 'See all →' link on the Recent
+       Entries card. Reuses the existing edit-entry modal for edits;
+       delete uses window.confirm() + iboostBudget.deleteEntry()
+       and re-renders this list in place (modal stays open) so
+       users can clean up batches of entries in one sitting.
+
+       Scope: current month only — same window the rest of the
+       Budget tab shows. Cross-month browsing happens via the
+       prev/next arrows on the Budget tab itself.
+       =========================================================== -->
+  <div id="all-entries-modal" class="add-entry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="all-entries-title">
+    <div class="add-entry-modal-backdrop" data-all-entries-backdrop></div>
+    <div class="add-entry-modal-card all-entries-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-all-entries-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="all-entries-title" class="add-entry-modal-title">All entries</h2>
+      <div class="all-entries-month-label" id="all-entries-month-label"></div>
+
+      <!-- Populated by renderAllEntriesList(). One .all-entries-row
+           per entry, with .all-entries-actions containing pencil +
+           trash. -->
+      <div class="all-entries-list" id="all-entries-list"></div>
+
+      <div class="add-entry-footer">
+        <div class="add-entry-footer-spacer"></div>
+        <button type="button" class="btn btn-outline" data-all-entries-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       Opening balance modal (Phase 5j of Budget tab)
+       ===========================================================
+       Edit the opening balance for the currently-viewed budget
+       month. Single dollar input. Negative values allowed (some
+       users genuinely start months overdrawn).
+
+       Triggered by clicking the Opening balance summary card.
+       Saves to budget_opening_balances with source='manual'.
+       =========================================================== -->
+  <div id="opening-balance-modal" class="add-entry-modal" hidden
+       role="dialog" aria-modal="true" aria-labelledby="opening-balance-title">
+    <div class="add-entry-modal-backdrop" data-opening-balance-backdrop></div>
+    <div class="add-entry-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-opening-balance-close
+              aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="opening-balance-title" class="add-entry-modal-title">
+        Opening balance
+      </h2>
+      <p class="csv-help" id="opening-balance-month-label" style="margin-bottom: var(--space-2);">
+        <!-- "for April 2026" — populated by JS -->
+      </p>
+
+      <form id="opening-balance-form" class="add-entry-form" novalidate>
+        <div class="add-entry-field">
+          <label for="opening-balance-amount" class="add-entry-label">
+            How much did you start the month with?
+          </label>
+          <div class="add-entry-amount-wrap">
+            <span class="add-entry-amount-prefix">$</span>
+            <input
+              type="text"
+              inputmode="decimal"
+              id="opening-balance-amount"
+              class="add-entry-input add-entry-amount-input"
+              placeholder="0.00"
+              autocomplete="off"
+              required
+              aria-label="Opening balance in dollars"
+            />
+          </div>
+          <p class="csv-help csv-help-secondary" style="margin-top: 6px; margin-bottom: 0;">
+            Negative values are allowed if your account started overdrawn.
+          </p>
+        </div>
+
+        <div class="add-entry-error" id="opening-balance-error" hidden role="alert"></div>
+
+        <div class="add-entry-footer">
+          <div class="add-entry-footer-spacer"></div>
+          <button type="button" class="btn btn-outline" data-opening-balance-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="opening-balance-submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===========================================================
+       CSV Import modal (Phase 5d of Budget tab)
+       ===========================================================
+       Three-step flow inside one modal:
+
+         Step 1 — Upload: file picker + raw preview
+         Step 2 — Map columns: dropdowns to map date/amount/desc;
+                  parsed preview re-renders below
+         Step 3 — Review & commit: parsed entries with auto-suggested
+                  categories, checkboxes to skip rows, Import button
+
+       Wider card than Add Entry / Goal modals because CSV previews
+       need horizontal room. Reuses the same backdrop + animations.
+       =========================================================== -->
+  <div id="csv-import-modal" class="csv-import-modal" hidden role="dialog" aria-modal="true" aria-labelledby="csv-import-title">
+    <div class="add-entry-modal-backdrop" data-csv-import-backdrop></div>
+    <div class="csv-import-modal-card" role="document">
+      <button type="button" class="add-entry-modal-close" data-csv-import-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h2 id="csv-import-title" class="add-entry-modal-title">Import from CSV</h2>
+
+      <!-- Step indicator -->
+      <div class="csv-step-indicator">
+        <div class="csv-step is-active" data-csv-step-indicator="1"><span class="csv-step-num">1</span> Upload</div>
+        <div class="csv-step" data-csv-step-indicator="2"><span class="csv-step-num">2</span> Map columns</div>
+        <div class="csv-step" data-csv-step-indicator="3"><span class="csv-step-num">3</span> Review &amp; import</div>
+      </div>
+
+      <!-- ===== Step 1: Upload ===== -->
+      <div class="csv-step-body" data-csv-step="1">
+        <p class="csv-help">
+          Upload a CSV file from your bank or credit card statement.
+          Most banks let you export transactions as CSV — look for
+          "Export" or "Download" in your account history.
+        </p>
+        <p class="csv-help csv-help-secondary">
+          Your data stays in your browser until you confirm the import.
+          We'll show you exactly what gets added before saving anything.
+        </p>
+
+        <label class="csv-file-picker">
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" hidden>
+          <div class="csv-file-picker-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div class="csv-file-picker-text">
+            <strong>Choose a CSV file</strong>
+            <span>or drag and drop</span>
+          </div>
+        </label>
+
+        <div class="csv-file-info" id="csv-file-info" hidden>
+          <div class="csv-file-info-name" id="csv-file-info-name"></div>
+          <div class="csv-file-info-meta" id="csv-file-info-meta"></div>
+          <div class="csv-file-info-detection" id="csv-file-info-detection" hidden></div>
+        </div>
+
+        <div class="add-entry-error" id="csv-import-error" hidden role="alert"></div>
+      </div>
+
+      <!-- ===== Step 2: Map columns ===== -->
+      <div class="csv-step-body" data-csv-step="2" hidden>
+        <p class="csv-help">
+          Tell us which columns hold the date, amount, and description.
+          We've made our best guess — adjust if anything looks wrong.
+        </p>
+
+        <div class="csv-mapping-grid">
+          <div class="add-entry-field">
+            <label for="csv-map-date" class="add-entry-label">Date column</label>
+            <select id="csv-map-date" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-amount" class="add-entry-label">Amount column</label>
+            <select id="csv-map-amount" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-amount-in" class="add-entry-label">
+              Inflow column (optional)
+              <span class="csv-help-inline">— pick this if your bank uses
+              separate columns for debits and credits</span>
+            </label>
+            <select id="csv-map-amount-in" class="add-entry-input"></select>
+          </div>
+          <div class="add-entry-field">
+            <label for="csv-map-description" class="add-entry-label">Description column</label>
+            <select id="csv-map-description" class="add-entry-input"></select>
+          </div>
+        </div>
+
+        <p class="csv-help csv-help-secondary">
+          Preview of the first 5 rows with your mapping applied:
+        </p>
+        <div class="csv-preview-table-wrap">
+          <table class="csv-preview-table" id="csv-mapping-preview"></table>
+        </div>
+      </div>
+
+      <!-- ===== Step 3: Review & commit ===== -->
+      <div class="csv-step-body" data-csv-step="3" hidden>
+        <p class="csv-help">
+          Review the entries below. Uncheck any rows you want to skip.
+          Categories were auto-suggested based on the description —
+          you can change them inline.
+        </p>
+
+        <div class="csv-review-summary" id="csv-review-summary"></div>
+        <div class="csv-review-banner" id="csv-review-banner" hidden role="note"></div>
+
+        <div class="csv-preview-table-wrap">
+          <table class="csv-preview-table csv-review-table" id="csv-review-table"></table>
+        </div>
+      </div>
+
+      <!-- Footer: Back / Cancel + Next / Import -->
+      <div class="add-entry-footer">
+        <button type="button" class="btn btn-outline" id="csv-back-btn" hidden>← Back</button>
+        <div class="add-entry-footer-spacer"></div>
+        <button type="button" class="btn btn-outline" data-csv-import-close>Cancel</button>
+        <button type="button" class="btn btn-primary" id="csv-next-btn" disabled>Next: Map columns</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script load order: shell pattern + Budget's lib dependencies.
+       config -> supabase -> auth -> shared (dom-utils + account-shell)
+       -> lib stack (locale, permissions, budget-seed, merchants,
+       budget, csv-import, csv-presets) -> page boot. Same lib order
+       as the monolith uses; runtime dependencies between libs are
+       respected. -->
+  <script src="/assets/js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/shared/dom-utils.js" defer></script>
+  <script src="/assets/js/shared/account-shell.js" defer></script>
+  <script src="/assets/js/lib/locale.js" defer></script>
+  <script src="/assets/js/lib/permissions.js" defer></script>
+  <script src="/assets/js/lib/budget-seed.js" defer></script>
+  <script src="/assets/js/lib/merchant-categories.js" defer></script>
+  <script src="/assets/js/lib/budget.js" defer></script>
+  <script src="/assets/js/lib/csv-import.js" defer></script>
+  <script src="/assets/js/lib/csv-presets.js" defer></script>
+  <script src="/assets/js/account/budget.js" defer></script>
+</body>
+</html>
