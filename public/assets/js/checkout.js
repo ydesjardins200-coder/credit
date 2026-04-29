@@ -80,11 +80,12 @@
 
   // Minimal escape for the <strong>-wrapping case above. Perks with
   // HTML chars in them are edge-case but we should not break the page.
+  // escapeHtml — delegated to shared/dom-utils.js (Phase A of the
+  // account architecture refactor; see docs/account-architecture.md).
+  // Previously a byte-identical duplicate of the same function in
+  // account.js. Now there's one source of truth.
   function escapeHtml(s) {
-    if (s == null) return '';
-    return String(s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return window.iboostShared.escapeHtml(s);
   }
 
   // After DB load, sync visible prices in the <label class="plan-row">

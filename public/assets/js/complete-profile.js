@@ -57,14 +57,16 @@
   }
 
   // ----- Alerts -----
+  // showAlert / clearAlert — delegated to shared/dom-utils.js (Phase A
+  // of account architecture refactor; see docs/account-architecture.md).
+  // Previously byte-identical copies lived in login.js and signup.js
+  // too. Now there's one source of truth; the local functions wrap it
+  // with `alertEl` baked in so existing call sites don't need changes.
   function showAlert(message, kind) {
-    alertEl.className = 'alert ' + (kind === 'success' ? 'alert-success' : 'alert-error');
-    alertEl.textContent = message;
-    alertEl.hidden = false;
+    window.iboostShared.showAlert(alertEl, message, kind);
   }
   function clearAlert() {
-    alertEl.hidden = true;
-    alertEl.textContent = '';
+    window.iboostShared.clearAlert(alertEl);
   }
 
   // ----- Country selector (radio group "country") -----

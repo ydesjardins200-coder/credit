@@ -102,15 +102,14 @@
   }
 
   // ----- Alerts -----
+  // showAlert / clearAlert — delegated to shared/dom-utils.js (Phase A
+  // of account architecture refactor; see docs/account-architecture.md).
   function showAlert(message, kind) {
-    alertEl.className = 'alert ' + (kind === 'success' ? 'alert-success' : 'alert-error');
-    alertEl.textContent = message;
-    alertEl.hidden = false;
+    window.iboostShared.showAlert(alertEl, message, kind);
   }
 
   function clearAlert() {
-    alertEl.hidden = true;
-    alertEl.textContent = '';
+    window.iboostShared.clearAlert(alertEl);
   }
 
   // ----- Password criteria -----

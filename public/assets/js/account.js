@@ -1051,11 +1051,14 @@
     }).join('');
   }
 
+  // escapeHtml — delegated to shared/dom-utils.js (Phase A of the
+  // account architecture refactor; see docs/account-architecture.md).
+  // The function previously lived inline here AND in checkout.js as
+  // byte-identical duplicates. Now there's one source of truth in
+  // window.iboostShared.escapeHtml. We keep a local alias so the many
+  // existing call sites don't have to change.
   function escapeHtml(s) {
-    if (s == null) return '';
-    return String(s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return window.iboostShared.escapeHtml(s);
   }
 
   // ---------------------------------------------------------------------

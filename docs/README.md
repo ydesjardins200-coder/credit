@@ -46,6 +46,15 @@ Per-tab, per-feature gating decisions for `/account.html`. Records what Free vs 
 - The Plan card in Profile / upgrade-flow UX
 - Adding/removing features from any plan tier
 
+### [`account-architecture.md`](./account-architecture.md)
+Active refactor plan: splitting the monolithic `account.html` (13,700+ lines across HTML/JS/CSS) into per-tab pages under `/account/{welcome,credit,offers,budget,education,profile}` with a shared utilities/auth/components layer. Covers the target folder layout, URL structure, migration phases (A=shared extraction, B=shell extraction, C=Profile-first single-tab proof, D=remaining tabs, E=cleanup), risks, and success criteria. Each phase ships a working app — no long-lived feature branches.
+
+**Read this first** if you're working on:
+- Anything in `public/account.html`
+- Adding a new tab or major feature to the account experience
+- Touching `account.js` or `account.css`
+- Setting up shared modules or worrying about code organization
+
 ---
 
 ## How the four documents relate
