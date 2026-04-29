@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Offers — iBoost</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
+  <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/shared/account-shell.css" />
+  <link rel="stylesheet" href="/assets/css/account/offers.css" />
+</head>
+<body class="dash-body">
+
+  <!-- DEV MODE banner — same content as the monolith account.html. -->
+  <div class="dash-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Some features are still in preview</strong>
+    <span>&mdash; real credit data appears after your first monthly report</span>
+  </div>
+
+  <header class="dash-topbar">
+    <a href="/" class="dash-logo-link" aria-label="iBoost home">
+      <img
+        src="/assets/img/brand/logo-horizontal-80.png"
+        srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+        alt="iBoost"
+        width="140"
+        height="48"
+      />
+    </a>
+    <div class="dash-user">
+      <div class="dash-user-avatar" id="user-avatar" aria-hidden="true">—</div>
+      <div class="dash-user-info">
+        <div class="dash-user-name" id="user-name">Welcome</div>
+        <div class="dash-user-email" id="user-email">…</div>
+      </div>
+      <button type="button" id="signout-btn" class="dash-signout">Sign out</button>
+    </div>
+  </header>
+
+  <!-- TAB NAV: Offers is the active page. Other tabs link back to the
+       monolith with ?tab= query param (matching the Education + Profile
+       pages). Education and Profile link to their per-page URLs. -->
+  <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+    <a href="/account.html?tab=welcome" class="dash-tab" role="tab" aria-selected="false">Welcome</a>
+    <a href="/account.html?tab=credit" class="dash-tab" role="tab" aria-selected="false">Credit</a>
+    <a href="/account/offers" class="dash-tab is-active" role="tab" aria-selected="true" aria-current="page">Offers</a>
+    <a href="/account.html?tab=budget" class="dash-tab" role="tab" aria-selected="false">Budget</a>
+    <a href="/account/education" class="dash-tab" role="tab" aria-selected="false">Education</a>
+    <a href="/account/profile" class="dash-tab" role="tab" aria-selected="false">Profile</a>
+  </nav>
+
+  <main class="dash-main">
+
+      <div class="dash-panel-head">
+        <h1>Offers for you</h1>
+        <p class="dash-panel-sub">Financial products matched to your profile. No spam, no hidden fees.</p>
+      </div>
+
+      <!-- Profile match summary (dark navy — same pattern as Credit AI tip + Welcome streak) -->
+      <article class="dash-offer-match">
+        <div class="dash-offer-match-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
+          </svg>
+        </div>
+        <div class="dash-offer-match-body">
+          <div class="dash-offer-match-eye">Matched to your profile</div>
+          <h2 class="dash-offer-match-title">Score 678 · Good tier · 22% utilization</h2>
+          <p>We only show you offers where you have a strong approval likelihood based on your current profile. Pre-approval checks are soft pulls — they won't affect your score.</p>
+          <div class="dash-offer-match-tags">
+            <span class="dash-offer-match-tag">Good credit (670–739)</span>
+            <span class="dash-offer-match-tag">Low utilization</span>
+            <span class="dash-offer-match-tag">3 mo. reported history</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Featured offers section -->
+      <div class="dash-offer-sect">
+        <h2>Best matches right now</h2>
+        <span class="dash-offer-sect-sub">Soft-pull pre-approval · No impact on score</span>
+      </div>
+      <div class="dash-offer-feat-row">
+
+        <button type="button" class="dash-offer dash-offer-featured">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-rbc">RBC</div>
+            <div>
+              <p class="dash-offer-lender">Royal Bank</p>
+              <p class="dash-offer-name">Cash Back Mastercard</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">2% cash back on groceries, 1% on everything else</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$0</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">20.99%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">660</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+        <button type="button" class="dash-offer">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-tang">TANG</div>
+            <div>
+              <p class="dash-offer-lender">Tangerine</p>
+              <p class="dash-offer-name">Money-Back Credit Card</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">2% cash back in up to 3 categories you choose</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$0</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">19.95%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">650</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+        <button type="button" class="dash-offer">
+          <div class="dash-offer-head">
+            <div class="dash-offer-logo dash-offer-logo-td">TD</div>
+            <div>
+              <p class="dash-offer-lender">TD Bank</p>
+              <p class="dash-offer-name">Cash Back Visa Infinite</p>
+            </div>
+          </div>
+          <div class="dash-offer-highlight">3% cash back on grocery + recurring bills</div>
+          <div class="dash-offer-specs">
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Annual fee</span><span class="dash-offer-spec-val">$120</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Regular APR</span><span class="dash-offer-spec-val">20.99%</span></div>
+            <div class="dash-offer-spec"><span class="dash-offer-spec-label">Min. score</span><span class="dash-offer-spec-val">675</span></div>
+          </div>
+          <div class="dash-offer-cta">
+            Check pre-approval
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Browse by category -->
+      <div class="dash-offer-sect">
+        <h2>Browse by category</h2>
+        <span class="dash-offer-sect-sub">Explore all available offers</span>
+      </div>
+
+      <!-- Credit cards -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <h3>Credit cards</h3>
+          <span class="dash-offer-cat-sub">12 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-scotia">SCO</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Scotiabank</p>
+              <p class="dash-offer-mini-name">Scene+ Visa</p>
+              <p class="dash-offer-mini-hook">5x points on grocery, $0 annual fee</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-bmo">BMO</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">BMO</p>
+              <p class="dash-offer-mini-name">CashBack Mastercard</p>
+              <p class="dash-offer-mini-hook">5% welcome cash back for 3 months</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Personal loans -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-loans">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h3>Personal loans</h3>
+          <span class="dash-offer-cat-sub">6 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#6b21a8">BRS</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Borrowell</p>
+              <p class="dash-offer-mini-name">Personal loan up to $35,000</p>
+              <p class="dash-offer-mini-hook">Rates from 5.99% · Check in 3 min</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#059669">FAIR</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Fairstone</p>
+              <p class="dash-offer-mini-name">Debt consolidation loan</p>
+              <p class="dash-offer-mini-hook">Consolidate up to 10 balances into one</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Bank accounts -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-banks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+            </svg>
+          </div>
+          <h3>Bank accounts</h3>
+          <span class="dash-offer-cat-sub">4 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#000">KOH</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Koho</p>
+              <p class="dash-offer-mini-name">Spending account</p>
+              <p class="dash-offer-mini-hook">No-fee banking · 1% cash back</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo dash-offer-logo-cibc">CIBC</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">CIBC</p>
+              <p class="dash-offer-mini-name">Smart Plus Chequing</p>
+              <p class="dash-offer-mini-hook">$450 welcome bonus · Unlimited transactions</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Insurance -->
+      <div class="dash-offer-cat-block">
+        <div class="dash-offer-cat-header">
+          <div class="dash-offer-cat-ico dash-offer-cat-ico-ins">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s-8-4-8-12V5l8-3 8 3v5c0 8-8 12-8 12z"/>
+            </svg>
+          </div>
+          <h3>Insurance</h3>
+          <span class="dash-offer-cat-sub">5 offers available</span>
+        </div>
+        <div class="dash-offer-cat-row">
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#dc2626">SQU</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Square One</p>
+              <p class="dash-offer-mini-name">Tenant insurance</p>
+              <p class="dash-offer-mini-hook">From $12/month · Pay-as-you-go</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+          <button type="button" class="dash-offer-mini">
+            <div class="dash-offer-logo" style="background:#1e40af">LAD</div>
+            <div class="dash-offer-mini-body">
+              <p class="dash-offer-mini-lender">Ladder</p>
+              <p class="dash-offer-mini-name">Term life insurance</p>
+              <p class="dash-offer-mini-hook">100% online · Decision in minutes</p>
+            </div>
+            <span class="dash-offer-mini-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Affiliate disclosure -->
+      <div class="dash-offer-disclosure">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div>
+          <strong>Affiliate disclosure:</strong> iBoost may earn a referral fee when you apply for a product we recommend. This does not affect our recommendations or the rates you receive. Pre-approval checks are soft pulls that do not affect your credit score. All terms, rates, and conditions are subject to the issuer's approval and may change without notice.
+        </div>
+      </div>
+
+  </main>
+
+  <!-- Script load order: same shell pattern as Education.
+       Offers has zero JS state — pure HTML mockup for now. -->
+  <script src="/assets/js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/shared/dom-utils.js" defer></script>
+  <script src="/assets/js/shared/account-shell.js" defer></script>
+  <script src="/assets/js/account/offers.js" defer></script>
+</body>
+</html>

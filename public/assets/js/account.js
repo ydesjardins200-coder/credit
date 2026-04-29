@@ -18,10 +18,11 @@
   //
   // Phase C of account-architecture refactor: 'education' was removed
   // from this list when the Education tab became a standalone page.
-  // Phase D-1b removed 'profile' for the same reason. Each tab drops
-  // out of this array as it's extracted to a per-tab page.
+  // Phase D-1b removed 'profile' for the same reason. Phase D-2b
+  // removed 'offers'. Each tab drops out of this array as it's
+  // extracted to a per-tab page.
   // ---------------------------------------------------------------------
-  const VALID_TABS = ['welcome', 'credit', 'offers', 'budget'];
+  const VALID_TABS = ['welcome', 'credit', 'budget'];
   const DEFAULT_TAB = 'welcome';
 
   // ---------------------------------------------------------------------

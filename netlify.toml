@@ -40,6 +40,13 @@
   status = 301
   force = true
 
+[[redirects]]
+  from = "/account.html"
+  query = { tab = "offers" }
+  to = "/account/offers"
+  status = 301
+  force = true
+
 # ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------
