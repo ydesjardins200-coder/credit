@@ -54,6 +54,13 @@
   status = 301
   force = true
 
+[[redirects]]
+  from = "/account.html"
+  query = { tab = "credit" }
+  to = "/account/credit"
+  status = 301
+  force = true
+
 # ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------

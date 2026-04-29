@@ -55,7 +55,8 @@
        Keyboard: left/right arrows cycle through tabs (handled in account.js). -->
   <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
     <button class="dash-tab is-active" role="tab" data-tab="welcome" aria-selected="true" aria-controls="panel-welcome">Welcome</button>
-    <button class="dash-tab" role="tab" data-tab="credit" aria-selected="false" aria-controls="panel-credit">Credit</button>
+    <!-- Phase D-4: Credit is now a standalone page at /account/credit. -->
+    <a href="/account/credit" class="dash-tab" role="tab" aria-selected="false">Credit</a>
     <!-- Phase D-2b: Offers is now a standalone page at /account/offers. -->
     <a href="/account/offers" class="dash-tab" role="tab" aria-selected="false">Offers</a>
     <!-- Phase D-3c: Budget is now a standalone page at /account/budget. -->
@@ -389,7 +390,7 @@
             <div class="dash-today-body">
               <h4>Review your April action items</h4>
               <p>3 items need your attention this month. Start with the urgent one — pay your Visa 5 days before statement close.</p>
-              <button type="button" class="dash-today-cta" data-goto-tab="credit">Go to Credit tab →</button>
+              <a href="/account/credit" class="dash-today-cta">Go to Credit tab →</a>
             </div>
           </div>
         </article>
@@ -429,240 +430,17 @@
 
     </section>
 
-    <!-- ===================== TAB 2: CREDIT ===================== -->
-    <section class="dash-panel" id="panel-credit" role="tabpanel" aria-labelledby="tab-credit" data-tab-panel="credit" data-feature="credit.tab" hidden>
 
-      <div class="dash-panel-head dash-panel-head-row">
-        <div>
-          <h1>Your credit</h1>
-          <p class="dash-panel-sub">Updated 3 days ago · Next report May 1</p>
-        </div>
-        <div class="dash-plan-pill">
-          <span aria-hidden="true"></span>
-          <span id="plan-label">iBoost Essential</span>
-        </div>
-      </div>
-
-      <!-- Score hero + 6-month graph -->
-      <div class="dash-grid-2">
-
-        <article class="dash-card dash-score-card">
-          <h3 class="dash-card-title">Your credit score</h3>
-          <div class="dash-score-body">
-            <div class="dash-gauge" role="img" aria-label="Current credit score 678, tier Good">
-              <svg viewBox="0 0 160 160" width="160" height="160" aria-hidden="true">
-                <circle cx="80" cy="80" r="68" fill="none" stroke="#e5e7eb" stroke-width="10"/>
-                <circle cx="80" cy="80" r="68" fill="none" stroke="url(#dashGaugeGrad)" stroke-width="10" stroke-linecap="round"
-                        stroke-dasharray="427" stroke-dashoffset="128" transform="rotate(-90 80 80)"/>
-                <defs>
-                  <linearGradient id="dashGaugeGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#2ECC71"/>
-                    <stop offset="100%" stop-color="#0891b2"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="dash-gauge-number">
-                <div class="dash-gauge-score">678</div>
-                <div class="dash-gauge-tier">Good</div>
-              </div>
-            </div>
-
-            <div class="dash-score-right">
-              <h2>Up 14 points this month</h2>
-              <p class="dash-score-sub">Your April report was filed 3 days ago.</p>
-              <div class="dash-score-delta">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polyline points="18 15 12 9 6 15"/>
-                </svg>
-                +14 pts vs March
-              </div>
-              <div class="dash-score-bureaus">
-                <div class="dash-score-bureau">
-                  <div class="dash-score-bureau-name">Equifax</div>
-                  <div class="dash-score-bureau-val">680</div>
-                </div>
-                <div class="dash-score-bureau">
-                  <div class="dash-score-bureau-name">TransUnion</div>
-                  <div class="dash-score-bureau-val">676</div>
-                </div>
-                <div class="dash-score-bureau">
-                  <div class="dash-score-bureau-name">Experian</div>
-                  <div class="dash-score-bureau-val">678</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article class="dash-card dash-graph-card">
-          <h3 class="dash-card-title">Score over 6 months</h3>
-          <div class="dash-graph">
-            <svg viewBox="0 0 320 180" width="100%" height="100%" preserveAspectRatio="none" aria-label="Score trend, November 540 to April 678, an upward line">
-              <line x1="0" y1="40" x2="320" y2="40" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="90" x2="320" y2="90" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="140" x2="320" y2="140" stroke="#f1f5f9" stroke-width="1"/>
-              <path d="M 15 140 L 65 132 L 115 115 L 165 100 L 215 78 L 265 60 L 305 50 L 305 180 L 15 180 Z"
-                    fill="url(#dashAreaGrad)" opacity="0.2"/>
-              <path d="M 15 140 L 65 132 L 115 115 L 165 100 L 215 78 L 265 60 L 305 50"
-                    fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <defs>
-                <linearGradient id="dashAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#2ECC71"/>
-                  <stop offset="100%" stop-color="#2ECC71" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              <circle cx="15" cy="140" r="3" fill="#2ECC71"/>
-              <circle cx="65" cy="132" r="3" fill="#2ECC71"/>
-              <circle cx="115" cy="115" r="3" fill="#2ECC71"/>
-              <circle cx="165" cy="100" r="3" fill="#2ECC71"/>
-              <circle cx="215" cy="78" r="3" fill="#2ECC71"/>
-              <circle cx="265" cy="60" r="3" fill="#2ECC71"/>
-              <circle cx="305" cy="50" r="4" fill="#fff" stroke="#2ECC71" stroke-width="2.5"/>
-              <text x="15" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Nov</text>
-              <text x="65" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Dec</text>
-              <text x="115" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Jan</text>
-              <text x="165" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Feb</text>
-              <text x="215" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Mar</text>
-              <text x="265" y="175" font-size="10" fill="#94a3b8" text-anchor="middle" font-family="-apple-system, sans-serif">Apr</text>
-            </svg>
-          </div>
-        </article>
-
-      </div>
-
-      <!-- AI tip — full width dark navy -->
-      <article class="dash-ai-tip" aria-labelledby="ai-tip-title">
-        <div class="dash-ai-tip-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
-          </svg>
-        </div>
-        <div class="dash-ai-tip-body">
-          <div class="dash-ai-tip-eyebrow">AI tip for April</div>
-          <h2 class="dash-ai-tip-title" id="ai-tip-title">Pay your Visa statement 5 days early this cycle</h2>
-          <p>Your statement closes April 24. Paying before then keeps your reported utilization under 10% — the threshold where scores accelerate.</p>
-        </div>
-        <button type="button" class="dash-ai-tip-cta">Learn more</button>
-      </article>
-
-      <!-- Action items: 3 cards -->
-      <article class="dash-card dash-actions-card">
-        <h3 class="dash-card-title">This month's focus</h3>
-        <div class="dash-actions-list">
-
-          <div class="dash-action dash-action-urgent">
-            <div class="dash-action-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
-              </svg>
-            </div>
-            <h4 class="dash-action-heading">Pay Visa card ending 4242</h4>
-            <p class="dash-action-desc">Statement balance $287. Pay $200 by April 28 to reduce utilization before the May report.</p>
-            <div class="dash-action-meta dash-action-meta-urgent">Due in 6 days</div>
-          </div>
-
-          <div class="dash-action dash-action-done">
-            <div class="dash-action-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <h4 class="dash-action-heading">Monthly iBoost payment</h4>
-            <p class="dash-action-desc">Your $15 Essential subscription reported on time. +1 to your on-time streak.</p>
-            <div class="dash-action-meta dash-action-meta-done">Complete</div>
-          </div>
-
-          <div class="dash-action">
-            <div class="dash-action-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-            <h4 class="dash-action-heading">Next report in 9 days</h4>
-            <p class="dash-action-desc">Your May report is filed May 1. Keep balances low through April 30 to maximize it.</p>
-            <div class="dash-action-meta">Upcoming</div>
-          </div>
-
-        </div>
-      </article>
-
-      <!-- 3-col row: progress / utilization / activity -->
-      <div class="dash-grid-3">
-
-        <article class="dash-card">
-          <h3 class="dash-card-title">Progress to Very Good</h3>
-          <div class="dash-progress-row">
-            <div class="dash-progress-current">678</div>
-            <div class="dash-progress-target">Target: 740</div>
-          </div>
-          <div class="dash-progress-bar" role="progressbar" aria-valuenow="58" aria-valuemin="0" aria-valuemax="100">
-            <div class="dash-progress-bar-fill" style="width: 58%"></div>
-          </div>
-          <div class="dash-progress-meta">
-            <span>Good</span>
-            <span class="dash-progress-pts">+62 pts to go</span>
-          </div>
-        </article>
-
-        <article class="dash-card">
-          <h3 class="dash-card-title">Credit utilization</h3>
-          <div class="dash-util-amount">
-            <span class="dash-util-big">22</span><span class="dash-util-unit">% used</span>
-          </div>
-          <div class="dash-util-bar" role="progressbar" aria-valuenow="22" aria-valuemin="0" aria-valuemax="100">
-            <div class="dash-util-bar-fill" style="width: 22%"></div>
-          </div>
-          <div class="dash-util-meta">
-            <span>$660 / $3,000</span>
-            <span>Target &lt; 30%</span>
-          </div>
-          <div class="dash-util-hint">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            On track. Hit 10% to accelerate.
-          </div>
-        </article>
-
-        <article class="dash-card">
-          <h3 class="dash-card-title">Recent activity</h3>
-          <ul class="dash-activity-list">
-            <li class="dash-activity-item">
-              <span class="dash-activity-dot" aria-hidden="true"></span>
-              <div class="dash-activity-text">
-                Score refreshed from Equifax: <strong>+14 pts</strong>
-                <span class="dash-activity-time">3 days ago</span>
-              </div>
-            </li>
-            <li class="dash-activity-item dash-activity-info">
-              <span class="dash-activity-dot" aria-hidden="true"></span>
-              <div class="dash-activity-text">
-                April on-time payment reported
-                <span class="dash-activity-time">Apr 15</span>
-              </div>
-            </li>
-            <li class="dash-activity-item">
-              <span class="dash-activity-dot" aria-hidden="true"></span>
-              <div class="dash-activity-text">
-                New AI tip: utilization timing
-                <span class="dash-activity-time">Apr 12</span>
-              </div>
-            </li>
-            <li class="dash-activity-item dash-activity-warn">
-              <span class="dash-activity-dot" aria-hidden="true"></span>
-              <div class="dash-activity-text">
-                Statement close reminder: Visa 4242
-                <span class="dash-activity-time">Apr 10</span>
-              </div>
-            </li>
-          </ul>
-        </article>
-
-      </div>
-
-    </section>
+    <!-- CREDIT PANEL EXTRACTED — Phase D-4 of account-architecture
+         refactor. Credit now lives at /account/credit.html with its
+         own CSS (account/credit.css) and page-boot script
+         (account/credit.js). Reuses shared/account-shell.css +
+         account-shell.js + lib/permissions.js + permissions-render.js
+         (the data-feature="credit.tab" attribute drives the lock
+         overlay for Free users — same UX as the monolith). The
+         Credit tab in the nav above is an <a href="/account/credit">
+         link instead of a JS-driven tab. See
+         docs/account-architecture.md for the full plan. -->
 
     <!-- OFFERS PANEL EXTRACTED — Phase D-2b of account-architecture
          refactor. Offers now lives at /account/offers.html with its

@@ -13,17 +13,17 @@
   'use strict';
 
   // ---------------------------------------------------------------------
-  // Tab list: keep in sync with HTML data-tab attributes. "welcome" is
-  // the default when no tab or an unknown tab is specified in the URL.
+  // Tab list: keep in sync with HTML data-tab attributes.
   //
-  // Phase C of account-architecture refactor: 'education' was removed
-  // from this list when the Education tab became a standalone page.
-  // Phase D-1b removed 'profile' for the same reason. Phase D-2b
-  // removed 'offers'. Phase D-3c removed 'budget'. Only 'welcome' and
-  // 'credit' remain in the monolith. (Welcome is the default landing
-  // tab, Credit will move to its own page in Phase D-4.)
+  // After Phase D-4, only Welcome remains in the monolith. The tab nav
+  // is mostly anchor links to per-tab pages; the Welcome tab is the only
+  // <button> remaining (it's the default landing). The tab-switching
+  // JS still handles the welcome <button> for keyboard navigation but
+  // there's effectively only one tab to switch to in the monolith.
+  // Phase D-5 (or Phase E) will decide whether to extract Welcome into
+  // its own page or keep it as the post-signup landing experience.
   // ---------------------------------------------------------------------
-  const VALID_TABS = ['welcome', 'credit'];
+  const VALID_TABS = ['welcome'];
   const DEFAULT_TAB = 'welcome';
 
   // ---------------------------------------------------------------------
