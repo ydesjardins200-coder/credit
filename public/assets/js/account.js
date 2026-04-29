@@ -23,39 +23,17 @@
   // Personalization helpers
   // ---------------------------------------------------------------------
 
-  // Derive a display name from Supabase session metadata.
-  // Falls back: first_name -> full_name -> name -> email prefix -> "there".
+  // deriveFirstName + deriveInitials — delegated to shared/account-shell.js
+  // (Phase B of account architecture refactor; see
+  // docs/account-architecture.md). The implementations previously lived
+  // inline here; they're now in window.iboostAccountShell so future
+  // per-tab pages can reuse them. We keep local aliases so existing
+  // call sites don't have to change.
   function deriveFirstName(user) {
-    if (!user) return 'there';
-    var m = user.user_metadata || {};
-    if (m.first_name) return m.first_name;
-    if (m.full_name) return m.full_name.split(' ')[0];
-    if (m.name) return m.name.split(' ')[0];
-    if (user.email) return user.email.split('@')[0];
-    return 'there';
+    return window.iboostAccountShell.deriveFirstName(user);
   }
-
-  // Derive 1-2 letter initials for the avatar circle.
   function deriveInitials(user) {
-    if (!user) return '·';
-    var m = user.user_metadata || {};
-    var source =
-      m.full_name ||
-      m.name ||
-      ((m.first_name || '') + ' ' + (m.last_name || '')).trim() ||
-      user.email ||
-      '';
-    var parts = source.trim().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    if (parts.length === 1 && parts[0].length >= 2) {
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    if (parts.length === 1) {
-      return parts[0][0].toUpperCase();
-    }
-    return '·';
+    return window.iboostAccountShell.deriveInitials(user);
   }
 
   // Compute "day N of your credit-building journey" from the user's
@@ -5341,17 +5319,11 @@
     }
     applyPermissions(earlyProfile, earlyPlansMap);
 
-    // Email in top bar
-    const emailEl = document.getElementById('user-email');
-    if (emailEl) emailEl.textContent = user.email || '(no email)';
-
-    // Display name in top bar
-    const nameEl = document.getElementById('user-name');
-    if (nameEl) nameEl.textContent = firstName;
-
-    // Avatar initials
-    const avatarEl = document.getElementById('user-avatar');
-    if (avatarEl) avatarEl.textContent = initials;
+    // Top-bar user info — delegated to shell (Phase B). Populates
+    // #user-email, #user-name, #user-avatar atomically. The shell
+    // version is defensive against missing elements (e.g., a future
+    // minimal page without an avatar would still work).
+    window.iboostAccountShell.populateUserInfo(user, firstName, initials);
 
     // Profile tab (tab 6) — populate identity hero + personal info rows
     // with real data from profiles + session. Credit goal is per-row
@@ -5394,27 +5366,12 @@
     // based on isProfileKycComplete().
     initProfileForm(user);
 
-    // Sign out button
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-      signoutBtn.addEventListener('click', async function () {
-        signoutBtn.disabled = true;
-        await window.iboostAuth.signOut();
-        window.location.replace('/login.html');
-      });
-    }
-
-    // Redirect on actual sign-out events from other tabs. Intentionally
-    // NOT triggered on INITIAL_SESSION-with-null or other null-session
-    // emissions — Supabase fires INITIAL_SESSION with session=null during
-    // OAuth hash processing, and bouncing on that would break OAuth
-    // returns. SIGNED_OUT is the only event that means "the user
-    // deliberately ended their session."
-    window.iboostAuth.onAuthChange(function (event, s) {
-      if (event === 'SIGNED_OUT') {
-        window.location.replace('/login.html');
-      }
-    });
+    // Sign-out button + cross-tab SIGNED_OUT redirect — delegated to
+    // shell (Phase B). The shell version preserves the same behavior:
+    // click → disable button → signOut → redirect; SIGNED_OUT events
+    // (and only those, not INITIAL_SESSION-with-null) trigger a
+    // redirect to /login.html. Idempotent.
+    window.iboostAccountShell.wireSignout();
 
     // Initialize tab switching (separate from auth so tabs work even if
     // auth resolves late — the panel structure is already in the DOM)
