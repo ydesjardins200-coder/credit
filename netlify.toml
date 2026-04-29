@@ -33,6 +33,13 @@
   status = 301
   force = true
 
+[[redirects]]
+  from = "/account.html"
+  query = { tab = "profile" }
+  to = "/account/profile"
+  status = 301
+  force = true
+
 # ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------
