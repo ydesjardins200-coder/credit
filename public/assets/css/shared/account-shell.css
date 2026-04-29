@@ -238,3 +238,89 @@
   .dash-tabs { padding: 0 12px; gap: 0; }
   .dash-tab { padding: 12px 14px; font-size: 0.82rem; }
 }
+
+/* =======================================================================
+   Panel + card primitives
+   -----------------------------------------------------------------------
+   Promoted from account.css to account-shell.css in Phase D-2a of the
+   account-architecture refactor. These are shell-shaped primitives —
+   used by EVERY account-page surface (the monolith account.html AND
+   per-tab pages like /account/education, /account/profile, /account/offers,
+   /account/credit). Living here means per-tab pages don't need to
+   redefine them or pull in the entire account.css.
+
+   Why this was a Phase B oversight: at the time, only the monolith used
+   these, so they "looked like" account.css territory. Phase C and Phase
+   D-1b shipped per-tab pages that USE these classes but didn't load
+   account.css — meaning the polished card and panel-head styling was
+   silently missing from those pages. This commit fixes that latent bug.
+
+   Scope: only the genuinely shell-shaped rules. .dash-card variants
+   like .dash-card-head, .dash-card-edit, .dash-card-title-row stay in
+   their respective per-tab CSS files (they're variant styling for
+   specific tab needs).
+   ======================================================================= */
+
+/* Shared card */
+.dash-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.dash-card-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0 0 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Panel: each tab's content. Hidden attr controls visibility on the
+   monolith (per-tab pages don't have multiple panels — they render
+   their content directly in <main>). */
+.dash-panel {
+  animation: dashPanelFadeIn 0.25s ease-out;
+}
+
+.dash-panel[hidden] { display: none; }
+
+@keyframes dashPanelFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Panel head — shared across tabs. Title + optional right-side accessory. */
+.dash-panel-head {
+  margin-bottom: 20px;
+}
+
+.dash-panel-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dash-panel-head h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0A2540;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.dash-panel-sub {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.dash-panel-sub strong {
+  color: #0A2540;
+  font-weight: 700;
+}

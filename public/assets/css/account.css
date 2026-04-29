@@ -99,22 +99,11 @@
   box-shadow: 0 0 6px rgba(46, 204, 113, 0.5);
 }
 
-/* Shared card */
-.dash-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 20px 22px;
-}
-
-.dash-card-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  margin: 0 0 14px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
+/* Shared card primitives (.dash-card, .dash-card-title) MOVED to
+   shared/account-shell.css in Phase D-2a — they're shell-shaped
+   infrastructure used on every account-page surface. Variants like
+   .dash-card-head and .dash-card-edit stay in tab-specific CSS files
+   (e.g. profile.css for the Profile-tab card variants). */
 
 /* Grid layouts */
 .dash-grid-2 {
@@ -743,50 +732,11 @@
    (.dash-panel) stay here below — they're specific to the
    monolith's JS-driven tab switching. */
 
-/* Panel: each tab's content. Hidden attr controls visibility; no JS-inline. */
-.dash-panel {
-  animation: dashPanelFadeIn 0.25s ease-out;
-}
-
-.dash-panel[hidden] { display: none; }
-
-@keyframes dashPanelFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Panel head — shared across tabs. Title + optional right-side accessory. */
-.dash-panel-head {
-  margin-bottom: 20px;
-}
-
-.dash-panel-head-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.dash-panel-head h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #0A2540;
-  margin: 0 0 4px;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.dash-panel-sub {
-  font-size: 0.88rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.dash-panel-sub strong {
-  color: #0A2540;
-  font-weight: 700;
-}
+/* Panel + panel-head primitives MOVED to shared/account-shell.css in
+   Phase D-2a — they're shell-shaped infrastructure. The .dash-panel
+   keyframe animation is in shell now too; per-tab pages don't trigger
+   it (their main content renders directly without a panel wrapper)
+   but loading the keyframe doesn't cost anything. */
 
 /* =======================================================================
    WELCOME TAB
