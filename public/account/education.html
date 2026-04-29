@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Education — iBoost</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
+  <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/shared/account-shell.css" />
+  <link rel="stylesheet" href="/assets/css/account/education.css" />
+</head>
+<body class="dash-body">
+
+  <!-- DEV MODE banner — same content as the monolith account.html.
+       Until launch, this banner appears on every account-page surface
+       to communicate that some features are still in preview. The
+       banner styling lives in account-shell.css. -->
+  <div class="dash-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Some features are still in preview</strong>
+    <span>&mdash; real credit data appears after your first monthly report</span>
+  </div>
+
+  <!-- Top bar: same structure as account.html. account-shell.js
+       populates #user-name, #user-email, #user-avatar after auth
+       resolves. -->
+  <header class="dash-topbar">
+    <a href="/" class="dash-logo-link" aria-label="iBoost home">
+      <img
+        src="/assets/img/brand/logo-horizontal-80.png"
+        srcset="/assets/img/brand/logo-horizontal-80.png 1x, /assets/img/brand/logo-horizontal-160.png 2x"
+        alt="iBoost"
+        width="140"
+        height="48"
+      />
+    </a>
+    <div class="dash-user">
+      <div class="dash-user-avatar" id="user-avatar" aria-hidden="true">—</div>
+      <div class="dash-user-info">
+        <div class="dash-user-name" id="user-name">Welcome</div>
+        <div class="dash-user-email" id="user-email">…</div>
+      </div>
+      <button type="button" id="signout-btn" class="dash-signout">Sign out</button>
+    </div>
+  </header>
+
+  <!-- TAB NAV: same structure as the monolith but with <a> tags.
+       The Education tab is the active page; clicking it does nothing
+       (it's the current page). The other tabs link back to the
+       monolith with the appropriate ?tab= query param. As Phase D
+       extracts each tab, those hrefs will point to the new pages
+       instead. -->
+  <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+    <a href="/account.html?tab=welcome" class="dash-tab" role="tab" aria-selected="false">Welcome</a>
+    <a href="/account.html?tab=credit" class="dash-tab" role="tab" aria-selected="false">Credit</a>
+    <a href="/account.html?tab=offers" class="dash-tab" role="tab" aria-selected="false">Offers</a>
+    <a href="/account.html?tab=budget" class="dash-tab" role="tab" aria-selected="false">Budget</a>
+    <a href="/account/education" class="dash-tab is-active" role="tab" aria-selected="true" aria-current="page">Education</a>
+    <a href="/account.html?tab=profile" class="dash-tab" role="tab" aria-selected="false">Profile</a>
+  </nav>
+
+  <main class="dash-main">
+
+    <div class="dash-panel-head dash-panel-head-row">
+      <div>
+        <h1>Education library</h1>
+        <p class="dash-panel-sub">Clear, jargon-free lessons on credit and personal finance. Free for all members.</p>
+      </div>
+      <button type="button" class="dash-search-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Search lessons
+      </button>
+    </div>
+
+    <!-- Progress overview -->
+    <article class="dash-edu-progress">
+      <div class="dash-edu-progress-main">
+        <div class="dash-edu-progress-eye">Your learning</div>
+        <h2 class="dash-edu-progress-title">4 of 24 lessons complete</h2>
+        <div class="dash-edu-progress-bar" role="progressbar" aria-valuenow="17" aria-valuemin="0" aria-valuemax="100">
+          <div class="dash-edu-progress-fill" style="width: 17%"></div>
+        </div>
+        <div class="dash-edu-progress-meta">Keep going — you're building the habit.</div>
+      </div>
+      <div class="dash-edu-stats">
+        <div class="dash-edu-stat">
+          <div class="dash-edu-stat-num">42</div>
+          <div class="dash-edu-stat-label">Min read</div>
+        </div>
+        <div class="dash-edu-stat">
+          <div class="dash-edu-stat-num">3</div>
+          <div class="dash-edu-stat-label">Streak wks</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Continue where you left off -->
+    <article class="dash-edu-continue">
+      <div class="dash-edu-continue-body">
+        <div class="dash-edu-continue-eye">Continue where you left off</div>
+        <h3 class="dash-edu-continue-title">How credit utilization is really calculated</h3>
+        <p class="dash-edu-continue-meta">Chapter 2 · Lesson 3 · 4 min remaining</p>
+        <div class="dash-edu-continue-bar"><div class="dash-edu-continue-bar-fill" style="width: 45%"></div></div>
+      </div>
+      <button type="button" class="dash-edu-continue-cta">
+        Resume lesson
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </article>
+
+    <!-- Recommended for you -->
+    <div class="dash-edu-sect-header">
+      <h2>Recommended for you</h2>
+      <p class="dash-edu-sect-sub">Based on what's holding your score back right now.</p>
+    </div>
+    <div class="dash-edu-rec-row">
+      <article class="dash-edu-rec">
+        <div class="dash-edu-rec-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v18h18"/>
+            <path d="M7 14l4-4 4 4 5-5"/>
+          </svg>
+        </div>
+        <h3 class="dash-edu-rec-title">Why your utilization matters more than payments</h3>
+        <p class="dash-edu-rec-desc">The single biggest lever for short-term score gains.</p>
+        <div class="dash-edu-rec-meta">
+          <span>5 min</span>
+          <span class="dash-edu-rec-badge">Quick win</span>
+        </div>
+      </article>
+      <article class="dash-edu-rec">
+        <div class="dash-edu-rec-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3 class="dash-edu-rec-title">When to actually pay your credit card</h3>
+        <p class="dash-edu-rec-desc">Statement date vs due date — the timing trick.</p>
+        <div class="dash-edu-rec-meta">
+          <span>3 min</span>
+          <span class="dash-edu-rec-badge">Tactic</span>
+        </div>
+      </article>
+      <article class="dash-edu-rec">
+        <div class="dash-edu-rec-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+          </svg>
+        </div>
+        <h3 class="dash-edu-rec-title">Reading your credit report (without panicking)</h3>
+        <p class="dash-edu-rec-desc">Every section explained, plain English.</p>
+        <div class="dash-edu-rec-meta">
+          <span>8 min</span>
+          <span class="dash-edu-rec-badge">Foundation</span>
+        </div>
+      </article>
+    </div>
+
+    <!-- Chapters / curriculum -->
+    <div class="dash-edu-sect-header">
+      <h2>Full curriculum</h2>
+      <p class="dash-edu-sect-sub">A guided path from "what's a credit score?" to advanced strategies.</p>
+    </div>
+
+    <article class="dash-edu-chapter">
+      <div class="dash-edu-chapter-head">
+        <div class="dash-edu-chapter-title-row">
+          <span class="dash-edu-chapter-num">1</span>
+          <h3>The basics</h3>
+        </div>
+        <p class="dash-edu-chapter-tagline">Start here if you're new to credit. 6 lessons · 22 min total.</p>
+      </div>
+      <div class="dash-edu-lessons">
+        <a href="#" class="dash-edu-lesson dash-edu-lesson-done">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">What a credit score actually measures</h4>
+            <div class="dash-edu-lesson-progress">100%</div>
+          </div>
+          <div class="dash-edu-lesson-time">3 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson dash-edu-lesson-done">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">The five factors, ranked by impact</h4>
+            <div class="dash-edu-lesson-progress">100%</div>
+          </div>
+          <div class="dash-edu-lesson-time">4 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson dash-edu-lesson-current">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">How credit utilization is really calculated</h4>
+            <div class="dash-edu-lesson-progress">45%</div>
+          </div>
+          <div class="dash-edu-lesson-time">4 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">Hard pulls vs soft pulls — and when each matters</h4>
+            <div class="dash-edu-lesson-progress">Not started</div>
+          </div>
+          <div class="dash-edu-lesson-time">3 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">Reading your credit report (without panicking)</h4>
+            <div class="dash-edu-lesson-progress">Not started</div>
+          </div>
+          <div class="dash-edu-lesson-time">8 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+      </div>
+    </article>
+
+    <article class="dash-edu-chapter">
+      <div class="dash-edu-chapter-head">
+        <div class="dash-edu-chapter-title-row">
+          <span class="dash-edu-chapter-num">2</span>
+          <h3>The fast levers</h3>
+        </div>
+        <p class="dash-edu-chapter-tagline">Things you can change this week to nudge your score up. 5 lessons · 18 min total.</p>
+      </div>
+      <div class="dash-edu-lessons">
+        <a href="#" class="dash-edu-lesson">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">When to actually pay your credit card</h4>
+            <div class="dash-edu-lesson-progress">Not started</div>
+          </div>
+          <div class="dash-edu-lesson-time">3 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">Asking for a credit limit increase (the right way)</h4>
+            <div class="dash-edu-lesson-progress">Not started</div>
+          </div>
+          <div class="dash-edu-lesson-time">4 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+        <a href="#" class="dash-edu-lesson">
+          <div class="dash-edu-lesson-icon"></div>
+          <div class="dash-edu-lesson-body">
+            <h4 class="dash-edu-lesson-title">Disputing an error on your report</h4>
+            <div class="dash-edu-lesson-progress">Not started</div>
+          </div>
+          <div class="dash-edu-lesson-time">5 min</div>
+          <div class="dash-edu-lesson-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </a>
+      </div>
+    </article>
+
+    <article class="dash-edu-chapter dash-edu-chapter-locked">
+      <div class="dash-edu-chapter-head">
+        <div class="dash-edu-chapter-title-row">
+          <span class="dash-edu-chapter-num">3</span>
+          <h3>Advanced strategies</h3>
+        </div>
+        <p class="dash-edu-chapter-tagline">For when you've stabilized and want to optimize. 7 lessons · 31 min total.</p>
+      </div>
+      <div class="dash-edu-locked-banner">
+        Reach a score of 700 to unlock this chapter. You're currently at 678 — only 22 points away.
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Script load order: same as account.html for the shared parts.
+       config -> supabase -> auth -> shared (dom-utils + account-shell)
+       -> page boot. Education has no other lib/ dependencies. -->
+  <script src="/assets/js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/shared/dom-utils.js" defer></script>
+  <script src="/assets/js/shared/account-shell.js" defer></script>
+  <script src="/assets/js/account/education.js" defer></script>
+</body>
+</html>

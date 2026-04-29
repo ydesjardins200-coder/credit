@@ -153,3 +153,88 @@
   margin: 0 auto;
   padding: 24px 28px 60px;
 }
+
+/* =======================================================================
+   Tab navigation
+   -----------------------------------------------------------------------
+   Promoted from account.css to account-shell.css in Phase C of the
+   account-architecture refactor. The tab nav appears identically on
+   every account-page surface (the monolith account.html and per-tab
+   pages like /account/education). Living in shared land is correct.
+
+   Selector design: works for both <button> (used by the monolith for
+   JS-driven panel switching) and <a> (used by per-tab pages where the
+   target tab navigates to a real URL). The :hover underline override
+   exists because main.css adds underline-on-hover to every <a>;
+   without the override, hovering an <a class="dash-tab"> would render
+   an unwanted underline.
+   ======================================================================= */
+.dash-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 28px;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dash-tabs::-webkit-scrollbar { display: none; }
+
+.dash-tab {
+  position: relative;
+  padding: 14px 22px;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* For <a class="dash-tab"> — main.css adds text-decoration to anchors */
+  text-decoration: none;
+}
+
+.dash-tab::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2.5px;
+  background: transparent;
+  border-radius: 2px 2px 0 0;
+  transition: background 0.2s ease;
+}
+
+.dash-tab:hover { color: #0A2540; text-decoration: none; }
+
+.dash-tab:focus-visible {
+  outline: 2px solid #2ECC71;
+  outline-offset: -4px;
+  border-radius: 4px;
+}
+
+.dash-tab.is-active {
+  color: #16a34a;
+}
+
+.dash-tab.is-active::after {
+  background: #2ECC71;
+}
+
+/* Responsive tab-nav. The responsive blocks for ALL tabs in account.css
+   include some tab-nav rules; those are duplicated here for the
+   per-tab-page case where account.css doesn't load. Mild duplication
+   is preferable to per-tab pages losing their responsive layout. */
+@media (max-width: 960px) {
+  .dash-tabs { padding: 0 18px; }
+}
+
+@media (max-width: 640px) {
+  .dash-tabs { padding: 0 12px; gap: 0; }
+  .dash-tab { padding: 12px 14px; font-size: 0.82rem; }
+}

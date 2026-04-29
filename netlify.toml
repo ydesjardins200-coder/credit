@@ -16,6 +16,24 @@
 #   status = 200
 
 # ---------------------------------------------------------------------------
+# Account page architecture refactor — backward-compat redirects
+# ---------------------------------------------------------------------------
+# Phase C of the account-architecture refactor (see
+# docs/account-architecture.md) extracted Education into its own page at
+# /account/education. Users with bookmarks to the old monolith URLs need
+# to land on the right place.
+#
+# Phase D will add similar redirects for the other tabs (Profile, Offers,
+# Credit, Budget, Welcome) as each one is extracted.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/account.html"
+  query = { tab = "education" }
+  to = "/account/education"
+  status = 301
+  force = true
+
+# ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------
 # While we're iterating on the site, every browser (including Yan's and the

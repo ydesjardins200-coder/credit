@@ -15,8 +15,14 @@
   // ---------------------------------------------------------------------
   // Tab list: keep in sync with HTML data-tab attributes. "welcome" is
   // the default when no tab or an unknown tab is specified in the URL.
+  //
+  // Phase C of account-architecture refactor: 'education' was removed
+  // from this list when the Education tab became a standalone page at
+  // /account/education. The Education link in account.html's tab nav
+  // is now an <a href> instead of a JS-managed tab. As Phase D
+  // extracts more tabs, they'll drop out of this array similarly.
   // ---------------------------------------------------------------------
-  const VALID_TABS = ['welcome', 'credit', 'offers', 'budget', 'education', 'profile'];
+  const VALID_TABS = ['welcome', 'credit', 'offers', 'budget', 'profile'];
   const DEFAULT_TAB = 'welcome';
 
   // ---------------------------------------------------------------------

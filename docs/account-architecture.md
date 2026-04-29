@@ -247,41 +247,66 @@ Steps:
 
 Deliverable: shell can be reused by future per-tab pages without rebuilding.
 
-### Phase C — Single tab extraction (Profile first) *(future session)*
+### Phase C — Single tab extraction (Education first) *(future session)*
 
 Goal: Take the SMALLEST tab that's also relatively self-contained, extract
 it into its own page, prove the per-page pattern works end-to-end.
 
-Why Profile first?
-- Smallest tab by HTML size after Welcome (which is special — it's the
-  first-time profile-completion form)
-- Self-contained: doesn't pull data from Budget, Credit, etc.
-- High-traffic: changes here are easy to test
-- Real users can give feedback even mid-refactor since the page renders
-  identically
+**Education first** (revised from earlier "Profile first" recommendation —
+see note below).
+
+Why Education first:
+- **Zero JS extraction needed.** Education is pure HTML/CSS — no
+  data-fetching, no DOM manipulation, no event handlers. Account.js's
+  VALID_TABS array is the only place Education is referenced.
+- **Smallest risk surface.** If something breaks during the extraction,
+  there are fewer moving parts to debug.
+- **Pure smoke test for the architecture.** The interesting question —
+  "do the shared shell modules actually work as a foundation for a new
+  page?" — gets answered with the lowest-risk possible payload.
+- **Static content.** No data state to migrate, no auth-coupled flows.
+
+Why NOT Profile first (the original plan):
+- Profile has ~1,200 lines of JS spread across initProfileTab,
+  initProfileForm (KYC), wireGoalEditor, and the plan-card flow.
+- Extracting that AND testing the new page architecture means debugging
+  two unknowns simultaneously if something fails.
+- Profile is data-heavy (fetches user profile, plans map, applies
+  permissions, handles the change-plan flow) — these can stay
+  encapsulated inside the monolith for one more phase while Education
+  proves out the page-level architecture.
 
 Steps:
-- Create `public/account/profile.html` with the Profile tab's HTML
-- Create `assets/js/account/profile.js` and `assets/css/account/profile.css`
-- Update tab navigation to link to `/account/profile` for the Profile tab
-- Other tabs still use the monolith (`account.html?tab=...`) until their
-  turn
-- Add Netlify redirects for backward compatibility
-- Test end-to-end: user logs in, lands on Welcome (still monolith), clicks
-  Profile (lands on new page), clicks Budget (returns to monolith)
+- Create `public/account/education.html` with the Education tab's HTML
+- Create `assets/css/account/education.css` for Education-specific
+  styles (extracted from account.css)
+- The page imports shared/account-shell.css + account-shell.js
+- Update tab navigation in `account.html` so the Education tab links to
+  `/account/education` (instead of `?tab=education`)
+- Add Netlify redirects for backward compat:
+  - `/account.html?tab=education` → `/account/education`
+- Test end-to-end: user logs in, lands on Welcome (still monolith),
+  clicks Education (lands on new page), clicks Budget (returns to
+  monolith via the tab link). Sign-out flow works from new page.
 
-Deliverable: profile lives at `/account/profile` and works.
+Deliverable: education lives at `/account/education` and works.
+
+After Education ships and is verified, Profile becomes the next target
+(Phase C2 or Phase D depending on how we want to number it). At that
+point we know the pattern works and the only remaining unknown is the
+JS extraction itself.
 
 ### Phase D — Remaining tabs *(several future sessions, one tab per session)*
 
-In recommended order:
-1. **Education** (smallest, most static)
-2. **Offers** (medium, mostly read-only)
-3. **Credit** (paid-tier, can be developed with mock data alongside the
-   real Bureau integration work)
-4. **Budget** (biggest, most complex, do last when pattern is proven)
-5. **Welcome** (special — it's the post-signup form, may need to stay as
-   a wizard)
+In recommended order (Education was already extracted in Phase C):
+1. **Profile** — the next-best self-contained target. Has substantial
+   JS (~1,200 lines) but doesn't depend on Budget/Credit data.
+2. **Offers** — medium, mostly read-only.
+3. **Credit** — paid-tier, can be developed with mock data alongside the
+   real Bureau integration work.
+4. **Budget** — biggest, most complex, do last when pattern is proven.
+5. **Welcome** — special; it's the post-signup form, may need to stay as
+   a wizard.
 
 Each tab gets its own session. Each session ships a working app at the end.
 
