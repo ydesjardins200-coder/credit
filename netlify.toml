@@ -116,21 +116,48 @@
   force = true
 
 # ---------------------------------------------------------------------------
-# DEV MODE — NO CACHE ANYWHERE
+# HYBRID CACHE STRATEGY (Phase G-1, 2026-04-30)
 # ---------------------------------------------------------------------------
-# While we're iterating on the site, every browser (including Yan's and the
-# partners') should always re-fetch every file from Netlify. This eliminates
-# the need for hard-refresh after every push.
+# Goal: keep HTML dev-friendly (always fresh, no hard-refresh needed after
+# deploys) while letting CSS/JS/images cache aggressively at the edge.
 #
-# Trade-off: every page load re-downloads every asset. That's fine for a
-# low-traffic dev site but will hurt performance + bandwidth in production.
+# Why this matters: HAR audit on 2026-04-30 confirmed that the previous
+# blanket no-cache headers caused every Netlify Edge cache hit to come
+# back as `fwd=stale`, requiring an origin round-trip per asset. Cold
+# /account.html load: TTFB 1,420ms. With this hybrid config, only the
+# HTML still pays the origin round-trip; CSS/JS/images come from edge
+# cache instantly after first warm.
+#
+# Strategy:
+#   - HTML responses: stay no-store, no-cache (the universal block below
+#     applies; no override). Every reload sees the latest deploy. Trade
+#     ~600-1500ms TTFB for never-stale HTML.
+#   - CSS/JS: cache 1 day with stale-while-revalidate 7 days. Aggressive
+#     enough for the perf win, short enough that a bad deploy auto-fixes
+#     within a day for users who don't hard-refresh.
+#   - Images: cache 30 days. They almost never change.
+#   - Fonts: cache 1 year, immutable. No custom fonts today (system
+#     stack), but the rule guards against future additions.
+#   - favicon: cache 1 day, same logic as CSS.
+#
+# DEPLOY CONSEQUENCE:
+#   After pushing a CSS/JS change, users with the old version cached
+#   may see the old version for up to 24 hours. To force-update for
+#   yourself: hard-refresh (Cmd-Shift-R). For partners testing: send
+#   them the URL with a cache-busting query string (e.g. ?v=2).
+#
+#   For an EMERGENCY rollback that needs immediate propagation: bump
+#   the URL of the offending asset in the HTML files (rename + update
+#   <link href>). That bypasses the cache entirely.
 #
 # BEFORE PUBLIC LAUNCH:
-#   Restore aggressive caching per asset type. See
-#   docs/LAUNCH_CHECKLIST.md section "Cache strategy before launch".
+#   Consider adding fingerprint hashes to CSS/JS filenames (e.g.
+#   account.abc123.css) so cache durations can safely jump to 1 year.
+#   Until then, 1 day is the right ceiling.
 # ---------------------------------------------------------------------------
 
-# Security headers + no-cache applied to ALL responses
+# Security headers + no-cache applied to ALL responses (HTML inherits this).
+# Asset-specific overrides below relax the cache policy for static assets.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -138,9 +165,64 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    # DEV MODE: disable all caching. Remove these 3 lines before launch.
     Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
     Pragma = "no-cache"
     Expires = "0"
     # Tighten CSP once you know all required origins (Supabase URL, API URL, etc.)
     # Content-Security-Policy = "default-src 'self'; ..."
+
+# CSS files — 1 day cache, 7 days stale-while-revalidate.
+# Path glob covers /assets/css/main-shared.css, /assets/css/account.css,
+# /assets/css/shared/*.css, /assets/css/account/*.css, /assets/css/main.css.
+#
+# Netlify behavior: this block's Cache-Control overrides the universal
+# block's value. The universal block's Pragma/Expires headers still
+# apply (legacy HTTP/1.0 directives), but every modern cache — including
+# Netlify Edge, browsers, and intermediaries — prioritizes Cache-Control
+# over Pragma. The inconsistency is harmless.
+[[headers]]
+  for = "/assets/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+[[headers]]
+  for = "/assets/css/*/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+# JS files — same policy as CSS.
+# Covers /assets/js/*.js, /assets/js/lib/*.js, /assets/js/shared/*.js,
+# /assets/js/account/*.js.
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+[[headers]]
+  for = "/assets/js/*/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+# Images — 30 days, they basically never change.
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/img/*/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# Fonts — 1 year, immutable. No custom fonts today (system stack only),
+# but the rule guards against future additions and matches industry default.
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# favicon.ico — 1 day. Could be longer, but matches CSS/JS for simplicity.
+[[headers]]
+  for = "/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
