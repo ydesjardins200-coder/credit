@@ -62,6 +62,60 @@
   force = true
 
 # ---------------------------------------------------------------------------
+# Pretty-URL variants — Netlify auto-strips .html from URLs
+# ---------------------------------------------------------------------------
+# Netlify's default behavior strips the .html extension when serving HTML
+# files (the "Pretty URLs" feature). So when a browser navigates to
+# /account.html?tab=credit, Netlify Edge serves it as /account?tab=credit
+# in the URL bar — and the redirect rules above (which match
+# from = "/account.html") never fire.
+#
+# These mirror rules catch the pretty-URL form. Without them, anyone
+# clicking a link like /account.html?tab=credit (from old bookmarks or
+# external sites linking to us) lands on the monolith Welcome page
+# instead of the standalone tab page.
+#
+# Found via real-user trace 2026-04-30: tab nav from /account/budget
+# clicking Credit redirected to /account?tab=credit (pretty URL) and
+# served account.html → which falls back to Welcome since 'credit' is
+# no longer in VALID_TABS.
+# ---------------------------------------------------------------------------
+[[redirects]]
+  from = "/account"
+  query = { tab = "education" }
+  to = "/account/education"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/account"
+  query = { tab = "profile" }
+  to = "/account/profile"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/account"
+  query = { tab = "offers" }
+  to = "/account/offers"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/account"
+  query = { tab = "budget" }
+  to = "/account/budget"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/account"
+  query = { tab = "credit" }
+  to = "/account/credit"
+  status = 301
+  force = true
+
+# ---------------------------------------------------------------------------
 # DEV MODE — NO CACHE ANYWHERE
 # ---------------------------------------------------------------------------
 # While we're iterating on the site, every browser (including Yan's and the
