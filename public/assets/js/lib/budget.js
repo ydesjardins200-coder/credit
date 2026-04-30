@@ -142,22 +142,24 @@
    */
   async function getCategories(opts) {
     opts = opts || {};
-    const auth = await getClient();
-    if (auth.error) return { data: [], error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: [], error: auth.error };
 
-    let query = auth.client
-      .from('budget_categories')
-      .select('*')
-      .eq('user_id', auth.userId)
-      .order('kind', { ascending: true })
-      .order('display_order', { ascending: true });
+      let query = auth.client
+        .from('budget_categories')
+        .select('*')
+        .eq('user_id', auth.userId)
+        .order('kind', { ascending: true })
+        .order('display_order', { ascending: true });
 
-    if (!opts.includeArchived) {
-      query = query.eq('is_archived', false);
-    }
+      if (!opts.includeArchived) {
+        query = query.eq('is_archived', false);
+      }
 
-    const { data, error } = await query;
-    return { data: data || [], error: error };
+      const { data, error } = await query;
+      return { data: data || [], error: error };
+    });
   }
 
   /**
@@ -202,32 +204,33 @@
    * @param {{name?: string, kind?: string, emoji?: string, display_order?: number}} updates
    */
   async function updateCategory(categoryId, updates) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
-
     if (!categoryId || !updates) {
       return { data: null, error: new Error('updateCategory: categoryId and updates required') };
     }
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    // Whitelist allowed fields. Never let callers update user_id, id,
-    // is_archived (use archiveCategory), created_at, updated_at.
-    const allowed = ['name', 'kind', 'emoji', 'display_order'];
-    const patch = {};
-    for (const key of allowed) {
-      if (updates.hasOwnProperty(key)) patch[key] = updates[key];
-    }
+      // Whitelist allowed fields. Never let callers update user_id, id,
+      // is_archived (use archiveCategory), created_at, updated_at.
+      const allowed = ['name', 'kind', 'emoji', 'display_order'];
+      const patch = {};
+      for (const key of allowed) {
+        if (updates.hasOwnProperty(key)) patch[key] = updates[key];
+      }
 
-    if (patch.name !== undefined) patch.name = patch.name.trim();
+      if (patch.name !== undefined) patch.name = patch.name.trim();
 
-    const { data, error } = await auth.client
-      .from('budget_categories')
-      .update(patch)
-      .eq('id', categoryId)
-      .eq('user_id', auth.userId) // belt-and-suspenders with RLS
-      .select()
-      .single();
+      const { data, error } = await auth.client
+        .from('budget_categories')
+        .update(patch)
+        .eq('id', categoryId)
+        .eq('user_id', auth.userId) // belt-and-suspenders with RLS
+        .select()
+        .single();
 
-    return { data: data, error: error };
+      return { data: data, error: error };
+    });
   }
 
   /**
@@ -239,18 +242,20 @@
    * because the management UI doesn't have an un-archive flow yet).
    */
   async function archiveCategory(categoryId) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const { data, error } = await auth.client
-      .from('budget_categories')
-      .update({ is_archived: true })
-      .eq('id', categoryId)
-      .eq('user_id', auth.userId)
-      .select()
-      .single();
+      const { data, error } = await auth.client
+        .from('budget_categories')
+        .update({ is_archived: true })
+        .eq('id', categoryId)
+        .eq('user_id', auth.userId)
+        .select()
+        .single();
 
-    return { data: data, error: error };
+      return { data: data, error: error };
+    });
   }
 
   // ============================================================
@@ -267,25 +272,27 @@
    * @param {Date | string} month
    */
   async function getEntriesForMonth(month) {
-    const auth = await getClient();
-    if (auth.error) return { data: [], error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: [], error: auth.error };
 
-    const start = toMonthStart(month);
-    const end = toMonthEnd(month);
+      const start = toMonthStart(month);
+      const end = toMonthEnd(month);
 
-    const { data, error } = await auth.client
-      .from('budget_entries')
-      .select(`
-        *,
-        category:budget_categories (id, name, kind, emoji)
-      `)
-      .eq('user_id', auth.userId)
-      .gte('entry_date', start)
-      .lte('entry_date', end)
-      .order('entry_date', { ascending: false })
-      .order('created_at', { ascending: false });
+      const { data, error } = await auth.client
+        .from('budget_entries')
+        .select(`
+          *,
+          category:budget_categories (id, name, kind, emoji)
+        `)
+        .eq('user_id', auth.userId)
+        .gte('entry_date', start)
+        .lte('entry_date', end)
+        .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false });
 
-    return { data: data || [], error: error };
+      return { data: data || [], error: error };
+    });
   }
 
   /**
@@ -303,25 +310,26 @@
    * @param {string} endIsoDate   'YYYY-MM-DD' inclusive
    */
   async function getEntriesInRange(startIsoDate, endIsoDate) {
-    const auth = await getClient();
-    if (auth.error) return { data: [], error: auth.error };
-
     if (!startIsoDate || !endIsoDate) {
       return { data: [], error: new Error('getEntriesInRange: start/end required') };
     }
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: [], error: auth.error };
 
-    const { data, error } = await auth.client
-      .from('budget_entries')
-      .select(`
-        *,
-        category:budget_categories (id, name, kind, emoji)
-      `)
-      .eq('user_id', auth.userId)
-      .gte('entry_date', startIsoDate)
-      .lte('entry_date', endIsoDate)
-      .order('entry_date', { ascending: false });
+      const { data, error } = await auth.client
+        .from('budget_entries')
+        .select(`
+          *,
+          category:budget_categories (id, name, kind, emoji)
+        `)
+        .eq('user_id', auth.userId)
+        .gte('entry_date', startIsoDate)
+        .lte('entry_date', endIsoDate)
+        .order('entry_date', { ascending: false });
 
-    return { data: data || [], error: error };
+      return { data: data || [], error: error };
+    });
   }
 
   /**
@@ -445,36 +453,37 @@
    * @param {{category_id?: string, entry_date?: string, amount_cents?: number, note?: string}} updates
    */
   async function updateEntry(entryId, updates) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
-
     if (!entryId || !updates) {
       return { data: null, error: new Error('updateEntry: entryId and updates required') };
     }
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const allowed = ['category_id', 'entry_date', 'amount_cents', 'note'];
-    const patch = {};
-    for (const key of allowed) {
-      if (updates.hasOwnProperty(key)) patch[key] = updates[key];
-    }
-
-    if (patch.amount_cents !== undefined) {
-      if (patch.amount_cents < 0) {
-        return { data: null, error: new Error('updateEntry: amount_cents must be non-negative') };
+      const allowed = ['category_id', 'entry_date', 'amount_cents', 'note'];
+      const patch = {};
+      for (const key of allowed) {
+        if (updates.hasOwnProperty(key)) patch[key] = updates[key];
       }
-      patch.amount_cents = Math.round(patch.amount_cents);
-    }
-    if (patch.note !== undefined && patch.note !== null) patch.note = patch.note.trim();
 
-    const { data, error } = await auth.client
-      .from('budget_entries')
-      .update(patch)
-      .eq('id', entryId)
-      .eq('user_id', auth.userId)
-      .select(`*, category:budget_categories (id, name, kind, emoji)`)
-      .single();
+      if (patch.amount_cents !== undefined) {
+        if (patch.amount_cents < 0) {
+          return { data: null, error: new Error('updateEntry: amount_cents must be non-negative') };
+        }
+        patch.amount_cents = Math.round(patch.amount_cents);
+      }
+      if (patch.note !== undefined && patch.note !== null) patch.note = patch.note.trim();
 
-    return { data: data, error: error };
+      const { data, error } = await auth.client
+        .from('budget_entries')
+        .update(patch)
+        .eq('id', entryId)
+        .eq('user_id', auth.userId)
+        .select(`*, category:budget_categories (id, name, kind, emoji)`)
+        .single();
+
+      return { data: data, error: error };
+    });
   }
 
   /**
@@ -484,16 +493,18 @@
    * undoing a typo, not erasing history.
    */
   async function deleteEntry(entryId) {
-    const auth = await getClient();
-    if (auth.error) return { error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { error: auth.error };
 
-    const { error } = await auth.client
-      .from('budget_entries')
-      .delete()
-      .eq('id', entryId)
-      .eq('user_id', auth.userId);
+      const { error } = await auth.client
+        .from('budget_entries')
+        .delete()
+        .eq('id', entryId)
+        .eq('user_id', auth.userId);
 
-    return { error: error };
+      return { error: error };
+    });
   }
 
   // ============================================================
@@ -504,21 +515,23 @@
    * Get all goals for the given month.
    */
   async function getGoalsForMonth(month) {
-    const auth = await getClient();
-    if (auth.error) return { data: [], error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: [], error: auth.error };
 
-    const monthStart = toMonthStart(month);
+      const monthStart = toMonthStart(month);
 
-    const { data, error } = await auth.client
-      .from('budget_goals')
-      .select(`
-        *,
-        category:budget_categories (id, name, kind, emoji)
-      `)
-      .eq('user_id', auth.userId)
-      .eq('month_start', monthStart);
+      const { data, error } = await auth.client
+        .from('budget_goals')
+        .select(`
+          *,
+          category:budget_categories (id, name, kind, emoji)
+        `)
+        .eq('user_id', auth.userId)
+        .eq('month_start', monthStart);
 
-    return { data: data || [], error: error };
+      return { data: data || [], error: error };
+    });
   }
 
   /**
@@ -529,9 +542,6 @@
    * @param {{category_id: string, month: Date|string, target_cents: number, goal_type: string}} input
    */
   async function setGoal(input) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
-
     if (!input || !input.category_id || !input.month || typeof input.target_cents !== 'number' || !input.goal_type) {
       return { data: null, error: new Error('setGoal: category_id, month, target_cents, goal_type required') };
     }
@@ -541,34 +551,41 @@
       return { data: null, error: new Error('setGoal: invalid goal_type: ' + input.goal_type) };
     }
 
-    const row = {
-      user_id: auth.userId,
-      category_id: input.category_id,
-      month_start: toMonthStart(input.month),
-      target_cents: Math.round(Math.abs(input.target_cents)),
-      goal_type: input.goal_type,
-    };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const { data, error } = await auth.client
-      .from('budget_goals')
-      .upsert([row], { onConflict: 'user_id,category_id,month_start' })
-      .select(`*, category:budget_categories (id, name, kind, emoji)`)
-      .single();
+      const row = {
+        user_id: auth.userId,
+        category_id: input.category_id,
+        month_start: toMonthStart(input.month),
+        target_cents: Math.round(Math.abs(input.target_cents)),
+        goal_type: input.goal_type,
+      };
 
-    return { data: data, error: error };
+      const { data, error } = await auth.client
+        .from('budget_goals')
+        .upsert([row], { onConflict: 'user_id,category_id,month_start' })
+        .select(`*, category:budget_categories (id, name, kind, emoji)`)
+        .single();
+
+      return { data: data, error: error };
+    });
   }
 
   async function deleteGoal(goalId) {
-    const auth = await getClient();
-    if (auth.error) return { error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { error: auth.error };
 
-    const { error } = await auth.client
-      .from('budget_goals')
-      .delete()
-      .eq('id', goalId)
-      .eq('user_id', auth.userId);
+      const { error } = await auth.client
+        .from('budget_goals')
+        .delete()
+        .eq('id', goalId)
+        .eq('user_id', auth.userId);
 
-    return { error: error };
+      return { error: error };
+    });
   }
 
   // ============================================================
@@ -653,18 +670,20 @@
    * @returns {{ data: {id, opening_cents, source, month_start} | null, error }}
    */
   async function getOpeningBalance(month) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const monthIso = toMonthStart(month);
-    const { data, error } = await auth.client
-      .from('budget_opening_balances')
-      .select('id, opening_cents, source, month_start')
-      .eq('user_id', auth.userId)
-      .eq('month_start', monthIso)
-      .maybeSingle();
+      const monthIso = toMonthStart(month);
+      const { data, error } = await auth.client
+        .from('budget_opening_balances')
+        .select('id, opening_cents, source, month_start')
+        .eq('user_id', auth.userId)
+        .eq('month_start', monthIso)
+        .maybeSingle();
 
-    return { data: data || null, error: error };
+      return { data: data || null, error: error };
+    });
   }
 
   /**
@@ -685,19 +704,24 @@
    * @returns {{ row, closing_cents } | null}
    */
   async function findMostRecentPriorOpening(monthIso) {
-    const auth = await getClient();
-    if (auth.error) return null;
+    const priorRowResult = await window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const { data, error } = await auth.client
-      .from('budget_opening_balances')
-      .select('id, opening_cents, source, month_start')
-      .eq('user_id', auth.userId)
-      .lt('month_start', monthIso)
-      .order('month_start', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      const { data, error } = await auth.client
+        .from('budget_opening_balances')
+        .select('id, opening_cents, source, month_start')
+        .eq('user_id', auth.userId)
+        .lt('month_start', monthIso)
+        .order('month_start', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (error || !data) return null;
+      return { data: data || null, error: error };
+    });
+
+    if (priorRowResult.error || !priorRowResult.data) return null;
+    const data = priorRowResult.data;
 
     // Compute that month's closing = its opening + its income - spent
     // - transfers. We need that month's entries to do this. (We
@@ -832,32 +856,34 @@
    * @returns {{ data, error }}
    */
   async function setOpeningBalance(month, opening_cents) {
-    const auth = await getClient();
-    if (auth.error) return { data: null, error: auth.error };
-
     if (typeof opening_cents !== 'number' || isNaN(opening_cents)) {
       return { data: null, error: new Error('setOpeningBalance: opening_cents must be a number') };
     }
 
-    const monthIso = toMonthStart(month);
+    return window.iboostRetry.withRetry(async function () {
+      const auth = await getClient();
+      if (auth.error) return { data: null, error: auth.error };
 
-    const row = {
-      user_id: auth.userId,
-      month_start: monthIso,
-      opening_cents: Math.round(opening_cents),
-      source: 'manual',
-    };
+      const monthIso = toMonthStart(month);
 
-    // Upsert on the unique (user_id, month_start) constraint. If a
-    // rollover row already exists for this month, this overwrites it
-    // and flips source to 'manual'.
-    const { data, error } = await auth.client
-      .from('budget_opening_balances')
-      .upsert([row], { onConflict: 'user_id,month_start' })
-      .select()
-      .single();
+      const row = {
+        user_id: auth.userId,
+        month_start: monthIso,
+        opening_cents: Math.round(opening_cents),
+        source: 'manual',
+      };
 
-    return { data: data, error: error };
+      // Upsert on the unique (user_id, month_start) constraint. If a
+      // rollover row already exists for this month, this overwrites it
+      // and flips source to 'manual'.
+      const { data, error } = await auth.client
+        .from('budget_opening_balances')
+        .upsert([row], { onConflict: 'user_id,month_start' })
+        .select()
+        .single();
+
+      return { data: data, error: error };
+    });
   }
 
   /**

@@ -253,17 +253,25 @@
     const { session } = await getSession();
     if (!session || !session.user) return null;
 
-    const { data, error } = await client
-      .from('profiles')
-      .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, created_at, updated_at')
-      .eq('id', session.user.id)
-      .single();
+    // Wrap in retry, but the function below adapts the Supabase
+    // {data, error} shape to the legacy null-on-error shape that
+    // existing callers depend on. Retry the SELECT itself; if the
+    // retry exhausts without success, log + return null (the
+    // pre-retry behavior).
+    const result = await window.iboostRetry.withRetry(async function () {
+      const { data, error } = await client
+        .from('profiles')
+        .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, created_at, updated_at')
+        .eq('id', session.user.id)
+        .single();
+      return { data: data, error: error };
+    });
 
-    if (error) {
-      console.error('[iboost-auth] getProfile error:', error);
+    if (result.error) {
+      console.error('[iboost-auth] getProfile error:', result.error);
       return null;
     }
-    return data;
+    return result.data;
   }
 
   // Pure check: does this profile row have everything the app requires?
@@ -435,9 +443,13 @@
       upsertRow.plan_currency = planCurrency;
     }
 
-    const { error: profileError } = await client
-      .from('profiles')
-      .upsert(upsertRow, { onConflict: 'id' });
+    const upsertResult = await window.iboostRetry.withRetry(async function () {
+      const { error } = await client
+        .from('profiles')
+        .upsert(upsertRow, { onConflict: 'id' });
+      return { data: null, error: error };
+    });
+    const profileError = upsertResult.error;
     if (profileError) {
       console.error('[iboost-auth] updateProfile profiles upsert error:', profileError);
 
@@ -539,17 +551,20 @@
     if (!session || !session.user) {
       return { data: [], error: { message: 'Not signed in' } };
     }
-    const { data, error } = await client
-      .from('plan_changes')
-      .select('id, from_plan, to_plan, changed_at, source')
-      .eq('user_id', session.user.id)
-      .order('changed_at', { ascending: false })
-      .limit(limit || 10);
-    if (error) {
-      console.error('[iboost-auth] getPlanHistory error:', error);
-      return { data: [], error };
+    const result = await window.iboostRetry.withRetry(async function () {
+      const { data, error } = await client
+        .from('plan_changes')
+        .select('id, from_plan, to_plan, changed_at, source')
+        .eq('user_id', session.user.id)
+        .order('changed_at', { ascending: false })
+        .limit(limit || 10);
+      return { data: data, error: error };
+    });
+    if (result.error) {
+      console.error('[iboost-auth] getPlanHistory error:', result.error);
+      return { data: [], error: result.error };
     }
-    return { data: data || [], error: null };
+    return { data: result.data || [], error: null };
   }
 
   window.iboostAuth = {

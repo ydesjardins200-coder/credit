@@ -148,10 +148,18 @@
     }
 
     try {
-      var result = await auth.client
-        .from('plans')
-        .select('plan_key, name, tagline, price_usd, price_cad, perks, sort_order')
-        .order('sort_order', { ascending: true });
+      // Wrap in retry — plans rarely change but every page load reads
+      // them. A transient blip on this read shouldn't cripple the upgrade
+      // CTAs across the whole site.
+      var fetchFn = function () {
+        return auth.client
+          .from('plans')
+          .select('plan_key, name, tagline, price_usd, price_cad, perks, sort_order')
+          .order('sort_order', { ascending: true });
+      };
+      var result = window.iboostRetry
+        ? await window.iboostRetry.withRetry(fetchFn)
+        : await fetchFn();
 
       if (result.error) {
         console.warn('[iboost-plans] DB query failed:', result.error.message);
