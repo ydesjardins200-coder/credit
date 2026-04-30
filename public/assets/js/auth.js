@@ -249,29 +249,96 @@
   // no profile row (shouldn't happen — trigger creates it), or any
   // Supabase error. Caller is expected to treat null as "something went
   // wrong, don't render the page".
+  // ---------------------------------------------------------------------
+  // getProfile cache (Phase F-2 — 2026-04-30)
+  // ---------------------------------------------------------------------
+  // Pre-F-2, getProfile() was called 3+ times per /account.html load
+  // (once from requireCompleteProfile, once explicitly, once from
+  // initProfileForm). Each call was a Supabase round trip — ~80-150ms
+  // warm, 200-400ms on flaky connections — and they ran sequentially.
+  // Total wasted: ~240-450ms on every page load.
+  //
+  // This cache resolves the redundancy without changing the API:
+  //   - First call: fires the SELECT, stores promise + result
+  //   - Subsequent calls during the same page session: return cached
+  //     result instantly
+  //   - In-flight dedup: if a second call comes while the first is
+  //     still pending, both await the same promise (no duplicate fetch)
+  //   - Invalidation: updateProfile() clears the cache after a
+  //     successful write so the next read sees fresh data
+  //   - Manual invalidation: window.iboostAuth.invalidateProfileCache()
+  //     for tests or explicit refresh scenarios
+  //
+  // Cache lifetime is the page session (cleared on navigation, since
+  // auth.js is re-loaded). No TTL — explicit invalidation only.
+  // ---------------------------------------------------------------------
+  let profileCache = null;       // resolved profile row (or null sentinel for "fetched, was null")
+  let profileCacheStatus = 'cold'; // 'cold' | 'inflight' | 'fresh' | 'invalidated'
+  let profileInflightPromise = null;
+
+  function invalidateProfileCache() {
+    profileCache = null;
+    profileCacheStatus = 'invalidated';
+    profileInflightPromise = null;
+  }
+
   async function getProfile() {
-    const { session } = await getSession();
-    if (!session || !session.user) return null;
-
-    // Wrap in retry, but the function below adapts the Supabase
-    // {data, error} shape to the legacy null-on-error shape that
-    // existing callers depend on. Retry the SELECT itself; if the
-    // retry exhausts without success, log + return null (the
-    // pre-retry behavior).
-    const result = await window.iboostRetry.withRetry(async function () {
-      const { data, error } = await client
-        .from('profiles')
-        .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, created_at, updated_at')
-        .eq('id', session.user.id)
-        .single();
-      return { data: data, error: error };
-    });
-
-    if (result.error) {
-      console.error('[iboost-auth] getProfile error:', result.error);
-      return null;
+    // Cache hit — return immediately. Note: profileCache may be null
+    // (we cache "fetched, no row" too). The status field is the source
+    // of truth for cache state.
+    if (profileCacheStatus === 'fresh') {
+      return profileCache;
     }
-    return result.data;
+
+    // In-flight: another call started but hasn't resolved. Await its
+    // promise rather than firing a duplicate fetch.
+    if (profileCacheStatus === 'inflight' && profileInflightPromise) {
+      return profileInflightPromise;
+    }
+
+    // Cold or invalidated — fire fresh fetch and stash the promise so
+    // any concurrent callers can await it.
+    profileCacheStatus = 'inflight';
+    profileInflightPromise = (async () => {
+      const { session } = await getSession();
+      if (!session || !session.user) {
+        // Don't cache "no session" — next call should re-check
+        // (user may have signed in between calls).
+        profileCacheStatus = 'cold';
+        profileInflightPromise = null;
+        return null;
+      }
+
+      // Wrap in retry, but the function below adapts the Supabase
+      // {data, error} shape to the legacy null-on-error shape that
+      // existing callers depend on. Retry the SELECT itself; if the
+      // retry exhausts without success, log + return null (the
+      // pre-retry behavior).
+      const result = await window.iboostRetry.withRetry(async function () {
+        const { data, error } = await client
+          .from('profiles')
+          .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, created_at, updated_at')
+          .eq('id', session.user.id)
+          .single();
+        return { data: data, error: error };
+      });
+
+      if (result.error) {
+        console.error('[iboost-auth] getProfile error:', result.error);
+        // Don't cache errors — let next call retry.
+        profileCacheStatus = 'cold';
+        profileInflightPromise = null;
+        return null;
+      }
+
+      // Success — cache the result for the rest of the page session.
+      profileCache = result.data;
+      profileCacheStatus = 'fresh';
+      profileInflightPromise = null;
+      return result.data;
+    })();
+
+    return profileInflightPromise;
   }
 
   // Pure check: does this profile row have everything the app requires?
@@ -501,6 +568,11 @@
       }
     }
 
+    // Phase F-2: invalidate the in-memory getProfile cache. Without
+    // this, subsequent getProfile() calls in the same page session
+    // would return the pre-update row.
+    invalidateProfileCache();
+
     return { data: { updated: true }, error: null };
   }
 
@@ -579,6 +651,7 @@
     onAuthChange,
     requireSession,
     getProfile,
+    invalidateProfileCache,  // Phase F-2: lets callers force a fresh getProfile fetch
     isProfileComplete,
     isProfileKycComplete,
     requireCompleteProfile,
