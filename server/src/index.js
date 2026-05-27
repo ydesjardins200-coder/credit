@@ -8,6 +8,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const healthRouter = require('./routes/health');
+const checkoutRouter = require('./routes/checkout');
+const stripeWebhookRouter = require('./routes/stripe-webhook');
 
 const app = express();
 
@@ -21,6 +23,21 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
 
 // --- Middleware ---
 app.use(helmet());
+
+// CRITICAL: the Stripe webhook must receive the RAW (unparsed) body so
+// its signature can be verified. It is therefore mounted with
+// express.raw() BEFORE the global express.json() parser below. If
+// express.json() ran first, it would consume/transform the body and
+// signature verification would always fail (the classic Stripe bug).
+//
+// Only this exact path gets raw treatment; everything else is JSON.
+app.use(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  stripeWebhookRouter
+);
+
+// Global JSON parser for every other route.
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
 
@@ -39,6 +56,7 @@ app.use(
 
 // --- Routes ---
 app.use('/api/health', healthRouter);
+app.use('/api/checkout', checkoutRouter);
 
 app.get('/', (req, res) => {
   res.json({ service: 'iboost-api', status: 'ok' });
