@@ -166,34 +166,167 @@
         <!-- =========== RIGHT COLUMN — payment / confirm =========== -->
         <section class="checkout-confirm-col" aria-label="Payment and confirmation">
 
+          <!-- Two payment panels — only one is visible at a time based on
+               state.paymentProvider (set by checkout.js after reading
+               /api/integrations/availability):
+                 stripe -> #checkout-panel-stripe (redirect to Stripe-hosted)
+                 manual -> #checkout-panel-manual (fake card form, dev-only;
+                           backend live-mode guard blocks this in production)
+               Both forms post to the same submit handler, which branches on
+               the backend response (Stripe URL vs internal redirect). -->
           <div class="checkout-payment-fields" id="checkout-payment-fields">
-            <div class="checkout-form-header">
-              <h2>Secure payment</h2>
-              <p>
-                Paid plans are handled by Stripe. When you continue, you&rsquo;ll
-                be taken to Stripe&rsquo;s secure checkout to enter your card &mdash;
-                your card details never touch iBoost&rsquo;s servers.
-              </p>
+
+            <!-- =========== STRIPE PANEL =========== -->
+            <div id="checkout-panel-stripe" data-mode="stripe" hidden>
+              <div class="checkout-form-header">
+                <h2>Secure payment</h2>
+                <p>
+                  Paid plans are handled by Stripe. When you continue, you&rsquo;ll
+                  be taken to Stripe&rsquo;s secure checkout to enter your card &mdash;
+                  your card details never touch iBoost&rsquo;s servers.
+                </p>
+              </div>
+
+              <form class="checkout-form" id="checkout-form-stripe" autocomplete="off" novalidate>
+                <div class="checkout-field">
+                  <label for="checkout-email-stripe">Email</label>
+                  <input type="email" id="checkout-email-stripe" class="checkout-email-input" name="email" readonly value="" />
+                </div>
+
+                <div class="checkout-stripe-note">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>You&rsquo;ll enter your card on the next screen, hosted by Stripe.</span>
+                </div>
+              </form>
             </div>
 
-            <!-- Stripe-hosted checkout: no card fields collected here. The
-                 card form lives on Stripe's domain (lowest PCI tier). The
-                 email is shown read-only for confirmation; it's prefilled
-                 from the signed-in session by checkout.js. -->
-            <form class="checkout-form" id="checkout-form" autocomplete="off" novalidate>
-              <div class="checkout-field">
-                <label for="checkout-email">Email</label>
-                <input type="email" id="checkout-email" name="email" readonly value="" />
+            <!-- =========== MANUAL (DEV) PANEL =========== -->
+            <!-- Card form is purely cosmetic — values are NEVER sent to the
+                 backend. Submit calls the same /api/checkout/create-session
+                 endpoint, which in manual mode writes the plan directly to
+                 the profile. Production live-Stripe deployments cannot
+                 accidentally land here (backend refuses manual mode when
+                 STRIPE_SECRET_KEY starts with sk_live_). -->
+            <div id="checkout-panel-manual" data-mode="manual" hidden>
+              <div class="checkout-form-header">
+                <h2>Payment method</h2>
+                <p>Enter your card to activate your subscription.</p>
+                <button type="button" class="checkout-fill-dummy-btn" id="checkout-fill-dummy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Fill with dummy data
+                </button>
               </div>
 
-              <div class="checkout-stripe-note">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <span>You&rsquo;ll enter your card on the next screen, hosted by Stripe.</span>
-              </div>
-            </form>
+              <form class="checkout-form" id="checkout-form-manual" autocomplete="off" novalidate>
+                <div class="checkout-field">
+                  <label for="checkout-email-manual">Email</label>
+                  <input type="email" id="checkout-email-manual" class="checkout-email-input" name="email" readonly value="" />
+                </div>
+
+                <div class="checkout-field">
+                  <label for="checkout-card-number">Card number</label>
+                  <div class="checkout-card-input-wrap">
+                    <input
+                      type="text"
+                      id="checkout-card-number"
+                      name="card_number"
+                      inputmode="numeric"
+                      autocomplete="cc-number"
+                      placeholder="1234 1234 1234 1234"
+                      maxlength="19"
+                    />
+                    <div class="checkout-card-logos" aria-hidden="true">
+                      <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="38" height="24" rx="3" fill="#1434cb"/>
+                        <text x="19" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11" font-style="italic" fill="#fff">VISA</text>
+                      </svg>
+                      <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="38" height="24" rx="3" fill="#fff" stroke="#e5e7eb"/>
+                        <circle cx="15" cy="12" r="6" fill="#eb001b"/>
+                        <circle cx="23" cy="12" r="6" fill="#f79e1b" fill-opacity="0.9"/>
+                      </svg>
+                      <svg viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="38" height="24" rx="3" fill="#2557d6"/>
+                        <text x="19" y="15" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="7" fill="#fff">AMEX</text>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="checkout-field-row">
+                  <div class="checkout-field">
+                    <label for="checkout-expiry">Expiration</label>
+                    <input
+                      type="text"
+                      id="checkout-expiry"
+                      name="expiry"
+                      inputmode="numeric"
+                      autocomplete="cc-exp"
+                      placeholder="MM / YY"
+                      maxlength="7"
+                    />
+                  </div>
+                  <div class="checkout-field">
+                    <label for="checkout-cvc">
+                      CVC
+                      <span class="checkout-field-hint" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                          <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      id="checkout-cvc"
+                      name="cvc"
+                      inputmode="numeric"
+                      autocomplete="cc-csc"
+                      placeholder="CVC"
+                      maxlength="4"
+                    />
+                  </div>
+                </div>
+
+                <div class="checkout-field">
+                  <label for="checkout-cardholder">Name on card</label>
+                  <input
+                    type="text"
+                    id="checkout-cardholder"
+                    name="cardholder"
+                    autocomplete="cc-name"
+                    placeholder="Full name as shown on card"
+                  />
+                </div>
+
+                <div class="checkout-field-row">
+                  <div class="checkout-field">
+                    <label for="checkout-country">Country</label>
+                    <select id="checkout-country" name="country">
+                      <option value="CA" selected>Canada</option>
+                      <option value="US">United States</option>
+                    </select>
+                  </div>
+                  <div class="checkout-field">
+                    <label for="checkout-postal">ZIP / Postal code</label>
+                    <input
+                      type="text"
+                      id="checkout-postal"
+                      name="postal"
+                      autocomplete="postal-code"
+                      placeholder="A1B 2C3"
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+
           </div>
 
           <!-- Alert area for errors — outside the collapsible block so
@@ -201,7 +334,7 @@
           <div id="checkout-alert" class="alert alert-error" hidden></div>
 
           <!-- Submit button — label changes based on selected plan. -->
-          <button type="submit" form="checkout-form" class="checkout-submit-btn" id="checkout-submit">
+          <button type="button" class="checkout-submit-btn" id="checkout-submit">
             <span class="checkout-submit-txt" id="checkout-submit-label">
               Continue to payment
             </span>

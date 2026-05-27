@@ -116,10 +116,10 @@
   }
 
   // Apply the current paymentProvider state to the UI:
-  //   - 'stripe': normal behavior, no notice.
-  //   - 'manual': paid plans selectable, dev-mode notice shown.
+  //   - 'stripe': show Stripe panel, no notice.
+  //   - 'manual': show manual card-form panel, dev-mode notice.
   //   - anything else: paid plans disabled, "unavailable" notice shown,
-  //     selection forced to free.
+  //     selection forced to free. Both panels stay hidden.
   function applyPaymentProvider() {
     var noticeId = 'payment-provider-notice';
     var existing = document.getElementById(noticeId);
@@ -129,6 +129,14 @@
       state.paymentProvider !== null &&
       state.paymentProvider !== 'stripe' &&
       state.paymentProvider !== 'manual';
+
+    // Toggle the two payment panels. Default: both hidden. Show exactly
+    // one based on the active provider. While provider is null
+    // (resolving), keep both hidden to avoid a flash of the wrong UI.
+    var stripePanel = document.getElementById('checkout-panel-stripe');
+    var manualPanel = document.getElementById('checkout-panel-manual');
+    if (stripePanel) stripePanel.hidden = (state.paymentProvider !== 'stripe');
+    if (manualPanel) manualPanel.hidden = (state.paymentProvider !== 'manual');
 
     // Reset paid row state — every render starts from "selectable" and
     // only disables when paidUnavailable is true. This lets a flip
@@ -160,8 +168,9 @@
     var noticeClass = 'alert alert-info';
     if (state.paymentProvider === 'manual') {
       noticeText =
-        'Dev mode: paid plans are activated instantly without payment. ' +
-        'Switch payment_processor to "stripe" in admin to enable real billing.';
+        'Dev mode: card form below is fake. Submitting activates the plan ' +
+        'without payment. Switch payment_processor to "stripe" in admin ' +
+        'to enable real billing.';
     } else if (paidUnavailable) {
       noticeText =
         'Paid subscriptions are temporarily unavailable. ' +
@@ -347,6 +356,35 @@
           throw new Error('You must be signed in to subscribe. Please log in again.');
         }
 
+        // Manual mode: validate the fake card-form fields' SHAPE before
+        // calling the backend. Card values are never sent — this is
+        // purely for dev-experience parity with the original mockup so
+        // empty submits get a clear error. The "Fill with dummy data"
+        // button populates all fields with valid shapes in one click.
+        if (state.paymentProvider === 'manual') {
+          var cardNumber = ($('#checkout-card-number').value || '').replace(/\s/g, '');
+          var expiry = ($('#checkout-expiry').value || '').replace(/\s/g, '');
+          var cvc = $('#checkout-cvc').value || '';
+          var cardholder = ($('#checkout-cardholder').value || '').trim();
+          var postal = ($('#checkout-postal').value || '').trim();
+
+          if (cardNumber.length < 13 || cardNumber.length > 16) {
+            throw new Error('Enter a valid card number (or click "Fill with dummy data").');
+          }
+          if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+            throw new Error('Enter expiration as MM / YY.');
+          }
+          if (cvc.length < 3) {
+            throw new Error('Enter your card\u2019s CVC.');
+          }
+          if (!cardholder) {
+            throw new Error('Enter the name on your card.');
+          }
+          if (!postal) {
+            throw new Error('Enter your postal / ZIP code.');
+          }
+        }
+
         var resp = await fetch(base + '/api/checkout/create-session', {
           method: 'POST',
           headers: {
@@ -389,8 +427,11 @@
     }
 
     submitBtn.addEventListener('click', handle);
-    var form = $('#checkout-form');
-    if (form) form.addEventListener('submit', handle);
+    // Both forms route through the same handler. Whichever panel is
+    // visible at submit time is the one the user interacted with.
+    $$('#checkout-form-stripe, #checkout-form-manual').forEach(function (f) {
+      f.addEventListener('submit', handle);
+    });
   }
 
   async function prefillEmail() {
@@ -399,10 +440,61 @@
       var res = await window.iboostAuth.getSessionSettled();
       var session = res && res.session;
       if (session && session.user && session.user.email) {
-        var emailEl = $('#checkout-email');
-        if (emailEl) emailEl.value = session.user.email;
+        // Both panels have an email input — fill them all via the
+        // shared .checkout-email-input class so the right one is
+        // populated whichever panel ends up visible.
+        $$('.checkout-email-input').forEach(function (el) {
+          el.value = session.user.email;
+        });
       }
     } catch (e) { /* non-fatal */ }
+  }
+
+  // Card-number / expiry formatters for the manual-mode card form.
+  // Cosmetic only — the values are never sent to the backend.
+  function formatCardNumber(raw) {
+    var digits = raw.replace(/\D/g, '').slice(0, 16);
+    var parts = [];
+    for (var i = 0; i < digits.length; i += 4) {
+      parts.push(digits.slice(i, i + 4));
+    }
+    return parts.join(' ');
+  }
+  function formatExpiry(raw) {
+    var digits = raw.replace(/\D/g, '').slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return digits.slice(0, 2) + ' / ' + digits.slice(2);
+  }
+  function wireManualFormHelpers() {
+    var cardInput = $('#checkout-card-number');
+    if (cardInput) {
+      cardInput.addEventListener('input', function (e) {
+        e.target.value = formatCardNumber(e.target.value);
+      });
+    }
+    var expiryInput = $('#checkout-expiry');
+    if (expiryInput) {
+      expiryInput.addEventListener('input', function (e) {
+        e.target.value = formatExpiry(e.target.value);
+      });
+    }
+    var cvcInput = $('#checkout-cvc');
+    if (cvcInput) {
+      cvcInput.addEventListener('input', function (e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+      });
+    }
+    var fillBtn = $('#checkout-fill-dummy');
+    if (fillBtn) {
+      fillBtn.addEventListener('click', function () {
+        var byId = function (id) { return document.getElementById(id); };
+        if (byId('checkout-card-number')) byId('checkout-card-number').value = '4242 4242 4242 4242';
+        if (byId('checkout-expiry'))      byId('checkout-expiry').value      = '12 / 34';
+        if (byId('checkout-cvc'))         byId('checkout-cvc').value         = '123';
+        if (byId('checkout-cardholder')) byId('checkout-cardholder').value  = 'Test User';
+        if (byId('checkout-postal'))      byId('checkout-postal').value      = 'A1B 2C3';
+      });
+    }
   }
 
   async function init() {
@@ -413,6 +505,7 @@
     });
 
     wireSubmit();
+    wireManualFormHelpers();
     prefillEmail();
 
     var rawPlans = [];
