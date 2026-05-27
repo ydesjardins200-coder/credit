@@ -11,6 +11,7 @@ const healthRouter = require('./routes/health');
 const checkoutRouter = require('./routes/checkout');
 const stripeWebhookRouter = require('./routes/stripe-webhook');
 const integrationsRouter = require('./routes/integrations');
+const invoicesRouter = require('./routes/invoices');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use(
 app.use('/api/health', healthRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/integrations', integrationsRouter);
+app.use('/api/invoices', invoicesRouter);
 
 app.get('/', (req, res) => {
   res.json({ service: 'iboost-api', status: 'ok' });
