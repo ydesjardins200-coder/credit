@@ -581,6 +581,164 @@
   // Page boot
   // ===================================================================
 
+  // -------- Invoice history (Stage 2 of invoices feature) --------
+  //
+  // Fetches GET /api/invoices/mine, renders a list into the card on the
+  // profile page. The card itself is hidden in the HTML by default and
+  // we only unhide it once we know the user has invoices to show.
+  //
+  // Failure mode: card stays hidden. We log to console but never
+  // surface errors to the user — invoice history is a nice-to-have on
+  // this page, not the main content.
+
+  function getApiBase() {
+    var cfg = window.IBOOST_CONFIG || {};
+    return (cfg.API_BASE_URL || '').replace(/\/$/, '');
+  }
+
+  // Format a unix-seconds timestamp as "Apr 12, 2026". Locale-aware via
+  // Intl but in a stable English form so the layout doesn't shift by locale.
+  function fmtInvoiceDate(unixSeconds) {
+    if (!unixSeconds && unixSeconds !== 0) return '';
+    try {
+      var d = new Date(unixSeconds * 1000);
+      return d.toLocaleDateString('en-CA', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      });
+    } catch (e) {
+      return '';
+    }
+  }
+
+  // Format an amount in the smallest currency unit (cents) as a display
+  // string with currency code. e.g. (4000, 'cad') -> "$40.00 CAD".
+  function fmtInvoiceAmount(amountInCents, currency) {
+    var cur = String(currency || 'cad').toUpperCase();
+    var dollars = (Number(amountInCents) || 0) / 100;
+    return '$' + dollars.toFixed(2) + ' ' + cur;
+  }
+
+  // Render the human description for an invoice. We don't have a clean
+  // "plan name" on the invoice itself, so the period range (when paid
+  // for) is the most honest label. Falls back to the invoice number.
+  function fmtInvoiceDesc(inv) {
+    if (inv.period_start && inv.period_end) {
+      var start = fmtInvoiceDate(inv.period_start);
+      var end = fmtInvoiceDate(inv.period_end);
+      return 'Subscription period: ' + start + ' — ' + end;
+    }
+    return inv.number ? ('Invoice ' + inv.number) : 'Invoice';
+  }
+
+  // Map Stripe status to a short label + CSS modifier. 'paid' is the
+  // happy path; the others render with a subdued tone so they read as
+  // "needs attention" without being alarmist.
+  function statusLabel(status) {
+    if (status === 'paid')          return { text: 'Paid',          mod: 'paid' };
+    if (status === 'open')          return { text: 'Open',          mod: 'open' };
+    if (status === 'draft')         return { text: 'Draft',         mod: 'draft' };
+    if (status === 'void')          return { text: 'Void',          mod: 'void' };
+    if (status === 'uncollectible') return { text: 'Uncollectible', mod: 'fail' };
+    return { text: String(status || ''), mod: '' };
+  }
+
+  function renderInvoiceRow(inv) {
+    var dateStr = fmtInvoiceDate(inv.created);
+    var titleStr = inv.number || inv.id;
+    var subStr = fmtInvoiceDesc(inv);
+    var amountStr = fmtInvoiceAmount(inv.amount_paid || inv.amount_due, inv.currency);
+    var s = statusLabel(inv.status);
+
+    // The download icon button links out to Stripe's hosted invoice page
+    // (which has a Download PDF button + the line items + payment status).
+    // We prefer hosted_invoice_url because it works for any status; the
+    // direct invoice_pdf URL exists only after finalize.
+    var linkUrl = inv.hosted_invoice_url || inv.invoice_pdf || '';
+    var linkAttrs = linkUrl
+      ? ' href="' + escapeHtml(linkUrl) + '" target="_blank" rel="noopener noreferrer"'
+      : ' aria-disabled="true"';
+
+    return (
+      '<div class="dash-invoice" data-invoice-id="' + escapeHtml(inv.id) + '">' +
+        '<div class="dash-invoice-date">' + escapeHtml(dateStr) + '</div>' +
+        '<div class="dash-invoice-desc">' +
+          '<p class="dash-invoice-desc-title">' + escapeHtml(titleStr) +
+            ' <span class="dash-invoice-status dash-invoice-status-' + s.mod + '">' +
+              escapeHtml(s.text) +
+            '</span>' +
+          '</p>' +
+          '<p class="dash-invoice-desc-sub">' + escapeHtml(subStr) + '</p>' +
+        '</div>' +
+        '<div class="dash-invoice-amount">' + escapeHtml(amountStr) + '</div>' +
+        '<a class="dash-invoice-dl"' + linkAttrs +
+          ' aria-label="View invoice ' + escapeHtml(titleStr) + ' on Stripe">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
+            '<polyline points="7 10 12 15 17 10"/>' +
+            '<line x1="12" y1="15" x2="12" y2="3"/>' +
+          '</svg>' +
+        '</a>' +
+      '</div>'
+    );
+  }
+
+  async function initInvoiceHistory(session) {
+    var card = document.getElementById('invoice-history-card');
+    var list = document.getElementById('invoice-history-list');
+    if (!card || !list) return;
+
+    var apiBase = getApiBase();
+    if (!apiBase) {
+      // Missing config — nothing we can do. Card stays hidden.
+      console.warn('[profile] no API_BASE_URL — skipping invoice history');
+      return;
+    }
+    if (!session || !session.access_token) {
+      return; // boot() already redirected to /login on this path
+    }
+
+    var resp;
+    try {
+      resp = await fetch(apiBase + '/api/invoices/mine', {
+        headers: { Authorization: 'Bearer ' + session.access_token },
+      });
+    } catch (e) {
+      console.warn('[profile] invoice fetch network error:', e);
+      return; // card stays hidden
+    }
+
+    if (!resp.ok) {
+      console.warn('[profile] invoice fetch HTTP ' + resp.status);
+      return;
+    }
+
+    var data;
+    try { data = await resp.json(); } catch (e) { return; }
+
+    // No Stripe customer = Free / manual-grant. Keep the card hidden;
+    // there's nothing useful to show. Avoids a confusing "No invoices"
+    // empty state that would imply "you're paying but nothing rendered."
+    if (!data.has_stripe_customer) {
+      return;
+    }
+
+    var invoices = (data && data.invoices) || [];
+    if (invoices.length === 0) {
+      // Stripe customer exists but no invoices returned (rare — perhaps
+      // a freshly-created subscription that hasn't been billed yet).
+      // Show the card with an honest message.
+      list.innerHTML =
+        '<div class="dash-invoice-empty" style="padding: 14px 4px; color: var(--color-text-muted);">' +
+          'No invoices yet. Your first invoice will appear after your next billing cycle.' +
+        '</div>';
+      card.hidden = false;
+      return;
+    }
+
+    list.innerHTML = invoices.map(renderInvoiceRow).join('');
+    card.hidden = false;
+  }
+
   async function boot() {
     if (!window.iboostAuth || !window.iboostAuth.getSessionSettled) {
       console.error('[profile] iboostAuth missing — script load order issue?');
@@ -624,6 +782,17 @@
       await initProfileTab(user, firstName);
     } catch (e) {
       console.error('[profile] initProfileTab failed:', e);
+    }
+
+    // Invoice history — best-effort, non-blocking. Card stays hidden
+    // if the user has no Stripe customer (Free / manual-grant users)
+    // or if the fetch fails. We deliberately don't surface errors —
+    // a missing invoice list shouldn't make the rest of the page feel
+    // broken.
+    try {
+      await initInvoiceHistory(session);
+    } catch (e) {
+      console.error('[profile] initInvoiceHistory failed:', e);
     }
   }
 

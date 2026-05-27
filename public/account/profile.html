@@ -292,61 +292,17 @@
       </article>
 
       <!-- Invoice history -->
-      <article class="dash-card" hidden data-preview-only="wave-later">
+      <article class="dash-card" id="invoice-history-card" hidden>
         <div class="dash-card-head">
           <h3>Invoice history</h3>
-          <span class="dash-card-head-sub">Last 4 months</span>
+          <span class="dash-card-head-sub" id="invoice-history-sub">Last 12 months</span>
         </div>
-        <div class="dash-invoices">
-
-          <div class="dash-invoice">
-            <div class="dash-invoice-date">Apr 12, 2026</div>
-            <div class="dash-invoice-desc">
-              <p class="dash-invoice-desc-title">iBoost Essential — April</p>
-              <p class="dash-invoice-desc-sub">Monthly subscription</p>
-            </div>
-            <div class="dash-invoice-amount">$15.00</div>
-            <button type="button" class="dash-invoice-dl" aria-label="Download April invoice">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="dash-invoice">
-            <div class="dash-invoice-date">Mar 12, 2026</div>
-            <div class="dash-invoice-desc">
-              <p class="dash-invoice-desc-title">iBoost Essential — March</p>
-              <p class="dash-invoice-desc-sub">Monthly subscription</p>
-            </div>
-            <div class="dash-invoice-amount">$15.00</div>
-            <button type="button" class="dash-invoice-dl" aria-label="Download March invoice">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="dash-invoice">
-            <div class="dash-invoice-date">Mar 10, 2026</div>
-            <div class="dash-invoice-desc">
-              <p class="dash-invoice-desc-title">Account activation</p>
-              <p class="dash-invoice-desc-sub">Initial setup</p>
-            </div>
-            <div class="dash-invoice-amount">$0.00</div>
-            <button type="button" class="dash-invoice-dl" aria-label="Download activation receipt">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-            </button>
-          </div>
-
+        <!-- Populated by profile.js via GET /api/invoices/mine.
+             The card itself starts hidden; profile.js un-hides it once
+             the user is confirmed to have a Stripe customer (paid plan).
+             Free / manual-grant users never see this card. -->
+        <div class="dash-invoices" id="invoice-history-list">
+          <!-- rendered: one .dash-invoice per row -->
         </div>
       </article>
 

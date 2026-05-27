@@ -512,6 +512,31 @@
 
 .dash-invoice-dl svg { width: 14px; height: 14px; }
 
+/* Make the <a> variant match the original <button> styling */
+a.dash-invoice-dl { text-decoration: none; }
+a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+
+/* Status pill next to the invoice title. Small, low-key — the amount
+   and date already carry most of the information. Color tones nudge
+   attention only for non-paid statuses. */
+.dash-invoice-status {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  background: #f1f5f9;
+  color: #475569;
+}
+.dash-invoice-status-paid  { background: #dcfce7; color: #166534; }
+.dash-invoice-status-open  { background: #fef3c7; color: #92400e; }
+.dash-invoice-status-draft { background: #e2e8f0; color: #475569; }
+.dash-invoice-status-void  { background: #f1f5f9; color: #64748b; text-decoration: line-through; }
+.dash-invoice-status-fail  { background: #fee2e2; color: #991b1b; }
+
 /* Notifications preferences */
 .dash-prefs {
   display: flex;
