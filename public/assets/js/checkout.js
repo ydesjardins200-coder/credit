@@ -72,7 +72,13 @@
     });
   }
 
-  var state = { planKey: 'complete' };
+  var state = {
+    planKey: 'complete',
+    // null until availability resolves; true/false after. We treat
+    // null as "still checking" — paid plans render normally but the
+    // submit handler will re-check before letting payment proceed.
+    paidAvailable: null,
+  };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -87,6 +93,62 @@
   function apiBase() {
     var cfg = window.IBOOST_CONFIG || {};
     return (cfg.API_BASE_URL || '').replace(/\/$/, '');
+  }
+
+  // Fetch the active provider per integrations category from the backend.
+  // Public endpoint, no auth. Failure-mode: returns null so we degrade
+  // gracefully — paid checkout will still attempt, the backend's
+  // requireProvider middleware is the real authority.
+  async function fetchAvailability() {
+    try {
+      var base = apiBase();
+      if (!base) return null;
+      var resp = await fetch(base + '/api/integrations/availability', {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+      });
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Apply the paidAvailable state to the UI: when paid checkout is
+  // disabled (admin flipped payment_processor away from 'stripe'),
+  // grey the paid plan rows, force-select the free plan, and surface
+  // an inline notice. Free plan remains fully functional.
+  function applyPaidAvailability() {
+    if (state.paidAvailable !== false) return; // null or true → no change
+    $$('.plan-row[data-plan]').forEach(function (row) {
+      var key = row.getAttribute('data-plan');
+      if (key === 'essential' || key === 'complete') {
+        row.classList.add('is-unavailable');
+        row.setAttribute('aria-disabled', 'true');
+        var radio = row.querySelector('.plan-picker-radio');
+        if (radio) radio.disabled = true;
+      }
+    });
+
+    // If a paid plan is currently selected, switch to free.
+    if (state.planKey === 'essential' || state.planKey === 'complete') {
+      selectPlan('free');
+    }
+
+    // Add a one-time notice above the plan list (idempotent).
+    if (!document.getElementById('paid-unavailable-notice')) {
+      var heading = document.querySelector('.checkout-plans-heading');
+      if (heading && heading.parentNode) {
+        var note = document.createElement('div');
+        note.id = 'paid-unavailable-notice';
+        note.className = 'alert alert-info';
+        note.style.marginBottom = '12px';
+        note.textContent =
+          'Paid subscriptions are temporarily unavailable. ' +
+          'You can still activate a Free plan and upgrade later.';
+        heading.parentNode.insertBefore(note, heading.nextSibling);
+      }
+    }
   }
 
   (function initPlanFromQuery() {
@@ -268,6 +330,19 @@
         try { data = await resp.json(); } catch (e) { /* non-JSON */ }
 
         if (!resp.ok) {
+          // Special-case: backend says paid checkout is currently
+          // disabled (admin flipped payment_processor away from stripe
+          // between page load and this click). Surface a user-friendly
+          // message AND apply the unavailable UI so the page reflects
+          // the new reality.
+          if (resp.status === 503 && data && data.reason === 'provider_not_active') {
+            state.paidAvailable = false;
+            applyPaidAvailability();
+            throw new Error(
+              'Paid subscriptions are temporarily unavailable. ' +
+              'You can activate a Free plan and upgrade later.'
+            );
+          }
           var msg = (data && data.error) || ('Checkout failed (HTTP ' + resp.status + ').');
           throw new Error(msg);
         }
@@ -311,14 +386,17 @@
     prefillEmail();
 
     var rawPlans = [];
+    var availabilityResp = null;
     try {
-      if (window.iboostPlans) {
-        rawPlans = await window.iboostPlans.getPlans({ fresh: true });
-      } else {
-        console.warn('[checkout] iboostPlans not loaded');
-      }
+      // Run plans + availability in parallel; both are independent reads.
+      var results = await Promise.all([
+        window.iboostPlans ? window.iboostPlans.getPlans({ fresh: true }) : Promise.resolve([]),
+        fetchAvailability(),
+      ]);
+      rawPlans = results[0] || [];
+      availabilityResp = results[1];
     } catch (e) {
-      console.warn('[checkout] plans fetch failed:', e);
+      console.warn('[checkout] plans/availability fetch failed:', e);
     }
 
     planMap = {};
@@ -326,8 +404,16 @@
       planMap[row.plan_key] = adaptPlan(row);
     });
 
+    // Resolve paid availability. If we can't read it, leave as null
+    // (paid plans render normally; backend is the real gatekeeper).
+    if (availabilityResp && availabilityResp.providers) {
+      state.paidAvailable =
+        availabilityResp.providers.payment_processor === 'stripe';
+    }
+
     syncPlanRowPrices();
     selectPlan(state.planKey);
+    applyPaidAvailability();
   }
 
   if (document.readyState === 'loading') {

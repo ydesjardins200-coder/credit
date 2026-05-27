@@ -26,6 +26,8 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 
+const { getActiveMap } = require('../lib/integrations-read');
+
 // Constant-time string compare. Returns false for length mismatch
 // without leaking the length difference via early-exit timing.
 function safeEqual(a, b) {
@@ -113,6 +115,34 @@ router.get('/status', requireSharedSecret, function (req, res) {
       },
     },
   });
+});
+
+// GET /api/integrations/availability
+//
+// PUBLIC endpoint (no auth) — the frontend hits this to learn which
+// provider is active per integrations category, so it can render the
+// right UI without exposing any secrets.
+//
+// Returns ONLY what the public needs: the active provider key per
+// category, full stop. No env-var info, no key prefixes, no API hints.
+router.get('/availability', async function (req, res) {
+  try {
+    const activeMap = await getActiveMap();
+    res.json({
+      timestamp: new Date().toISOString(),
+      providers: activeMap, // { payment_processor: 'stripe', email_provider: 'manual', ... }
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[integrations] availability read failed:', err.message);
+    // Fail-open shape: empty providers map. Frontend treats this as
+    // "everything's manual" → safer than 500ing the page.
+    res.json({
+      timestamp: new Date().toISOString(),
+      providers: {},
+      error: 'integrations table unavailable',
+    });
+  }
 });
 
 module.exports = router;

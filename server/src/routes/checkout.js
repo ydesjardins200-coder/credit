@@ -24,6 +24,7 @@ const express = require('express');
 const router = express.Router();
 
 const requireAuth = require('../middleware/requireAuth');
+const requireProvider = require('../middleware/requireProvider');
 const { getStripe } = require('../lib/stripe');
 const { resolvePriceId } = require('../lib/plan-prices');
 
@@ -38,7 +39,11 @@ const FRONTEND_URL =
 // plumbing is added. Hardcoded here rather than trusting a client value.
 const V1_CURRENCY = 'cad';
 
-router.post('/create-session', requireAuth, async function (req, res, next) {
+router.post(
+  '/create-session',
+  requireAuth,
+  requireProvider('payment_processor', ['stripe']),
+  async function (req, res, next) {
   try {
     const stripe = getStripe();
 
