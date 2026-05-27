@@ -130,6 +130,217 @@ async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSu
   );
 }
 
+// Find a profile row by its Stripe customer id. Used by every webhook
+// handler that gets a customer-keyed event (subscription.updated /
+// .deleted, invoice.payment_failed). Returns the row or null if not
+// found — caller decides whether that's an error or expected.
+async function findUserByStripeCustomerId(stripeCustomerId) {
+  if (!stripeCustomerId) return null;
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date')
+    .eq('stripe_customer_id', stripeCustomerId)
+    .single();
+  if (error) {
+    // PGRST116 = no row. Not an error — could be a webhook for a
+    // customer we never tracked (e.g. test data, deleted profile).
+    if (error.code === 'PGRST116') return null;
+    throw new Error(
+      'profile lookup by stripe_customer_id failed: ' + error.message
+    );
+  }
+  return data;
+}
+
+// Sync our profile.cancel_at_period_end + next_billing_date with what
+// Stripe says about a subscription. Idempotent: safe to call any number
+// of times; only writes when state differs.
+//
+// Called from customer.subscription.updated. Catches three scenarios:
+//   1) Operator cancelled directly in the Stripe dashboard (DB drifts).
+//   2) Operator un-cancelled directly in the Stripe dashboard.
+//   3) Renewal: Stripe updates current_period_end to the next cycle.
+//      Keeps profile.next_billing_date current.
+async function syncSubscriptionState(sub) {
+  const stripeCustomerId = sub.customer;
+  if (!stripeCustomerId) return;
+
+  const profile = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!profile) {
+    // eslint-disable-next-line no-console
+    console.log(
+      '[webhook] subscription.updated for unknown customer ' +
+      stripeCustomerId + ' — ignoring'
+    );
+    return;
+  }
+
+  // Period end lives on the subscription item in Basil API (same as
+  // grantPlan handles).
+  const firstItem = sub.items && sub.items.data && sub.items.data[0];
+  const currentPeriodEnd =
+    (firstItem && firstItem.current_period_end) ||
+    sub.current_period_end ||
+    null;
+  const nextBillingDate = currentPeriodEnd
+    ? new Date(currentPeriodEnd * 1000).toISOString().slice(0, 10)
+    : null;
+
+  const desiredCancel = !!sub.cancel_at_period_end;
+  const update = {};
+
+  if (profile.cancel_at_period_end !== desiredCancel) {
+    update.cancel_at_period_end = desiredCancel;
+  }
+  if (nextBillingDate && profile.next_billing_date !== nextBillingDate) {
+    update.next_billing_date = nextBillingDate;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return; // already in sync, nothing to do
+  }
+
+  update.updated_at = new Date().toISOString();
+  const { error: updErr } = await supabaseAdmin
+    .from('profiles')
+    .update(update)
+    .eq('id', profile.id);
+  if (updErr) {
+    throw new Error(
+      'profile sync update failed for ' + profile.id + ': ' + updErr.message
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log(
+    '[webhook] synced subscription state for user=' + profile.id +
+    ' cancel_at_period_end=' + desiredCancel +
+    (nextBillingDate ? ' next=' + nextBillingDate : '')
+  );
+}
+
+// Handle the actual end of a subscription. Stripe fires
+// customer.subscription.deleted when:
+//   1) cancel_at_period_end was true and the period rolled over.
+//   2) Operator clicked "Cancel immediately" in the Stripe dashboard.
+//   3) Stripe gave up on a card after dunning (involuntary churn).
+//
+// In all three cases: drop the user to Free in our DB. Clear the
+// cancel_at_period_end flag (it's no longer "pending" — it happened).
+// Leave Stripe customer/subscription IDs intact for historical lookup
+// (the invoice page would break if we cleared customer_id).
+//
+// Idempotent guard: skip the plan_changes insert if the most recent
+// row is already this exact transition (some Stripe retries can deliver
+// the deletion event twice within seconds).
+async function handleSubscriptionEnded(sub) {
+  const stripeCustomerId = sub.customer;
+  if (!stripeCustomerId) return;
+
+  const profile = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!profile) {
+    // eslint-disable-next-line no-console
+    console.log(
+      '[webhook] subscription.deleted for unknown customer ' +
+      stripeCustomerId + ' — ignoring'
+    );
+    return;
+  }
+
+  if (profile.plan === 'free') {
+    // Already on Free. Just clear stale flags if any and exit.
+    if (profile.cancel_at_period_end) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          cancel_at_period_end: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+    }
+    return;
+  }
+
+  const update = {
+    plan: 'free',
+    plan_activated_at: new Date().toISOString(),
+    cancel_at_period_end: false,
+    next_billing_date: null,
+    // Intentionally NOT clearing stripe_customer_id — keeps the invoice
+    // history visible after cancellation (the user's past invoices are
+    // still real). The subscription_id we clear because it no longer
+    // refers to anything billable.
+    stripe_subscription_id: null,
+    card_brand: null,
+    card_last_four: null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: updErr } = await supabaseAdmin
+    .from('profiles')
+    .update(update)
+    .eq('id', profile.id);
+  if (updErr) {
+    throw new Error(
+      'profile drop-to-free update failed for ' + profile.id +
+      ': ' + updErr.message
+    );
+  }
+
+  // Idempotency check: only write the history row if the last
+  // stripe_webhook row for this user isn't already this exact
+  // transition. Stripe's at-least-once delivery means we can get
+  // duplicates.
+  const { data: recent } = await supabaseAdmin
+    .from('plan_changes')
+    .select('id, from_plan, to_plan, source, changed_at')
+    .eq('user_id', profile.id)
+    .order('changed_at', { ascending: false })
+    .limit(1);
+  const lastRow = recent && recent[0];
+  const isDuplicate =
+    lastRow &&
+    lastRow.source === 'stripe_webhook' &&
+    lastRow.from_plan === profile.plan &&
+    lastRow.to_plan === 'free' &&
+    // Within 5 minutes — generous window for Stripe retries.
+    Date.now() - new Date(lastRow.changed_at).getTime() < 5 * 60 * 1000;
+
+  if (!isDuplicate) {
+    const { error: histErr } = await supabaseAdmin
+      .from('plan_changes')
+      .insert({
+        user_id: profile.id,
+        from_plan: profile.plan,
+        to_plan: 'free',
+        source: 'stripe_webhook',
+      });
+    if (histErr) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[webhook] history insert failed (drop-to-free): ' + histErr.message
+      );
+    }
+  }
+
+  // If there's a pending admin_cancel row that pointed at this very
+  // transition, mark it cancelled_at=now so it doesn't keep appearing
+  // as "pending" forever in the plan history UI. The cancel actually
+  // happened — it's now history, not pending.
+  await supabaseAdmin
+    .from('plan_changes')
+    .update({ cancelled_at: new Date().toISOString() })
+    .eq('user_id', profile.id)
+    .eq('source', 'admin_cancel')
+    .is('cancelled_at', null)
+    .lt('effective_at', new Date(Date.now() + 60 * 1000).toISOString());
+
+  // eslint-disable-next-line no-console
+  console.log(
+    '[webhook] subscription ended: user=' + profile.id +
+    ' was=' + profile.plan + ' now=free'
+  );
+}
+
 // express.raw() is applied to this route in index.js, so req.body is a
 // Buffer here.
 //
@@ -228,10 +439,29 @@ router.post('/', async function (req, res) {
         break;
       }
 
-      // Future-proofing hooks. Logged but not yet acted on — wire these
-      // when handling renewals, cancellations, and failed payments.
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
+      // customer.subscription.updated fires for every state change on
+      // the subscription — including operator-side cancel/uncancel in
+      // the Stripe dashboard, renewal (current_period_end shifts), card
+      // updates, etc. Sync our profile to match Stripe's truth.
+      case 'customer.subscription.updated': {
+        const sub = event.data.object;
+        await syncSubscriptionState(sub);
+        break;
+      }
+
+      // customer.subscription.deleted fires at the actual end of a
+      // subscription: scheduled cancel reaching its period end, or an
+      // immediate cancel, or Stripe giving up after dunning. Drops the
+      // user to Free.
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object;
+        await handleSubscriptionEnded(sub);
+        break;
+      }
+
+      // Future-proofing: failed payment dunning. We'll act on this when
+      // we build the lifecycle UI ("your card was declined, update it").
+      // Logged for now.
       case 'invoice.payment_failed':
         // eslint-disable-next-line no-console
         console.log('[webhook] received (not yet handled):', event.type);
