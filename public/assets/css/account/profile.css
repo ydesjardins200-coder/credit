@@ -312,8 +312,7 @@
 .dash-plan-history-empty {
   padding: 14px 12px;
   color: #64748b;
-  font-size: 0.85rem;
-  font-style: italic;
+  font-size: 0.85rem;  font-style: italic;
   text-align: center;
 }
 
@@ -898,4 +897,62 @@ a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
     grid-template-columns: 1fr;
   }
   .dash-danger-btn { justify-self: start; }
+}
+
+/* ---------- Pending-cancel banner on the Plan card ---------- */
+/* User-facing version. Shows when profile.cancel_at_period_end is true.
+   Communicates "your subscription is ending and when" with appropriate
+   visual weight (not alarming red, not invisible gray — amber). */
+.dash-plan-cancel-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+.dash-plan-cancel-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #78350f;
+}
+.dash-plan-cancel-banner-text strong { font-size: 0.94rem; }
+.dash-plan-cancel-banner-text span {
+  color: #92400e;
+  font-size: 0.82rem;
+}
+
+/* ---------- Plan history: Pending + History sections ---------- */
+/* Section header inside the history <ul>. Slightly muted, uppercase,
+   distinguishes "Pending" rows above from "History" rows below. */
+.dash-plan-history-section {
+  list-style: none;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  padding: 6px 4px 4px;
+}
+.dash-plan-history-section + .dash-plan-history-section { margin-top: 8px; }
+
+/* Pending row — amber left bar matches the banner color so the visual
+   relationship is clear. */
+.dash-plan-history-item-pending {
+  border-left: 3px solid #f59e0b;
+  background: #fefce8;
+}
+
+/* Rescinded row — was scheduled, then cancelled before taking effect.
+   Strikethrough on the change span; muted overall. */
+.dash-plan-history-item-rescinded .dash-plan-history-item-change {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.dash-plan-history-item-rescinded {
+  background: #f1f5f9;
+  color: #64748b;
 }

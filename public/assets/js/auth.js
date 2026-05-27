@@ -317,7 +317,7 @@
       const result = await window.iboostRetry.withRetry(async function () {
         const { data, error } = await client
           .from('profiles')
-          .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, created_at, updated_at')
+          .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, cancel_at_period_end, created_at, updated_at')
           .eq('id', session.user.id)
           .single();
         return { data: data, error: error };
@@ -618,15 +618,21 @@
 
   // Read back the plan change history for the current user, newest first.
   // Limit 10 by default — matches the Profile tab "View plan history" UX.
+  // Returns { pending, history, error }:
+  //   pending = rows where effective_at is in the future AND cancelled_at
+  //             is null (scheduled-but-not-yet-effective).
+  //   history = everything else (past changes, signups, cancelled-pending).
+  // Split is performed in JS rather than two queries because the limit
+  // bounds the size and a single network round-trip is preferable.
   async function getPlanHistory(limit) {
     const { session } = await getSession();
     if (!session || !session.user) {
-      return { data: [], error: { message: 'Not signed in' } };
+      return { pending: [], history: [], error: { message: 'Not signed in' } };
     }
     const result = await window.iboostRetry.withRetry(async function () {
       const { data, error } = await client
         .from('plan_changes')
-        .select('id, from_plan, to_plan, changed_at, source')
+        .select('id, from_plan, to_plan, changed_at, source, effective_at, cancelled_at')
         .eq('user_id', session.user.id)
         .order('changed_at', { ascending: false })
         .limit(limit || 10);
@@ -634,9 +640,26 @@
     });
     if (result.error) {
       console.error('[iboost-auth] getPlanHistory error:', result.error);
-      return { data: [], error: result.error };
+      return { pending: [], history: [], error: result.error };
     }
-    return { data: result.data || [], error: null };
+    const all = result.data || [];
+    const nowIso = new Date().toISOString();
+    const pending = [];
+    const history = [];
+    all.forEach(function (row) {
+      if (row.effective_at && row.effective_at > nowIso && !row.cancelled_at) {
+        pending.push(row);
+      } else {
+        history.push(row);
+      }
+    });
+    // Pending sorted ASC (soonest first).
+    pending.sort(function (a, b) {
+      if (a.effective_at < b.effective_at) return -1;
+      if (a.effective_at > b.effective_at) return 1;
+      return 0;
+    });
+    return { pending: pending, history: history, error: null };
   }
 
   window.iboostAuth = {

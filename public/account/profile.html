@@ -249,6 +249,15 @@
           </div>
           <div class="dash-plan-badge" id="profile-plan-badge">Active</div>
         </div>
+        <!-- Pending-cancel banner: populated + un-hidden by profile.js
+             when the profile has cancel_at_period_end=true. Tells the
+             user clearly that their subscription is ending and when. -->
+        <div class="dash-plan-cancel-banner" id="profile-plan-cancel-banner" hidden>
+          <div class="dash-plan-cancel-banner-text">
+            <strong id="profile-plan-cancel-banner-title">Subscription ending soon</strong>
+            <span id="profile-plan-cancel-banner-sub"></span>
+          </div>
+        </div>
         <ul class="dash-plan-perks" id="profile-plan-perks">
           <!-- Populated by account.js based on plan kind -->
         </ul>

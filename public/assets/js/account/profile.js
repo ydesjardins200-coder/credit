@@ -508,6 +508,29 @@
       }
     }
 
+    // Pending-cancel banner: shown only when the user has a scheduled
+    // cancellation on their subscription. The user has a right to see
+    // this — it's their account, their billing.
+    var cancelBanner = document.getElementById('profile-plan-cancel-banner');
+    var cancelBannerSub = document.getElementById('profile-plan-cancel-banner-sub');
+    var cancelBannerTitle = document.getElementById('profile-plan-cancel-banner-title');
+    if (cancelBanner && profile && profile.cancel_at_period_end) {
+      var endDate = profile.next_billing_date
+        ? formatLongDate(profile.next_billing_date)
+        : null;
+      if (cancelBannerTitle) {
+        cancelBannerTitle.textContent = endDate
+          ? 'Your subscription ends ' + endDate
+          : 'Your subscription is scheduled to end';
+      }
+      if (cancelBannerSub) {
+        cancelBannerSub.textContent =
+          'You\u2019ll keep access until then. To continue with iBoost, ' +
+          'contact support before this date.';
+      }
+      cancelBanner.hidden = false;
+    }
+
     // View plan history — lazy-load on first click, toggle after that.
     var historyLoaded = false;
     if (historyBtn && historyEl) {
@@ -524,7 +547,7 @@
           try {
             var res = await window.iboostAuth.getPlanHistory(20);
             if (res.error) throw new Error(res.error.message);
-            renderPlanHistory(historyList, res.data);
+            renderPlanHistory(historyList, res.pending || [], res.history || []);
           } catch (err) {
             historyList.innerHTML =
               '<li class="dash-plan-history-empty">Could not load history.</li>';
@@ -534,8 +557,11 @@
     }
   }
 
-  async function renderPlanHistory(listEl, rows) {
-    if (!rows || !rows.length) {
+  async function renderPlanHistory(listEl, pending, history) {
+    pending = pending || [];
+    history = history || [];
+
+    if (pending.length === 0 && history.length === 0) {
       listEl.innerHTML =
         '<li class="dash-plan-history-empty">No plan changes yet.</li>';
       return;
@@ -556,25 +582,61 @@
       return (planMap[key] && planMap[key].name) || key;
     }
 
-    listEl.innerHTML = rows.map(function (r) {
+    function renderRow(r, isPending) {
       var fromLabel = labelFor(r.from_plan);
       var toLabel = labelFor(r.to_plan);
-      var when = formatLongDate(r.changed_at) || '';
-      var sourceHint = r.source === 'signup' ? ' · initial signup' : '';
+      var isRescinded = !!r.cancelled_at;
+
+      var whenStr, sourceHint;
+      if (isPending && r.effective_at) {
+        whenStr = formatLongDate(r.effective_at) || '';
+        sourceHint = ' \u00b7 scheduled';
+      } else {
+        whenStr = formatLongDate(r.changed_at) || '';
+        sourceHint = (
+          r.source === 'signup'         ? ' \u00b7 initial signup' :
+          r.source === 'admin_cancel'   ? ' \u00b7 canceled' :
+          r.source === 'admin_resume'   ? ' \u00b7 resumed' :
+          r.source === 'stripe_webhook' ? ' \u00b7 via Stripe' :
+          ''
+        );
+      }
+
+      var changeLine;
+      if (r.source === 'admin_resume') {
+        changeLine = 'Subscription resumed';
+      } else if (r.from_plan) {
+        changeLine = escapeHtml(fromLabel) + ' \u2192 ' + escapeHtml(toLabel);
+      } else {
+        changeLine = 'Signed up on ' + escapeHtml(toLabel);
+      }
+
+      var itemClasses = 'dash-plan-history-item';
+      if (isPending) itemClasses += ' dash-plan-history-item-pending';
+      if (isRescinded) itemClasses += ' dash-plan-history-item-rescinded';
 
       return (
-        '<li class="dash-plan-history-item">' +
-          '<span class="dash-plan-history-item-change">' +
-            (r.from_plan
-              ? escapeHtml(fromLabel) + ' → ' + escapeHtml(toLabel)
-              : 'Signed up on ' + escapeHtml(toLabel)) +
-          '</span>' +
+        '<li class="' + itemClasses + '">' +
+          '<span class="dash-plan-history-item-change">' + changeLine + '</span>' +
           '<span class="dash-plan-history-item-when">' +
-            escapeHtml(when) + escapeHtml(sourceHint) +
+            escapeHtml(whenStr) + escapeHtml(sourceHint) +
           '</span>' +
         '</li>'
       );
-    }).join('');
+    }
+
+    var html = '';
+    if (pending.length > 0) {
+      html += '<li class="dash-plan-history-section">Pending</li>';
+      html += pending.map(function (r) { return renderRow(r, true); }).join('');
+    }
+    if (history.length > 0) {
+      if (pending.length > 0) {
+        html += '<li class="dash-plan-history-section">History</li>';
+      }
+      html += history.map(function (r) { return renderRow(r, false); }).join('');
+    }
+    listEl.innerHTML = html;
   }
 
   // ===================================================================
