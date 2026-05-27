@@ -10,6 +10,7 @@ const morgan = require('morgan');
 const healthRouter = require('./routes/health');
 const checkoutRouter = require('./routes/checkout');
 const stripeWebhookRouter = require('./routes/stripe-webhook');
+const integrationsRouter = require('./routes/integrations');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use(
 // --- Routes ---
 app.use('/api/health', healthRouter);
 app.use('/api/checkout', checkoutRouter);
+app.use('/api/integrations', integrationsRouter);
 
 app.get('/', (req, res) => {
   res.json({ service: 'iboost-api', status: 'ok' });
