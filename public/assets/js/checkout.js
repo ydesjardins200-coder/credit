@@ -74,10 +74,11 @@
 
   var state = {
     planKey: 'complete',
-    // null until availability resolves; true/false after. We treat
-    // null as "still checking" — paid plans render normally but the
-    // submit handler will re-check before letting payment proceed.
-    paidAvailable: null,
+    // Active payment processor: 'stripe' (real billing), 'manual' (dev
+    // mode — writes profile directly, no Stripe), or null while
+    // resolving / on unknown providers. The submit handler still works
+    // for stripe AND manual; only unknown values disable paid checkout.
+    paymentProvider: null,
   };
 
   function $(sel) { return document.querySelector(sel); }
@@ -114,38 +115,67 @@
     }
   }
 
-  // Apply the paidAvailable state to the UI: when paid checkout is
-  // disabled (admin flipped payment_processor away from 'stripe'),
-  // grey the paid plan rows, force-select the free plan, and surface
-  // an inline notice. Free plan remains fully functional.
-  function applyPaidAvailability() {
-    if (state.paidAvailable !== false) return; // null or true → no change
+  // Apply the current paymentProvider state to the UI:
+  //   - 'stripe': normal behavior, no notice.
+  //   - 'manual': paid plans selectable, dev-mode notice shown.
+  //   - anything else: paid plans disabled, "unavailable" notice shown,
+  //     selection forced to free.
+  function applyPaymentProvider() {
+    var noticeId = 'payment-provider-notice';
+    var existing = document.getElementById(noticeId);
+    if (existing) existing.remove();
+
+    var paidUnavailable =
+      state.paymentProvider !== null &&
+      state.paymentProvider !== 'stripe' &&
+      state.paymentProvider !== 'manual';
+
+    // Reset paid row state — every render starts from "selectable" and
+    // only disables when paidUnavailable is true. This lets a flip
+    // back to stripe re-enable rows without a page reload.
     $$('.plan-row[data-plan]').forEach(function (row) {
       var key = row.getAttribute('data-plan');
-      if (key === 'essential' || key === 'complete') {
+      if (key !== 'essential' && key !== 'complete') return;
+      var radio = row.querySelector('.plan-picker-radio');
+      if (paidUnavailable) {
         row.classList.add('is-unavailable');
         row.setAttribute('aria-disabled', 'true');
-        var radio = row.querySelector('.plan-picker-radio');
         if (radio) radio.disabled = true;
+      } else {
+        row.classList.remove('is-unavailable');
+        row.removeAttribute('aria-disabled');
+        if (radio) radio.disabled = false;
       }
     });
 
-    // If a paid plan is currently selected, switch to free.
-    if (state.planKey === 'essential' || state.planKey === 'complete') {
-      selectPlan('free');
+    if (paidUnavailable) {
+      if (state.planKey === 'essential' || state.planKey === 'complete') {
+        selectPlan('free');
+      }
     }
 
-    // Add a one-time notice above the plan list (idempotent).
-    if (!document.getElementById('paid-unavailable-notice')) {
+    // Notice text per state. Manual notice is dev-only signage so you
+    // don't forget the switch is flipped when testing.
+    var noticeText = null;
+    var noticeClass = 'alert alert-info';
+    if (state.paymentProvider === 'manual') {
+      noticeText =
+        'Dev mode: paid plans are activated instantly without payment. ' +
+        'Switch payment_processor to "stripe" in admin to enable real billing.';
+    } else if (paidUnavailable) {
+      noticeText =
+        'Paid subscriptions are temporarily unavailable. ' +
+        'You can still activate a Free plan and upgrade later.';
+    }
+
+    if (noticeText) {
       var heading = document.querySelector('.checkout-plans-heading');
       if (heading && heading.parentNode) {
         var note = document.createElement('div');
-        note.id = 'paid-unavailable-notice';
-        note.className = 'alert alert-info';
+        note.id = noticeId;
+        note.className = noticeClass;
         note.style.marginBottom = '12px';
-        note.textContent =
-          'Paid subscriptions are temporarily unavailable. ' +
-          'You can still activate a Free plan and upgrade later.';
+        note.textContent = noticeText;
         heading.parentNode.insertBefore(note, heading.nextSibling);
       }
     }
@@ -336,8 +366,8 @@
           // message AND apply the unavailable UI so the page reflects
           // the new reality.
           if (resp.status === 503 && data && data.reason === 'provider_not_active') {
-            state.paidAvailable = false;
-            applyPaidAvailability();
+            state.paymentProvider = (data && data.current_provider) || 'unknown';
+            applyPaymentProvider();
             throw new Error(
               'Paid subscriptions are temporarily unavailable. ' +
               'You can activate a Free plan and upgrade later.'
@@ -404,16 +434,18 @@
       planMap[row.plan_key] = adaptPlan(row);
     });
 
-    // Resolve paid availability. If we can't read it, leave as null
-    // (paid plans render normally; backend is the real gatekeeper).
+    // Resolve active payment provider from the availability response.
+    // If we couldn't read it, leave as null (paid plans render normally;
+    // backend is the real gatekeeper and will return an error on submit
+    // if something's truly off).
     if (availabilityResp && availabilityResp.providers) {
-      state.paidAvailable =
-        availabilityResp.providers.payment_processor === 'stripe';
+      state.paymentProvider =
+        availabilityResp.providers.payment_processor || null;
     }
 
     syncPlanRowPrices();
     selectPlan(state.planKey);
-    applyPaidAvailability();
+    applyPaymentProvider();
   }
 
   if (document.readyState === 'loading') {
