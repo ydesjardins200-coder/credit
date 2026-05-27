@@ -121,7 +121,11 @@ async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSu
 
 // express.raw() is applied to this route in index.js, so req.body is a
 // Buffer here.
-router.post('/webhook', async function (req, res) {
+//
+// NOTE: this router is mounted at '/api/stripe/webhook' in index.js, so
+// the handler path is '/' (not '/webhook') — otherwise the live path
+// would double to '/api/stripe/webhook/webhook'.
+router.post('/', async function (req, res) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
