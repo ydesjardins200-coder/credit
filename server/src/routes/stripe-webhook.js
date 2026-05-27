@@ -46,7 +46,7 @@ function planKeyFromPriceId(priceId) {
 // Idempotent: re-running with the same data is a harmless no-op-ish
 // upsert (plan ends up the same; a duplicate history row is possible on
 // retry but acceptable — history is append-only and a dupe is benign).
-async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSubscriptionId, currentPeriodEnd }) {
+async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSubscriptionId, currentPeriodEnd, cardLast4, cardBrand }) {
   if (!userId || !planKey) {
     throw new Error(
       'grantPlan called without userId or planKey (metadata missing?)'
@@ -85,6 +85,17 @@ async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSu
     next_billing_date: nextBillingDate,
     updated_at: new Date().toISOString(),
   };
+
+  // Only set card fields when we actually have them — avoids overwriting
+  // previously-stored card details with null on a retry where the payment
+  // method didn't expand. card_last_four has a CHECK (^[0-9]{4}$), so we
+  // only write it if it matches that shape.
+  if (cardLast4 && /^[0-9]{4}$/.test(cardLast4)) {
+    update.card_last_four = cardLast4;
+  }
+  if (cardBrand) {
+    update.card_brand = cardBrand;
+  }
 
   const { error: updErr } = await supabaseAdmin
     .from('profiles')
@@ -161,21 +172,42 @@ router.post('/', async function (req, res) {
         const stripeCustomerId = session.customer || null;
         const stripeSubscriptionId = session.subscription || null;
 
-        // Pull the subscription to get the period end (for next_billing_date)
-        // and to confirm the plan from the price if metadata is missing.
+        // Pull the subscription to get the period end (for next_billing_date),
+        // the card details (last4/brand), and to confirm the plan from the
+        // price if metadata is missing. We expand default_payment_method so
+        // the card object comes back inline.
         let currentPeriodEnd = null;
+        let cardLast4 = null;
+        let cardBrand = null;
         if (stripeSubscriptionId) {
           try {
-            const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
-            currentPeriodEnd = sub.current_period_end || null;
+            const sub = await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+              expand: ['default_payment_method'],
+            });
+
+            // current_period_end moved OFF the Subscription object onto the
+            // subscription ITEM as of Stripe's Basil API (2025-03-31). Our
+            // pinned version (2026-04-22.dahlia) is well past that, so read
+            // it from items.data[0]. Fall back to the (legacy) top-level
+            // field just in case.
+            const firstItem =
+              sub.items && sub.items.data && sub.items.data[0];
+            currentPeriodEnd =
+              (firstItem && firstItem.current_period_end) ||
+              sub.current_period_end ||
+              null;
+
             if (!planKey) {
               const priceId =
-                sub.items &&
-                sub.items.data &&
-                sub.items.data[0] &&
-                sub.items.data[0].price &&
-                sub.items.data[0].price.id;
+                firstItem && firstItem.price && firstItem.price.id;
               planKey = planKeyFromPriceId(priceId);
+            }
+
+            // Card details from the default payment method (expanded above).
+            const pm = sub.default_payment_method;
+            if (pm && typeof pm === 'object' && pm.card) {
+              cardLast4 = pm.card.last4 || null;
+              cardBrand = pm.card.brand || null;
             }
           } catch (e) {
             // eslint-disable-next-line no-console
@@ -190,6 +222,8 @@ router.post('/', async function (req, res) {
           stripeCustomerId,
           stripeSubscriptionId,
           currentPeriodEnd,
+          cardLast4,
+          cardBrand,
         });
         break;
       }
