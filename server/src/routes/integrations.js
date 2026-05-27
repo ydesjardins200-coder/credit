@@ -23,44 +23,10 @@
 'use strict';
 
 const express = require('express');
-const crypto = require('crypto');
 const router = express.Router();
 
+const requireAdminSharedSecret = require('../middleware/requireAdminSharedSecret');
 const { getActiveMap } = require('../lib/integrations-read');
-
-// Constant-time string compare. Returns false for length mismatch
-// without leaking the length difference via early-exit timing.
-function safeEqual(a, b) {
-  const aBuf = Buffer.from(String(a || ''), 'utf8');
-  const bBuf = Buffer.from(String(b || ''), 'utf8');
-  if (aBuf.length !== bBuf.length) {
-    // Still do a compare against self to keep timing flat-ish.
-    crypto.timingSafeEqual(aBuf, aBuf);
-    return false;
-  }
-  return crypto.timingSafeEqual(aBuf, bBuf);
-}
-
-function requireSharedSecret(req, res, next) {
-  const expected = process.env.ADMIN_INTEGRATIONS_SECRET;
-  if (!expected) {
-    // Fail closed: if WE are misconfigured, do not pretend the request
-    // was unauthorized — surface a 500 so the admin can show "unknown"
-    // and an operator can fix it.
-    // eslint-disable-next-line no-console
-    console.error(
-      '[integrations] ADMIN_INTEGRATIONS_SECRET not set — endpoint disabled'
-    );
-    return res
-      .status(500)
-      .json({ error: 'Server misconfigured: shared secret not set' });
-  }
-  const provided = req.headers['x-admin-shared-secret'] || '';
-  if (!safeEqual(provided, expected)) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  return next();
-}
 
 // Inspect the Stripe key WITHOUT returning the secret itself. Returns a
 // summary the admin can render: configured y/n, mode (test/live/unknown),
@@ -82,7 +48,7 @@ function inspectStripeKey() {
   };
 }
 
-router.get('/status', requireSharedSecret, function (req, res) {
+router.get('/status', requireAdminSharedSecret, function (req, res) {
   const stripeKey = inspectStripeKey();
   const webhookSecretSet = !!process.env.STRIPE_WEBHOOK_SECRET;
   const essentialPriceSet = !!process.env.STRIPE_PRICE_ESSENTIAL_CAD;
