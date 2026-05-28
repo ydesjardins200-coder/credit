@@ -83,6 +83,10 @@ async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSu
     stripe_customer_id: stripeCustomerId || null,
     stripe_subscription_id: stripeSubscriptionId || null,
     next_billing_date: nextBillingDate,
+    // A completed checkout means an active subscription. Clear any stale
+    // past-due flag (e.g. a user who lapsed then re-subscribed).
+    subscription_status: 'active',
+    payment_failed_at: null,
     updated_at: new Date().toISOString(),
   };
 
@@ -138,7 +142,7 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
   if (!stripeCustomerId) return null;
   const { data, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date')
+    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at')
     .eq('stripe_customer_id', stripeCustomerId)
     .single();
   if (error) {
@@ -196,6 +200,24 @@ async function syncSubscriptionState(sub) {
     update.next_billing_date = nextBillingDate;
   }
 
+  // Sync subscription_status straight from Stripe's own field. Stripe
+  // is authoritative — it sends 'active' | 'past_due' | 'canceled' |
+  // 'incomplete' | 'trialing' | etc. We store whatever it says (no
+  // CHECK constraint), and the UI treats anything != 'past_due' as
+  // "no banner", so an unexpected value fails safe.
+  const desiredStatus = sub.status || null;
+  if (desiredStatus && profile.subscription_status !== desiredStatus) {
+    update.subscription_status = desiredStatus;
+  }
+
+  // If Stripe reports the sub is healthy again ('active'), clear any
+  // stale payment_failed_at. The dedicated invoice.payment_succeeded
+  // handler also does this, but catching it here too means a recovery
+  // that arrives only as a status flip still clears the flag.
+  if (desiredStatus === 'active' && profile.payment_failed_at) {
+    update.payment_failed_at = null;
+  }
+
   if (Object.keys(update).length === 0) {
     return; // already in sync, nothing to do
   }
@@ -214,6 +236,7 @@ async function syncSubscriptionState(sub) {
   console.log(
     '[webhook] synced subscription state for user=' + profile.id +
     ' cancel_at_period_end=' + desiredCancel +
+    ' status=' + (desiredStatus || 'n/a') +
     (nextBillingDate ? ' next=' + nextBillingDate : '')
   );
 }
@@ -272,6 +295,9 @@ async function handleSubscriptionEnded(sub) {
     stripe_subscription_id: null,
     card_brand: null,
     card_last_four: null,
+    // Subscription is gone — status + payment-failure tracking are moot.
+    subscription_status: 'canceled',
+    payment_failed_at: null,
     updated_at: new Date().toISOString(),
   };
 
@@ -339,6 +365,89 @@ async function handleSubscriptionEnded(sub) {
     '[webhook] subscription ended: user=' + profile.id +
     ' was=' + profile.plan + ' now=free'
   );
+}
+
+// invoice.payment_failed fires when a renewal charge fails. Stripe then
+// enters dunning and retries — so this event can fire MULTIPLE times for
+// one genuinely-failing card. We record only the FIRST failure timestamp
+// (so the admin sees "declining since May 20", not "since the last
+// retry 2 hours ago"). subscription_status flips to past_due via the
+// companion subscription.updated event Stripe sends alongside.
+//
+// Idempotency: guarded by "only set payment_failed_at if currently null".
+async function handlePaymentFailed(invoice) {
+  const stripeCustomerId = invoice.customer;
+  if (!stripeCustomerId) return;
+
+  const profile = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!profile) {
+    // eslint-disable-next-line no-console
+    console.log(
+      '[webhook] payment_failed for unknown customer ' +
+      stripeCustomerId + ' — ignoring'
+    );
+    return;
+  }
+
+  // Already recorded a failure — don't overwrite the first-failure time
+  // on subsequent dunning retries. This is the idempotency guard.
+  if (profile.payment_failed_at) {
+    return;
+  }
+
+  const { error: updErr } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      payment_failed_at: new Date().toISOString(),
+      // status is also synced via subscription.updated, but set it here
+      // too in case the events arrive out of order — fail safe toward
+      // showing the past_due banner sooner rather than later.
+      subscription_status: 'past_due',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id);
+  if (updErr) {
+    throw new Error(
+      'payment_failed update failed for ' + profile.id + ': ' + updErr.message
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log('[webhook] payment failed: user=' + profile.id + ' marked past_due');
+}
+
+// invoice.payment_succeeded fires on every successful charge — initial
+// AND renewals. We use it to CLEAR a past-due flag once the customer's
+// card recovers (they updated it, or a retry finally went through).
+//
+// Idempotency: only writes when there's actually a flag to clear.
+async function handlePaymentSucceeded(invoice) {
+  const stripeCustomerId = invoice.customer;
+  if (!stripeCustomerId) return;
+
+  const profile = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!profile) return; // unknown customer — nothing to clear
+
+  // Nothing to clear if not currently flagged. Avoids a needless write
+  // on every routine successful renewal.
+  if (!profile.payment_failed_at && profile.subscription_status !== 'past_due') {
+    return;
+  }
+
+  const { error: updErr } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      payment_failed_at: null,
+      subscription_status: 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profile.id);
+  if (updErr) {
+    throw new Error(
+      'payment_succeeded update failed for ' + profile.id + ': ' + updErr.message
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log('[webhook] payment recovered: user=' + profile.id + ' back to active');
 }
 
 // express.raw() is applied to this route in index.js, so req.body is a
@@ -459,13 +568,23 @@ router.post('/', async function (req, res) {
         break;
       }
 
-      // Future-proofing: failed payment dunning. We'll act on this when
-      // we build the lifecycle UI ("your card was declined, update it").
-      // Logged for now.
-      case 'invoice.payment_failed':
-        // eslint-disable-next-line no-console
-        console.log('[webhook] received (not yet handled):', event.type);
+      // invoice.payment_failed fires when a renewal charge bounces.
+      // Records the first-failure time + flips status to past_due.
+      // Fires repeatedly during dunning — handler is idempotent.
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        await handlePaymentFailed(invoice);
         break;
+      }
+
+      // invoice.payment_succeeded fires on every successful charge.
+      // Used to clear a past-due flag when the card recovers. No-op
+      // when the user wasn't flagged.
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object;
+        await handlePaymentSucceeded(invoice);
+        break;
+      }
 
       default:
         // Unhandled event types are normal — Stripe sends many. Ack them.
