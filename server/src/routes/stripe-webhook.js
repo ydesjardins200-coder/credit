@@ -142,7 +142,7 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
   if (!stripeCustomerId) return null;
   const { data, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at')
+    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at, card_last_four, card_brand')
     .eq('stripe_customer_id', stripeCustomerId)
     .single();
   if (error) {
@@ -156,6 +156,67 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
   return data;
 }
 
+// Read the current card details (last4 + brand) for a customer. Used to
+// keep profile.card_last_four / card_brand in sync when a user changes
+// their card via the Customer Portal — those events don't carry the
+// card inline, so we resolve the customer's default payment method.
+//
+// Resolution order, matching how Stripe stores the "default" card:
+//   1) subscription.default_payment_method (sub-level override)
+//   2) customer.invoice_settings.default_payment_method (customer default)
+// Falls back to listing the customer's card payment methods if neither
+// default is set.
+//
+// Returns { cardLast4, cardBrand } — either may be null if unresolved.
+// Never throws; logs and returns nulls on Stripe errors so a card-read
+// failure doesn't break the rest of the sync.
+async function readCustomerCard(stripe, stripeCustomerId, subscription) {
+  try {
+    // 1) Subscription-level default payment method, if the sub specifies one.
+    let pmId =
+      subscription && subscription.default_payment_method
+        ? (typeof subscription.default_payment_method === 'string'
+            ? subscription.default_payment_method
+            : subscription.default_payment_method.id)
+        : null;
+
+    // 2) Customer-level default.
+    if (!pmId) {
+      const customer = await stripe.customers.retrieve(stripeCustomerId);
+      pmId =
+        customer &&
+        customer.invoice_settings &&
+        customer.invoice_settings.default_payment_method
+          ? customer.invoice_settings.default_payment_method
+          : null;
+    }
+
+    // 3) Resolve the payment method object to read card last4/brand.
+    if (pmId) {
+      const pm = await stripe.paymentMethods.retrieve(pmId);
+      if (pm && pm.card) {
+        return { cardLast4: pm.card.last4 || null, cardBrand: pm.card.brand || null };
+      }
+    }
+
+    // 4) Last resort: list the customer's card payment methods, take the
+    //    first. Covers customers with a card but no explicit default set.
+    const list = await stripe.paymentMethods.list({
+      customer: stripeCustomerId,
+      type: 'card',
+      limit: 1,
+    });
+    const first = list && list.data && list.data[0];
+    if (first && first.card) {
+      return { cardLast4: first.card.last4 || null, cardBrand: first.card.brand || null };
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[webhook] readCustomerCard failed for ' + stripeCustomerId + ': ' + err.message);
+  }
+  return { cardLast4: null, cardBrand: null };
+}
+
 // Sync our profile.cancel_at_period_end + next_billing_date with what
 // Stripe says about a subscription. Idempotent: safe to call any number
 // of times; only writes when state differs.
@@ -165,7 +226,7 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
 //   2) Operator un-cancelled directly in the Stripe dashboard.
 //   3) Renewal: Stripe updates current_period_end to the next cycle.
 //      Keeps profile.next_billing_date current.
-async function syncSubscriptionState(sub) {
+async function syncSubscriptionState(stripe, sub) {
   const stripeCustomerId = sub.customer;
   if (!stripeCustomerId) return;
 
@@ -218,6 +279,18 @@ async function syncSubscriptionState(sub) {
     update.payment_failed_at = null;
   }
 
+  // Sync card details. The webhook's sub object isn't expanded, so
+  // resolve the current default card via Stripe. Only write when it
+  // actually changed (avoids a needless write on every renewal event).
+  const card = await readCustomerCard(stripe, stripeCustomerId, sub);
+  if (card.cardLast4 && /^[0-9]{4}$/.test(card.cardLast4) &&
+      card.cardLast4 !== profile.card_last_four) {
+    update.card_last_four = card.cardLast4;
+  }
+  if (card.cardBrand && card.cardBrand !== profile.card_brand) {
+    update.card_brand = card.cardBrand;
+  }
+
   if (Object.keys(update).length === 0) {
     return; // already in sync, nothing to do
   }
@@ -238,6 +311,53 @@ async function syncSubscriptionState(sub) {
     ' cancel_at_period_end=' + desiredCancel +
     ' status=' + (desiredStatus || 'n/a') +
     (nextBillingDate ? ' next=' + nextBillingDate : '')
+  );
+}
+
+// customer.updated fires when a customer's details change — including
+// when their default payment method changes (which is what a card
+// update via the Customer Portal does, if it doesn't also touch the
+// subscription). We sync only the card fields here; subscription state
+// is handled by the subscription.updated path. Idempotent: writes only
+// when the card actually differs from what we have stored.
+async function handleCustomerUpdated(stripe, customer) {
+  const stripeCustomerId = customer && customer.id;
+  if (!stripeCustomerId) return;
+
+  const profile = await findUserByStripeCustomerId(stripeCustomerId);
+  if (!profile) return; // unknown customer — nothing to sync
+
+  // Pass no subscription — readCustomerCard will fall back to the
+  // customer's default payment method (which is exactly what changed).
+  const card = await readCustomerCard(stripe, stripeCustomerId, null);
+
+  const update = {};
+  if (card.cardLast4 && /^[0-9]{4}$/.test(card.cardLast4) &&
+      card.cardLast4 !== profile.card_last_four) {
+    update.card_last_four = card.cardLast4;
+  }
+  if (card.cardBrand && card.cardBrand !== profile.card_brand) {
+    update.card_brand = card.cardBrand;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return; // card unchanged — nothing to do
+  }
+
+  update.updated_at = new Date().toISOString();
+  const { error: updErr } = await supabaseAdmin
+    .from('profiles')
+    .update(update)
+    .eq('id', profile.id);
+  if (updErr) {
+    throw new Error(
+      'customer.updated card sync failed for ' + profile.id + ': ' + updErr.message
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log(
+    '[webhook] synced card for user=' + profile.id +
+    ' last4=' + (update.card_last_four || profile.card_last_four)
   );
 }
 
@@ -554,7 +674,16 @@ router.post('/', async function (req, res) {
       // updates, etc. Sync our profile to match Stripe's truth.
       case 'customer.subscription.updated': {
         const sub = event.data.object;
-        await syncSubscriptionState(sub);
+        await syncSubscriptionState(stripe, sub);
+        break;
+      }
+
+      // customer.updated fires when customer details change, including a
+      // default-payment-method swap from the Customer Portal that doesn't
+      // also touch the subscription. Sync card fields.
+      case 'customer.updated': {
+        const customer = event.data.object;
+        await handleCustomerUpdated(stripe, customer);
         break;
       }
 
