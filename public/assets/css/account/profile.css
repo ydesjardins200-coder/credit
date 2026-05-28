@@ -956,3 +956,23 @@ a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
   background: #f1f5f9;
   color: #64748b;
 }
+
+/* ---------- Past-due banner on the Plan card (user-facing) ---------- */
+/* Red-toned, more urgent than the amber cancel banner. Reuses
+   .dash-plan-cancel-banner-text inner layout. */
+.dash-plan-pastdue-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+.dash-plan-pastdue-banner .dash-plan-cancel-banner-text { color: #991b1b; }
+.dash-plan-pastdue-banner .dash-plan-cancel-banner-text strong { font-size: 0.94rem; color: #991b1b; }
+.dash-plan-pastdue-banner .dash-plan-cancel-banner-text span {
+  color: #b91c1c;
+  font-size: 0.82rem;
+}

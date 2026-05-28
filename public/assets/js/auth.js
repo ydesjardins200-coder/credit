@@ -317,7 +317,7 @@
       const result = await window.iboostRetry.withRetry(async function () {
         const { data, error } = await client
           .from('profiles')
-          .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, cancel_at_period_end, created_at, updated_at')
+          .select('id, email, full_name, phone, country, date_of_birth, address_line1, address_line2, address_city, address_region, address_postal, credit_goal_kind, credit_goal_detail, plan, plan_activated_at, plan_currency, stripe_customer_id, stripe_subscription_id, card_last_four, card_brand, next_billing_date, cancel_at_period_end, subscription_status, payment_failed_at, created_at, updated_at')
           .eq('id', session.user.id)
           .single();
         return { data: data, error: error };

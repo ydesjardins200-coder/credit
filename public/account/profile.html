@@ -249,6 +249,15 @@
           </div>
           <div class="dash-plan-badge" id="profile-plan-badge">Active</div>
         </div>
+        <!-- Past-due banner: shown when subscription_status is past_due.
+             Higher urgency than the cancel banner (active billing
+             problem), so it renders above it. -->
+        <div class="dash-plan-pastdue-banner" id="profile-plan-pastdue-banner" hidden>
+          <div class="dash-plan-cancel-banner-text">
+            <strong>Your last payment didn't go through</strong>
+            <span id="profile-plan-pastdue-banner-sub"></span>
+          </div>
+        </div>
         <!-- Pending-cancel banner: populated + un-hidden by profile.js
              when the profile has cancel_at_period_end=true. Tells the
              user clearly that their subscription is ending and when. -->

@@ -508,6 +508,21 @@
       }
     }
 
+    // Past-due banner: card failing renewal. Higher urgency than the
+    // cancel banner. The fix is the user updating their card — for now
+    // we direct them to support (Customer Portal link can replace this
+    // copy later without other changes).
+    var pastDueBanner = document.getElementById('profile-plan-pastdue-banner');
+    var pastDueSub = document.getElementById('profile-plan-pastdue-banner-sub');
+    if (pastDueBanner && profile && profile.subscription_status === 'past_due') {
+      if (pastDueSub) {
+        pastDueSub.textContent =
+          'We couldn\u2019t process your latest payment. Please contact ' +
+          'support to update your payment method and keep your subscription active.';
+      }
+      pastDueBanner.hidden = false;
+    }
+
     // Pending-cancel banner: shown only when the user has a scheduled
     // cancellation on their subscription. The user has a right to see
     // this — it's their account, their billing.
