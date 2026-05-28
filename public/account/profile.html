@@ -273,6 +273,10 @@
         <div class="dash-plan-cta-row">
           <button type="button" class="dash-plan-cta dash-plan-cta-primary" id="profile-plan-change-btn">Change plan</button>
           <button type="button" class="dash-plan-cta" id="profile-plan-history-btn" aria-expanded="false">View plan history</button>
+          <!-- Shown by profile.js only when the user has a Stripe customer
+               (paid via Stripe). Opens the Stripe Customer Portal to update
+               their card. Hidden for Free / manual-grant users. -->
+          <button type="button" class="dash-plan-cta" id="profile-plan-billing-btn" hidden>Update payment method</button>
         </div>
         <div class="dash-plan-history" id="profile-plan-history" hidden>
           <ul class="dash-plan-history-list" id="profile-plan-history-list">

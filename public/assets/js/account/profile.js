@@ -517,8 +517,9 @@
     if (pastDueBanner && profile && profile.subscription_status === 'past_due') {
       if (pastDueSub) {
         pastDueSub.textContent =
-          'We couldn\u2019t process your latest payment. Please contact ' +
-          'support to update your payment method and keep your subscription active.';
+          'We couldn\u2019t process your latest payment. Use the ' +
+          '\u201cUpdate payment method\u201d button below to fix it and ' +
+          'keep your subscription active.';
       }
       pastDueBanner.hidden = false;
     }
@@ -544,6 +545,52 @@
           'contact support before this date.';
       }
       cancelBanner.hidden = false;
+    }
+
+    // Update payment method — opens the Stripe Customer Portal. Shown
+    // only when the user has a Stripe customer (paid via Stripe). Free
+    // and manual-grant users have no card to update, so it stays hidden.
+    var billingBtn = document.getElementById('profile-plan-billing-btn');
+    if (billingBtn && profile && profile.stripe_customer_id) {
+      billingBtn.hidden = false;
+      // Give past-due users a stronger nudge — relabel + emphasize.
+      if (profile.subscription_status === 'past_due') {
+        billingBtn.textContent = 'Update payment method';
+        billingBtn.classList.add('dash-plan-cta-primary');
+      }
+      billingBtn.addEventListener('click', async function () {
+        var base = getApiBase();
+        if (!base) return;
+        var settled = await window.iboostAuth.getSessionSettled();
+        var session = settled && settled.session;
+        if (!session || !session.access_token) {
+          window.location.href = '/login.html';
+          return;
+        }
+        var original = billingBtn.textContent;
+        billingBtn.disabled = true;
+        billingBtn.textContent = 'Opening…';
+        try {
+          var resp = await fetch(base + '/api/billing/portal-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + session.access_token,
+            },
+          });
+          var data = await resp.json();
+          if (!resp.ok || !data.url) {
+            throw new Error((data && data.error) || 'Could not open billing portal.');
+          }
+          // Redirect to the Stripe-hosted portal. Returns to
+          // /account/profile via the return_url set server-side.
+          window.location.href = data.url;
+        } catch (err) {
+          billingBtn.disabled = false;
+          billingBtn.textContent = original;
+          alert(err.message || 'Could not open the billing portal. Please try again.');
+        }
+      });
     }
 
     // View plan history — lazy-load on first click, toggle after that.
