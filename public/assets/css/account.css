@@ -1341,3 +1341,48 @@
   /* On narrow screens keep them in a row but allow tighter gap. */
   .profile-dob-row { gap: 8px; }
 }
+
+/* ===== Welcome KYC — inline field validation (green check / red border) ===== */
+/* Wrapper goes relative so we can pin a checkmark inside the field. */
+.profile-form-field.is-valid,
+.profile-form-field.is-invalid { position: relative; }
+
+/* Valid: green border + checkmark on text/select inputs. */
+.profile-form-field.is-valid input,
+.profile-form-field.is-valid select,
+.profile-form-field.is-valid textarea {
+  border-color: var(--color-accent);
+  padding-right: 38px; /* room for the check */
+}
+.profile-form-field.is-valid::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  /* Anchor from the TOP: label(~18px) + gap(6px) centers the 16px check
+     on the ~39px input below it. Robust regardless of any hint that
+     follows the input (bottom-anchoring would drift when a hint exists). */
+  top: 35px;
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232ECC71' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+/* Invalid: red border. */
+.profile-form-field.is-invalid input,
+.profile-form-field.is-invalid select,
+.profile-form-field.is-invalid textarea {
+  border-color: #ef4444;
+}
+
+/* DOB group: the wrapper holds the 3-select row + a hint, so a single
+   ::after check would mis-position. Show the check on the row instead. */
+.profile-form-field.is-valid .profile-dob-row select { border-color: var(--color-accent); }
+.profile-form-field.is-invalid .profile-dob-row select { border-color: #ef4444; }
+.profile-form-field.is-valid:has(.profile-dob-row)::after { display: none; }
+
+/* Goal grid valid/invalid: subtle accent on the grid container. */
+.profile-goal-grid.is-valid { /* selected option already shows accent; keep calm */ }
+.profile-goal-grid.is-invalid { /* detail required but empty — handled by inline msg */ }

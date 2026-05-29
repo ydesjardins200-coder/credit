@@ -634,6 +634,126 @@
     // Start at step 0.
     showStep(0);
 
+    // ---- Inline per-field validation (green check / red border) -------
+    // On blur: mark a field valid (green border + checkmark) or invalid
+    // (red border). Rules mirror the step/submit validation. A field is
+    // only marked invalid once TOUCHED (blurred) — untouched empty
+    // fields stay neutral, so the form isn't a wall of red on load.
+    // Optional fields (address line 2) get no state. Toggles .is-valid /
+    // .is-invalid on the .profile-form-field wrapper; CSS does the rest.
+    function fieldWrap(el) {
+      return el ? el.closest('.profile-form-field') : null;
+    }
+    function setFieldState(wrap, state) {
+      if (!wrap) return;
+      wrap.classList.toggle('is-valid', state === 'valid');
+      wrap.classList.toggle('is-invalid', state === 'invalid');
+    }
+    // Validate a single text/textarea field by id against a test fn.
+    // emptyOk=true means empty is neutral (not invalid) even when touched.
+    function wireFieldValidation(id, isValid, emptyOk) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var wrap = fieldWrap(el);
+      function evaluate() {
+        var val = el.value.trim();
+        if (!val) {
+          setFieldState(wrap, emptyOk ? 'neutral' : 'invalid');
+          return;
+        }
+        setFieldState(wrap, isValid(val) ? 'valid' : 'invalid');
+      }
+      el.addEventListener('blur', evaluate);
+      // Once a field is valid, keep it updating live so a correction
+      // clears red immediately (only after it's been touched once).
+      el.addEventListener('input', function () {
+        if (wrap && (wrap.classList.contains('is-valid') || wrap.classList.contains('is-invalid'))) {
+          evaluate();
+        }
+      });
+    }
+
+    var nonEmpty = function (v) { return !!v; };
+    var twoLetter = function (v) { return /^[A-Za-z]{2}$/.test(v); };
+
+    wireFieldValidation('profile-form-address-line1', nonEmpty, false);
+    wireFieldValidation('profile-form-address-city', nonEmpty, false);
+    wireFieldValidation('profile-form-address-region', twoLetter, false);
+    wireFieldValidation('profile-form-address-postal', nonEmpty, false);
+    // Goal detail: only validated as required when kind='other'; handled
+    // in the goal-state evaluator below, not as a standalone field.
+
+    // DOB group: one combined state on the DOB row. Valid when all three
+    // selects are chosen AND the date is 18+. Evaluated on change (selects
+    // don't blur like inputs).
+    var dobWrap = dobDay ? dobDay.closest('.profile-form-field') : null;
+    function evaluateDob() {
+      if (!dobWrap) return;
+      var d = parseInt(dobDay && dobDay.value, 10) || 0;
+      var m = parseInt(dobMonth && dobMonth.value, 10) || 0;
+      var y = parseInt(dobYear && dobYear.value, 10) || 0;
+      if (!d || !m || !y) {
+        // Partial selection: neutral until all three chosen (don't scold
+        // mid-selection), unless they've completed then cleared one.
+        setFieldState(dobWrap, 'neutral');
+        return;
+      }
+      // 18+ check
+      var ok = true;
+      try {
+        var dob = new Date(y, m - 1, d);
+        var eighteen = new Date();
+        eighteen.setFullYear(eighteen.getFullYear() - 18);
+        ok = dob <= eighteen;
+      } catch (e) { ok = false; }
+      setFieldState(dobWrap, ok ? 'valid' : 'invalid');
+    }
+    [dobDay, dobMonth, dobYear].forEach(function (sel) {
+      if (sel) sel.addEventListener('change', evaluateDob);
+    });
+
+    // Goal group: green-check when a valid goal is chosen (and, for
+    // 'other', the detail is filled). Evaluated on radio change + detail
+    // input.
+    var goalWrap = null;
+    var firstGoalInput = formEl.querySelector('input[name="credit_goal_kind"]');
+    if (firstGoalInput) {
+      // The goal grid isn't a .profile-form-field; mark the grid itself.
+      goalWrap = formEl.querySelector('.profile-goal-grid');
+    }
+    function evaluateGoal() {
+      if (!goalWrap) return;
+      var checked = formEl.querySelector('input[name="credit_goal_kind"]:checked');
+      if (!checked) { goalWrap.classList.remove('is-valid', 'is-invalid'); return; }
+      var ok = true;
+      if (checked.value === 'other') {
+        var detail = document.getElementById('profile-form-goal-detail');
+        ok = !!(detail && detail.value.trim());
+      }
+      goalWrap.classList.toggle('is-valid', ok);
+      goalWrap.classList.toggle('is-invalid', !ok);
+    }
+    formEl.querySelectorAll('input[name="credit_goal_kind"]').forEach(function (r) {
+      r.addEventListener('change', evaluateGoal);
+    });
+    var goalDetailEl = document.getElementById('profile-form-goal-detail');
+    if (goalDetailEl) {
+      goalDetailEl.addEventListener('blur', evaluateGoal);
+      goalDetailEl.addEventListener('input', evaluateGoal);
+    }
+
+    // Pre-filled fields (returning user): evaluate once so already-valid
+    // values show green immediately.
+    if (profile) {
+      ['profile-form-address-line1', 'profile-form-address-city',
+       'profile-form-address-region', 'profile-form-address-postal'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && el.value.trim()) el.dispatchEvent(new Event('blur'));
+      });
+      evaluateDob();
+      evaluateGoal();
+    }
+
     // 7. Submit handler
     formEl.addEventListener('submit', async function (ev) {
       ev.preventDefault();
