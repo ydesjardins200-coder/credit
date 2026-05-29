@@ -135,6 +135,12 @@
     // 3. Wire up the credit-goal editor
     wireGoalEditor(profile);
 
+    // 3b. Wire up the phone + address inline editors. Both follow the
+    // goal-editor pattern (Edit -> form -> Save -> updateProfile ->
+    // refresh row). The @iboost.test clear-affordance lives inside them.
+    wirePhoneEditor(user, profile);
+    wireAddressEditor(user, profile);
+
     // 4. Plan card (migration 0009/0010 wired up at checkout). Populates
     // from profile.plan / plan_currency / plan_activated_at. If the user
     // somehow has no plan, we show a "No plan selected" state and CTA.
@@ -348,6 +354,221 @@
         saveBtn.disabled = false;
       }
     }
+  }
+
+  // Is this a dummy/test account? Test users (@iboost.test) are allowed
+  // to CLEAR required fields, which re-triggers the Welcome KYC — a
+  // re-test affordance, NOT a real feature. This is a client-side
+  // convenience only (not server-enforced); real users can't blank
+  // required fields through the UI. Clearly intentional for dev data.
+  function isTestUser(user) {
+    var email = (user && user.email ? String(user.email) : '').toLowerCase();
+    return email.endsWith('@iboost.test');
+  }
+
+  // Live NANP phone formatter + validator — mirrors signup.js so the
+  // stored format (formatted '(NXX) NXX-XXXX' string) round-trips.
+  function formatPhoneLive(rawValue) {
+    var digits = (rawValue || '').replace(/\D/g, '').slice(0, 10);
+    if (digits.length === 0) return '';
+    if (digits.length < 4)  return '(' + digits;
+    if (digits.length < 7)  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+    return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+  }
+  var PHONE_VALID_RE = /^\([2-9]\d{2}\)\s\d{3}-\d{4}$/;
+
+  // ---- Phone editor ----------------------------------------------------
+  function wirePhoneEditor(user, initialProfile) {
+    var rowVal   = document.getElementById('profile-row-phone');
+    var editBtn  = document.getElementById('profile-phone-edit-btn');
+    var formWrap = document.getElementById('profile-phone-edit-form');
+    var form     = document.getElementById('profile-phone-form');
+    var input    = document.getElementById('profile-phone-input');
+    var cancelBtn= document.getElementById('profile-phone-cancel-btn');
+    var saveBtn  = document.getElementById('profile-phone-save-btn');
+    var alertEl  = document.getElementById('profile-phone-edit-alert');
+    var hintEl   = document.getElementById('profile-phone-hint');
+    if (!rowVal || !editBtn || !form || !input) return;
+
+    var current = initialProfile || {};
+    var testUser = isTestUser(user);
+
+    if (hintEl && testUser) {
+      hintEl.textContent = 'Test account: you may clear this to re-trigger sign-up checks.';
+    }
+
+    // Live formatting as the user types.
+    input.addEventListener('input', function () {
+      var f = formatPhoneLive(input.value);
+      if (input.value !== f) input.value = f;
+    });
+
+    function display(raw) {
+      var m = (raw || '').match(/^\+?1?(\d{3})(\d{3})(\d{4})$/);
+      return m ? '(' + m[1] + ') ' + m[2] + '-' + m[3] : (raw || '');
+    }
+
+    function enter() {
+      input.value = display(current.phone || '');
+      rowVal.hidden = true; editBtn.hidden = true; formWrap.hidden = false;
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+      input.focus();
+    }
+    function exit() {
+      rowVal.hidden = false; editBtn.hidden = false; formWrap.hidden = true;
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+    }
+    function err(msg) {
+      if (alertEl) { alertEl.textContent = msg; alertEl.hidden = false; }
+      if (saveBtn) { saveBtn.classList.remove('is-loading'); saveBtn.disabled = false; }
+    }
+
+    editBtn.addEventListener('click', enter);
+    if (cancelBtn) cancelBtn.addEventListener('click', exit);
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+      var val = input.value.trim();
+
+      if (!val) {
+        // Empty: allowed only for test users (clears phone).
+        if (!testUser) return err('Please enter a phone number.');
+      } else if (!PHONE_VALID_RE.test(val)) {
+        return err('Please enter a valid phone number, e.g. (514) 555-0100.');
+      }
+
+      if (saveBtn) { saveBtn.classList.add('is-loading'); saveBtn.disabled = true; }
+      try {
+        // updateProfile only writes phone when truthy; to CLEAR it for a
+        // test user we must write null explicitly via a direct field.
+        var payload = { phone: val || null };
+        var res = await window.iboostAuth.updateProfile(payload);
+        if (res && res.error) return err(res.error.message || 'Could not save. Please try again.');
+        current.phone = val || null;
+        rowVal.textContent = val ? display(val) : '—';
+        exit();
+      } catch (e) {
+        console.error('[profile] phone save error:', e);
+        err('Network error. Please try again.');
+      } finally {
+        if (saveBtn) { saveBtn.classList.remove('is-loading'); saveBtn.disabled = false; }
+      }
+    });
+  }
+
+  // ---- Address editor --------------------------------------------------
+  function wireAddressEditor(user, initialProfile) {
+    var rowVal   = document.getElementById('profile-row-address');
+    var editBtn  = document.getElementById('profile-address-edit-btn');
+    var formWrap = document.getElementById('profile-address-edit-form');
+    var form     = document.getElementById('profile-address-form');
+    var cancelBtn= document.getElementById('profile-address-cancel-btn');
+    var saveBtn  = document.getElementById('profile-address-save-btn');
+    var alertEl  = document.getElementById('profile-address-edit-alert');
+    if (!rowVal || !editBtn || !form) return;
+
+    var line1 = document.getElementById('profile-address-line1');
+    var line2 = document.getElementById('profile-address-line2');
+    var city  = document.getElementById('profile-address-city');
+    var region= document.getElementById('profile-address-region');
+    var postal= document.getElementById('profile-address-postal');
+    var regionLabel = document.getElementById('profile-address-region-label');
+    var postalLabel = document.getElementById('profile-address-postal-label');
+
+    var current = initialProfile || {};
+    var testUser = isTestUser(user);
+    var country = current.country || null;
+
+    // Country-aware labels/placeholders (same source as the KYC).
+    try {
+      var labels = window.iboostLocale.getAddressLabels(country);
+      var ph = window.iboostLocale.getAddressPlaceholders(country);
+      if (regionLabel) regionLabel.textContent = labels.region;
+      if (postalLabel) postalLabel.textContent = labels.postal;
+      if (region) region.placeholder = ph.region;
+      if (postal) postal.placeholder = ph.postal;
+    } catch (e) { /* locale module optional; defaults in HTML */ }
+
+    function enter() {
+      if (line1) line1.value = current.address_line1 || '';
+      if (line2) line2.value = current.address_line2 || '';
+      if (city)  city.value  = current.address_city || '';
+      if (region) region.value = current.address_region || '';
+      if (postal) postal.value = current.address_postal || '';
+      rowVal.hidden = true; editBtn.hidden = true; formWrap.hidden = false;
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+      if (line1) line1.focus();
+    }
+    function exit() {
+      rowVal.hidden = false; editBtn.hidden = false; formWrap.hidden = true;
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+    }
+    function err(msg) {
+      if (alertEl) { alertEl.textContent = msg; alertEl.hidden = false; }
+      if (saveBtn) { saveBtn.classList.remove('is-loading'); saveBtn.disabled = false; }
+    }
+
+    editBtn.addEventListener('click', enter);
+    if (cancelBtn) cancelBtn.addEventListener('click', exit);
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+
+      var v = {
+        line1: (line1 && line1.value.trim()) || '',
+        line2: (line2 && line2.value.trim()) || '',
+        city:  (city && city.value.trim()) || '',
+        region:(region && region.value.trim()) || '',
+        postal:(postal && postal.value.trim()) || ''
+      };
+
+      // Determine if the form is entirely blank (test-user clear case).
+      var allBlank = !v.line1 && !v.city && !v.region && !v.postal && !v.line2;
+
+      if (testUser && allBlank) {
+        // Allowed: clears the address, re-triggering Welcome KYC.
+      } else {
+        // Normal update path: required fields must be valid.
+        if (!v.line1) return err('Please enter your street address.');
+        if (!v.city)  return err('Please enter your city.');
+        if (!/^[A-Za-z]{2}$/.test(v.region)) {
+          var rl = 'region', rex = 'QC';
+          try {
+            rl = window.iboostLocale.getAddressLabels(country).region.toLowerCase();
+            rex = window.iboostLocale.getAddressPlaceholders(country).region;
+          } catch (e) {}
+          return err('Please enter your 2-letter ' + rl + ' code (e.g. ' + rex + ').');
+        }
+        if (!v.postal) return err('Please enter your postal/ZIP code.');
+      }
+
+      if (saveBtn) { saveBtn.classList.add('is-loading'); saveBtn.disabled = true; }
+      try {
+        var res = await window.iboostAuth.updateProfile({
+          addressLine1: v.line1 || null,
+          addressLine2: v.line2 || null,
+          addressCity:  v.city || null,
+          addressRegion: v.region || null,
+          addressPostal: v.postal || null
+        });
+        if (res && res.error) return err(res.error.message || 'Could not save. Please try again.');
+
+        current.address_line1 = v.line1 || null;
+        current.address_line2 = v.line2 || null;
+        current.address_city  = v.city || null;
+        current.address_region= v.region || null;
+        current.address_postal= v.postal || null;
+        rowVal.textContent = formatAddress(current) || '—';
+        exit();
+      } catch (e) {
+        console.error('[profile] address save error:', e);
+        err('Network error. Please try again.');
+      } finally {
+        if (saveBtn) { saveBtn.classList.remove('is-loading'); saveBtn.disabled = false; }
+      }
+    });
   }
 
   // ---------------------------------------------------------------------

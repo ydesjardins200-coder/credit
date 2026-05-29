@@ -976,3 +976,21 @@ a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
   color: #b91c1c;
   font-size: 0.82rem;
 }
+
+/* ===== Inline editors: phone + address (mirror the goal editor) ===== */
+.profile-inline-edit-form {
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+.profile-inline-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+/* The editable rows show the Edit button in the 3rd grid column, like
+   the goal row. (Static rows used an empty <div> there.) */
+.profile-edit-row .dash-info-btn { align-self: start; }

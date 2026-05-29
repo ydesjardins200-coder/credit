@@ -109,16 +109,78 @@
             <div></div>
           </div>
 
-          <div class="dash-info-row">
+          <!-- Phone row: editable. Edit reveals a single input with live
+               (XXX) XXX-XXXX formatting + NANP validation (same as
+               signup). Real users must save a valid number; test users
+               (@iboost.test) may clear it. -->
+          <div class="dash-info-row profile-edit-row" id="profile-row-phone-wrap">
             <div class="dash-info-label">Phone</div>
             <div class="dash-info-val" id="profile-row-phone">—</div>
-            <div></div>
+            <button type="button" class="dash-info-btn" id="profile-phone-edit-btn">Edit</button>
+
+            <div class="profile-inline-edit-form" id="profile-phone-edit-form" hidden>
+              <form id="profile-phone-form" class="profile-form">
+                <div class="profile-form-field">
+                  <label for="profile-phone-input">Phone number</label>
+                  <input
+                    type="tel"
+                    id="profile-phone-input"
+                    inputmode="tel"
+                    autocomplete="tel"
+                    placeholder="(514) 555-0100"
+                  />
+                  <p class="profile-form-hint" id="profile-phone-hint">Mobile or landline we can reach you at.</p>
+                </div>
+                <div id="profile-phone-edit-alert" class="alert alert-error" hidden></div>
+                <div class="profile-inline-edit-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" id="profile-phone-cancel-btn">Cancel</button>
+                  <button type="submit" class="btn btn-primary btn-sm" id="profile-phone-save-btn">Save</button>
+                </div>
+              </form>
+            </div>
           </div>
 
-          <div class="dash-info-row">
+          <!-- Address row: editable. Edit reveals the 5 address fields
+               with country-aware labels + 2-letter region validation
+               (same rules as the Welcome KYC). Real users must keep
+               required fields filled; test users (@iboost.test) may
+               clear them, which re-triggers the Welcome KYC. -->
+          <div class="dash-info-row profile-edit-row" id="profile-row-address-wrap">
             <div class="dash-info-label">Address</div>
             <div class="dash-info-val" id="profile-row-address">—</div>
-            <div></div>
+            <button type="button" class="dash-info-btn" id="profile-address-edit-btn">Edit</button>
+
+            <div class="profile-inline-edit-form" id="profile-address-edit-form" hidden>
+              <form id="profile-address-form" class="profile-form">
+                <div class="profile-form-field">
+                  <label for="profile-address-line1">Street address</label>
+                  <input type="text" id="profile-address-line1" autocomplete="address-line1" placeholder="123 Main St" />
+                </div>
+                <div class="profile-form-field">
+                  <label for="profile-address-line2">Apt, suite, unit <span class="profile-form-optional">(optional)</span></label>
+                  <input type="text" id="profile-address-line2" autocomplete="address-line2" placeholder="Apt 4B" />
+                </div>
+                <div class="profile-form-field-row">
+                  <div class="profile-form-field">
+                    <label for="profile-address-city">City</label>
+                    <input type="text" id="profile-address-city" autocomplete="address-level2" placeholder="Montreal" />
+                  </div>
+                  <div class="profile-form-field">
+                    <label for="profile-address-region" id="profile-address-region-label">Province</label>
+                    <input type="text" id="profile-address-region" maxlength="2" autocomplete="address-level1" placeholder="QC" />
+                  </div>
+                  <div class="profile-form-field">
+                    <label for="profile-address-postal" id="profile-address-postal-label">Postal code</label>
+                    <input type="text" id="profile-address-postal" autocomplete="postal-code" placeholder="H3Z 2Y7" />
+                  </div>
+                </div>
+                <div id="profile-address-edit-alert" class="alert alert-error" hidden></div>
+                <div class="profile-inline-edit-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" id="profile-address-cancel-btn">Cancel</button>
+                  <button type="submit" class="btn btn-primary btn-sm" id="profile-address-save-btn">Save</button>
+                </div>
+              </form>
+            </div>
           </div>
 
           <div class="dash-info-row">
