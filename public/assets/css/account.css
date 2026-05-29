@@ -1468,3 +1468,19 @@
   .toolkit-item { flex-direction: column; align-items: stretch; }
   .toolkit-cta { text-align: center; }
 }
+
+/* Welcome-card dismiss (X) — on "profile completed" + "call confirmed" */
+.profile-complete-success-card,
+.appointment-card-confirmed { position: relative; }
+.welcome-card-dismiss {
+  position: absolute; top: 10px; right: 12px;
+  width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 6px;
+  color: var(--color-muted); font-size: 1.25rem; line-height: 1;
+  cursor: pointer; padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.welcome-card-dismiss:hover { background: rgba(10,37,64,0.06); color: #0a2540; }
+/* Keep the edit link clear of the X */
+.profile-complete-success-card .profile-complete-success-edit { margin-right: 28px; }

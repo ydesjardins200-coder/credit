@@ -136,6 +136,26 @@
         </ol>
       </div>
 
+      <!-- ===================== STEP 1 CONFIRMATION =====================
+           "Your profile is now completed" — shown once KYC is done.
+           Dismissible via the X (persisted per-user in DB: profiles
+           .welcome_setup_dismissed). Sits in step order: after the
+           journey block, before the call + toolkit. account.js toggles
+           visibility by id and hides it if dismissed. ================ -->
+      <div class="profile-complete-block profile-complete-success" id="profile-complete-success" hidden>
+        <article class="dash-card profile-complete-success-card">
+          <svg class="profile-complete-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <div class="profile-complete-success-body">
+            <h3>Your profile is now completed</h3>
+            <p>Our onboarding specialist will give you a call soon to walk you through your next steps.</p>
+          </div>
+          <a href="/account/profile" class="profile-complete-success-edit">Edit on Profile →</a>
+          <button type="button" class="welcome-card-dismiss" data-dismiss-card="setup" aria-label="Dismiss">&times;</button>
+        </article>
+      </div>
+
       <!-- ===================== STEP 2: BOOK WELCOME CALL =================
            Appears once KYC is complete. Lets the user request a
            complimentary onboarding call (preferred weekday Mon–Fri +
@@ -207,6 +227,7 @@
             <h3>Your call is confirmed</h3>
             <p id="appointment-confirmed-msg">We'll talk soon.</p>
           </div>
+          <button type="button" class="welcome-card-dismiss" data-dismiss-card="call" aria-label="Dismiss">&times;</button>
         </article>
       </div>
 
@@ -544,20 +565,6 @@
       <!-- (B) Complete state — hidden by default, unhidden when profile is
            fully filled. Small success card, no content beyond the message
            + 'Edit on Profile' affordance if user wants to change something. -->
-      <div class="profile-complete-block profile-complete-success" id="profile-complete-success" hidden>
-        <article class="dash-card profile-complete-success-card">
-          <svg class="profile-complete-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <div class="profile-complete-success-body">
-            <h3>You're all set</h3>
-            <p>Our onboarding specialist will give you a call soon to walk you through your next steps.</p>
-          </div>
-          <a href="/account/profile" class="profile-complete-success-edit">Edit on Profile →</a>
-        </article>
-      </div>
-
-
       <!-- Today's focus + milestones.
            HIDDEN in Wave 1: Today's focus copy refers to fake action items
            on the Credit tab; Milestones require bureau data that doesn't

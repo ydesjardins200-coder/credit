@@ -256,6 +256,30 @@
   //   7. Submit calls updateProfile(), flips to the success card on
   //      success, or shows an error in the alert div on failure.
 
+  // Wire a welcome-card X (dismiss) button. Persists the dismissal
+  // per-user in the DB (so it survives across devices/reloads), then
+  // hides the card. cardEl is the wrapper to hide; cardKey is 'setup' or
+  // 'call'. Safe to call repeatedly (guards against double-wiring).
+  function wireWelcomeDismiss(cardEl, cardKey) {
+    if (!cardEl) return;
+    var btn = cardEl.querySelector('[data-dismiss-card="' + cardKey + '"]');
+    if (!btn || btn._wired) return;
+    btn._wired = true;
+    btn.addEventListener('click', async function () {
+      cardEl.hidden = true; // optimistic — hide immediately
+      try {
+        await authedFetch('/api/support/dismiss-welcome-card', {
+          method: 'POST',
+          body: JSON.stringify({ card: cardKey })
+        });
+      } catch (e) {
+        // If the save fails the card stays hidden for this session; it'll
+        // reappear on next load, which is acceptable (no data lost).
+        console.error('[account] dismiss-welcome-card failed:', e);
+      }
+    });
+  }
+
   async function initProfileForm(user) {
     // Guard: form might not be on the page (e.g. if we later nuke it
     // via a different wave). All DOM reads below are null-safe.
@@ -298,7 +322,9 @@
     var journeyEl = document.getElementById('welcome-journey');
     if (window.iboostAuth.isProfileKycComplete && window.iboostAuth.isProfileKycComplete(profile)) {
       incompleteBlock.hidden = true;
-      successBlock.hidden = false;
+      // Show the "profile completed" card unless the user dismissed it.
+      successBlock.hidden = !!(profile && profile.welcome_setup_dismissed);
+      wireWelcomeDismiss(successBlock, 'setup');
       if (journeyEl) journeyEl.setAttribute('data-profile-state', 'complete');
       return;
     }
@@ -1040,6 +1066,16 @@
             var cm = document.getElementById('appointment-confirmed-msg');
             if (cm) cm.textContent = fmtApptWhen(appt) + '. We\u2019ll talk soon.';
             showApptView('confirmed');
+            // The confirmed card is dismissible (persisted). If already
+            // dismissed, hide just that card; wire its X either way.
+            try {
+              var prof = await window.iboostAuth.getProfile();
+              var confirmedCard = wrap.querySelector('[data-appt-view="confirmed"]');
+              if (confirmedCard) {
+                if (prof && prof.welcome_call_dismissed) confirmedCard.hidden = true;
+                wireWelcomeDismiss(confirmedCard, 'call');
+              }
+            } catch (e) { /* non-fatal */ }
           } else {
             var rm = document.getElementById('appointment-requested-msg');
             if (rm) rm.textContent = 'Requested for ' + fmtApptWhen(appt) + '. We\u2019ll confirm shortly.';

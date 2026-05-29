@@ -452,4 +452,35 @@ function formatHour(h) {
   return h12 + ':00 ' + ampm;
 }
 
+// ---- POST /api/support/dismiss-welcome-card ----------------------------
+// Persist a per-user dismissal of a welcome-tab confirmation card so it
+// stays hidden across devices/reloads. Body: { card: 'setup' | 'call' }.
+// Only the two confirmation cards are dismissible; the toolkit card is
+// not (it's gated on the future bureau/bank connection state).
+const DISMISSIBLE = {
+  setup: 'welcome_setup_dismissed',
+  call: 'welcome_call_dismissed',
+};
+router.post('/dismiss-welcome-card', requireAuth, async function (req, res, next) {
+  try {
+    const card = (req.body && req.body.card) || '';
+    const column = DISMISSIBLE[card];
+    if (!column) {
+      return res.status(400).json({ error: 'Unknown card. Expected: setup or call.' });
+    }
+    const update = {};
+    update[column] = true;
+    const { error } = await req.supabase
+      .from('profiles')
+      .update(update)
+      .eq('id', req.user.id);
+    if (error) {
+      return res.status(500).json({ error: 'Could not save dismissal: ' + error.message });
+    }
+    return res.json({ ok: true, card: card });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 module.exports = router;
