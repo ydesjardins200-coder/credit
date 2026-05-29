@@ -818,6 +818,11 @@
         // Success — flip to success card
         incompleteBlock.hidden = true;
         successBlock.hidden = false;
+        // KYC is now complete — surface Step 2 (the appointment scheduler)
+        // immediately, without requiring a page refresh. updateProfile()
+        // already invalidated the getProfile cache, so initAppointment
+        // reads the fresh, now-complete profile and shows the scheduler.
+        try { initAppointment(user); } catch (e) { /* non-fatal */ }
         // Scroll the success card into view so the state change is visible
         try {
           successBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
