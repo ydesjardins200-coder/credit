@@ -37,6 +37,12 @@ const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
 const { resolvePriceId } = require('../lib/plan-prices');
 
+// Same env var + fallback the rest of the credit backend uses (checkout.js,
+// billing.js). Stripe requires success_url/cancel_url to be fully-qualified
+// URLs — the fallback guarantees we never pass a bare path.
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || 'https://iboostcredit.netlify.app';
+
 // UUID shape check (same as invoices route — should probably extract,
 // but two duplications is the threshold; one more triggers a shared lib).
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -585,15 +591,19 @@ router.post(
     let checkoutUrl;
     try {
       const stripe = getStripe();
-      const appBase = (process.env.APP_BASE_URL || '').replace(/\/$/, '');
       const sessionParams = {
         mode: 'subscription',
         line_items: [{ price: priceId, quantity: 1 }],
-        success_url: (appBase || '') + '/account/profile?upgrade=success',
-        cancel_url: (appBase || '') + '/account/profile?upgrade=cancelled',
-        client_reference_id: userId, // so the webhook can map back to the user
-        metadata: { user_id: userId, source: 'admin_upgrade_link', target_plan: targetPlan },
-        subscription_data: { metadata: { user_id: userId } },
+        success_url: FRONTEND_URL + '/account/profile?upgrade=success',
+        cancel_url: FRONTEND_URL + '/account/profile?upgrade=cancelled',
+        client_reference_id: userId,
+        // Use the SAME metadata keys the webhook's checkout.session.completed
+        // handler reads (supabase_user_id, plan_key) so provisioning works
+        // identically to a normal signup checkout.
+        metadata: { supabase_user_id: userId, plan_key: targetPlan, source: 'admin_upgrade_link' },
+        subscription_data: {
+          metadata: { supabase_user_id: userId, plan_key: targetPlan },
+        },
       };
       if (profile.stripe_customer_id) {
         sessionParams.customer = profile.stripe_customer_id;
