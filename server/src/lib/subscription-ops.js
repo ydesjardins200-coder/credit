@@ -219,6 +219,20 @@ async function cancelToFree(userId, reason, note, actor) {
     // eslint-disable-next-line no-console
     console.error('[sub-ops/cancel] profile update threw:', e && e.message);
   }
+  // Mark any pending scheduled-change history rows as cancelled so they
+  // drop out of "pending changes" — the upgrade is abandoned on cancel.
+  try {
+    await supabaseAdmin
+      .from('plan_changes')
+      .update({ cancelled_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('source', 'admin_schedule')
+      .is('cancelled_at', null)
+      .gt('effective_at', new Date().toISOString());
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel] mark-schedule-cancelled threw:', e && e.message);
+  }
   try {
     await supabaseAdmin.from('plan_changes').insert({
       user_id: userId,

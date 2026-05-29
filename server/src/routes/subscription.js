@@ -202,6 +202,21 @@ router.post(
       console.error('[sub/cancel] profile update threw:', err.message);
     }
 
+    // Mark any pending scheduled-change rows cancelled — the upgrade is
+    // abandoned when the subscription is cancelled.
+    try {
+      await supabaseAdmin
+        .from('plan_changes')
+        .update({ cancelled_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('source', 'admin_schedule')
+        .is('cancelled_at', null)
+        .gt('effective_at', new Date().toISOString());
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/cancel] mark-schedule-cancelled threw:', err.message);
+    }
+
     // 4) Write pending plan_changes row.
     // from_plan = current plan, to_plan = free (what they'll be after cancel),
     // changed_at = now (when the operator decided),
