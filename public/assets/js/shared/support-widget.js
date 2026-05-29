@@ -53,6 +53,21 @@
       .replace(/"/g, '&quot;');
   }
 
+  // Escape first (safety), THEN turn http(s) URLs into clickable links.
+  // Operating on already-escaped text means the URL chars are safe; we
+  // only need to match the (escaped) URL substring. Trailing punctuation
+  // is left out of the link. newlines -> <br> so multi-line bodies read.
+  function linkify(s) {
+    var escaped = esc(s);
+    escaped = escaped.replace(
+      /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g,
+      function (url) {
+        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+      }
+    );
+    return escaped.replace(/\n/g, '<br>');
+  }
+
   function fmtDate(iso) {
     if (!iso) return '';
     var d = new Date(iso);
@@ -310,7 +325,7 @@
           var who = side === 'agent' ? 'iBoost Support' : 'You';
           return '<div class="support-msg support-msg-' + side + '">' +
             '<div class="support-msg-who">' + esc(who) + '</div>' +
-            '<div class="support-msg-body">' + esc(msg.body) + '</div>' +
+            '<div class="support-msg-body">' + linkify(msg.body) + '</div>' +
             '<div class="support-msg-time">' + esc(fmtDate(msg.created_at)) + '</div>' +
           '</div>';
         }).join('');
