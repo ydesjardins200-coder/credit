@@ -297,4 +297,119 @@ router.post('/cases/:id/rating', requireAuth, async function (req, res, next) {
   }
 });
 
+// ---- GET /api/support/appointment -------------------------------------
+// The caller's active onboarding appointment, if any. "Active" = an
+// onboarding_appointment case that isn't resolved/closed. Returns null
+// when none, so the UI can show the scheduler vs. the existing-request
+// state.
+router.get('/appointment', requireAuth, async function (req, res, next) {
+  try {
+    const { data, error } = await req.supabase
+      .from('support_cases')
+      .select('id, case_number, status, appointment_requested_date, ' +
+        'appointment_requested_hour, appointment_timezone, ' +
+        'appointment_alt_phone, appointment_status, appointment_confirmed_at, created_at')
+      .eq('category', 'onboarding_appointment')
+      .in('status', ['open']) // resolved/closed appointments are done
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      return res.status(500).json({ error: 'Could not load appointment: ' + error.message });
+    }
+    const appt = (data && data[0]) || null;
+    return res.json({ appointment: appt });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ---- POST /api/support/appointment -------------------------------------
+// Request an onboarding call. Creates an onboarding_appointment case +
+// a first message summarizing the request. One active appointment per
+// user — if an open one exists, return it instead of creating a second.
+// Body: { date 'YYYY-MM-DD', hour 8-17, timezone, alt_phone? }
+router.post('/appointment', requireAuth, async function (req, res, next) {
+  try {
+    const userId = req.user.id;
+    const date = (req.body && req.body.date ? String(req.body.date) : '').trim();
+    const hour = parseInt(req.body && req.body.hour, 10);
+    const timezone = (req.body && req.body.timezone ? String(req.body.timezone) : '').trim();
+    const altPhone = (req.body && req.body.alt_phone ? String(req.body.alt_phone) : '').trim();
+
+    // Validate date is a real YYYY-MM-DD and a weekday (Mon–Fri).
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Please choose a valid date.' });
+    }
+    const d = new Date(date + 'T12:00:00Z'); // midday UTC to avoid tz edge
+    if (isNaN(d.getTime())) {
+      return res.status(400).json({ error: 'Please choose a valid date.' });
+    }
+    const dow = d.getUTCDay(); // 0=Sun..6=Sat
+    if (dow === 0 || dow === 6) {
+      return res.status(400).json({ error: 'Please choose a weekday (Monday–Friday).' });
+    }
+    if (!(hour >= 8 && hour <= 17)) {
+      return res.status(400).json({ error: 'Please choose a time between 8am and 5pm.' });
+    }
+
+    // One active appointment per user — return the existing open one.
+    const { data: existing } = await req.supabase
+      .from('support_cases')
+      .select('id, case_number, status, appointment_requested_date, appointment_requested_hour, appointment_timezone, appointment_status')
+      .eq('category', 'onboarding_appointment')
+      .eq('status', 'open')
+      .limit(1);
+    if (existing && existing[0]) {
+      return res.json({ ok: true, already: true, appointment: existing[0] });
+    }
+
+    // Create the appointment case.
+    const { data: caseRow, error: caseErr } = await req.supabase
+      .from('support_cases')
+      .insert({
+        user_id: userId,
+        category: 'onboarding_appointment',
+        subject: 'Onboarding call request',
+        appointment_requested_date: date,
+        appointment_requested_hour: hour,
+        appointment_timezone: timezone || null,
+        appointment_alt_phone: altPhone || null,
+        appointment_status: 'requested',
+      })
+      .select('id, case_number, status, appointment_requested_date, appointment_requested_hour, appointment_timezone, appointment_alt_phone, appointment_status')
+      .single();
+
+    if (caseErr) {
+      return res.status(500).json({ error: 'Could not create appointment: ' + caseErr.message });
+    }
+
+    // First message summarizing the request (human-readable in the
+    // thread; the structured columns are the source of truth).
+    const hourLabel = formatHour(hour);
+    const summary = 'Onboarding call requested for ' + date + ' at ' + hourLabel +
+      (timezone ? ' (' + timezone + ')' : '') +
+      (altPhone ? '. Preferred call number: ' + altPhone : '.');
+    await req.supabase
+      .from('support_messages')
+      .insert({
+        case_id: caseRow.id,
+        author_type: 'customer',
+        author_id: userId,
+        body: summary,
+      });
+
+    return res.json({ ok: true, appointment: caseRow });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+function formatHour(h) {
+  // 8 -> '8:00 AM', 13 -> '1:00 PM', 17 -> '5:00 PM'
+  var ampm = h < 12 ? 'AM' : 'PM';
+  var h12 = h % 12; if (h12 === 0) h12 = 12;
+  return h12 + ':00 ' + ampm;
+}
+
 module.exports = router;
