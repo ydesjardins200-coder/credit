@@ -14,6 +14,7 @@ const integrationsRouter = require('./routes/integrations');
 const invoicesRouter = require('./routes/invoices');
 const subscriptionRouter = require('./routes/subscription');
 const billingRouter = require('./routes/billing');
+const supportRouter = require('./routes/support');
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/integrations', integrationsRouter);
 app.use('/api/invoices', invoicesRouter);
 app.use('/api/subscription', subscriptionRouter);
 app.use('/api/billing', billingRouter);
+app.use('/api/support', supportRouter);
 
 app.get('/', (req, res) => {
   res.json({ service: 'iboost-api', status: 'ok' });
