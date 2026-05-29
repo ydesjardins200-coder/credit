@@ -268,8 +268,19 @@
     btn.addEventListener('click', async function () {
       cardEl.hidden = true; // optimistic — hide immediately
       try {
-        await authedFetch('/api/support/dismiss-welcome-card', {
+        var cfg = window.IBOOST_CONFIG || {};
+        var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
+        var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        try {
+          if (window.iboostAuth && window.iboostAuth.getSessionSettled) {
+            var s = await window.iboostAuth.getSessionSettled();
+            var token = s && s.session && s.session.access_token;
+            if (token) headers.Authorization = 'Bearer ' + token;
+          }
+        } catch (e) { /* fall through; request will 401 and card reappears next load */ }
+        await fetch(base + '/api/support/dismiss-welcome-card', {
           method: 'POST',
+          headers: headers,
           body: JSON.stringify({ card: cardKey })
         });
       } catch (e) {
