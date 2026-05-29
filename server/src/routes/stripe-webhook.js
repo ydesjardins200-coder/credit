@@ -142,7 +142,7 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
   if (!stripeCustomerId) return null;
   const { data, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at, card_last_four, card_brand')
+    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at, card_last_four, card_brand, pending_plan')
     .eq('stripe_customer_id', stripeCustomerId)
     .single();
   if (error) {
@@ -291,6 +291,27 @@ async function syncSubscriptionState(stripe, sub) {
     update.card_brand = card.cardBrand;
   }
 
+  // Plan sync from the subscription's current price. When a scheduled
+  // plan change (Subscription Schedule) lands at renewal, the price on
+  // the sub changes; map it to a plan key and sync profiles.plan. If the
+  // new plan matches a pending marker, the scheduled change has taken
+  // effect — clear the marker. (We deliberately did NOT flip plan when
+  // the change was scheduled; this is where it becomes real.)
+  const livePriceId = firstItem && firstItem.price && firstItem.price.id;
+  const livePlanKey = planKeyFromPriceId(livePriceId);
+  if (livePlanKey && livePlanKey !== profile.plan) {
+    update.plan = livePlanKey;
+  }
+  if (profile.pending_plan) {
+    // Clear the pending marker once the live plan reaches it (the
+    // schedule landed), or if the sub no longer reflects a pending state.
+    if (livePlanKey === profile.pending_plan) {
+      update.pending_plan = null;
+      update.pending_plan_currency = null;
+      update.pending_plan_effective_at = null;
+    }
+  }
+
   if (Object.keys(update).length === 0) {
     return; // already in sync, nothing to do
   }
@@ -312,6 +333,25 @@ async function syncSubscriptionState(stripe, sub) {
     ' status=' + (desiredStatus || 'n/a') +
     (nextBillingDate ? ' next=' + nextBillingDate : '')
   );
+
+  // If the plan actually changed (e.g. a scheduled change landed at
+  // renewal), append a history row so plan_changes reflects reality.
+  if (update.plan && update.plan !== profile.plan) {
+    try {
+      await supabaseAdmin
+        .from('plan_changes')
+        .insert({
+          user_id: profile.id,
+          from_plan: profile.plan,
+          to_plan: update.plan,
+          source: 'stripe_webhook',
+          note: 'plan change effective at renewal',
+        });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.log('[webhook] plan_changes insert threw: ' + (e && e.message));
+    }
+  }
 }
 
 // customer.updated fires when a customer's details change — including

@@ -35,6 +35,7 @@ const router = express.Router();
 const requireAdminSharedSecret = require('../middleware/requireAdminSharedSecret');
 const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
+const { resolvePriceId } = require('../lib/plan-prices');
 
 // UUID shape check (same as invoices route — should probably extract,
 // but two duplications is the threshold; one more triggers a shared lib).
@@ -339,6 +340,279 @@ router.post(
       ok: true,
       user_id: userId,
       cancel_at_period_end: false,
+    });
+  }
+);
+
+// ---------------------------------------------------------------------
+// POST /api/subscription/schedule-plan-change
+// Paid <-> paid plan change (Essential <-> Complete), effective at the
+// NEXT billing cycle with NO proration, via a Stripe Subscription
+// Schedule. The current price runs until period end; the new price
+// starts on the next cycle. We DON'T flip profiles.plan now — we record
+// the intent in a pending marker + plan_changes(admin_schedule), and the
+// webhook flips the real plan when the schedule lands at renewal.
+//
+// Body: { target_plan, currency?, admin_actor? }
+// Not for: paid->free (use /cancel) or free->paid (use /upgrade-link).
+// ---------------------------------------------------------------------
+router.post(
+  '/schedule-plan-change',
+  requireAdminSharedSecret,
+  async function (req, res) {
+    const body = req.body || {};
+    const userId = String(body.user_id || '').trim();
+    const targetPlan = String(body.target_plan || '').toLowerCase().trim();
+    const currency = String(body.currency || 'cad').toLowerCase().trim();
+    const adminActor = body.admin_actor || 'unknown';
+
+    if (!UUID_RE.test(userId)) {
+      return res.status(400).json({ error: 'Invalid user id.' });
+    }
+    if (targetPlan !== 'essential' && targetPlan !== 'complete') {
+      return res.status(400).json({
+        error: 'schedule-plan-change is only for paid plans (essential/complete). ' +
+          'Use /cancel for downgrades to free, /upgrade-link for free->paid.',
+      });
+    }
+    if (currency !== 'cad') {
+      return res.status(400).json({
+        error: 'Only CAD is supported in v1.',
+        reason: 'currency_unsupported',
+      });
+    }
+
+    // Resolve the target Stripe price up front — fail loud if misconfigured.
+    let targetPriceId;
+    try {
+      targetPriceId = resolvePriceId(targetPlan, currency).priceId;
+    } catch (err) {
+      return res.status(err.statusCode || 500).json({ error: err.message });
+    }
+
+    // Read the profile.
+    let profile;
+    try {
+      const r = await supabaseAdmin
+        .from('profiles')
+        .select('id, plan, plan_currency, stripe_subscription_id, cancel_at_period_end')
+        .eq('id', userId)
+        .single();
+      if (r.error) {
+        if (r.error.code === 'PGRST116') return res.status(404).json({ error: 'User not found.' });
+        return res.status(500).json({ error: 'Could not read profile.' });
+      }
+      profile = r.data;
+    } catch (err) {
+      return res.status(500).json({ error: 'Profile lookup error.' });
+    }
+
+    if (!profile.stripe_subscription_id) {
+      return res.status(400).json({
+        error: 'User has no active Stripe subscription. Use the upgrade link for free users.',
+        reason: 'no_subscription',
+      });
+    }
+    if (profile.cancel_at_period_end) {
+      return res.status(409).json({
+        error: 'Subscription is scheduled to cancel; resume it before changing plans.',
+        reason: 'pending_cancel',
+      });
+    }
+    if (profile.plan === targetPlan) {
+      return res.status(409).json({
+        error: 'User is already on the ' + targetPlan + ' plan.',
+        reason: 'no_change',
+      });
+    }
+
+    // Build a Subscription Schedule: phase 1 = current price until period
+    // end, phase 2 = new price thereafter. proration_behavior: none so no
+    // mid-cycle money moves — the change bills on the next renewal.
+    let effectiveAtIso;
+    try {
+      const stripe = getStripe();
+
+      // Create a schedule FROM the existing subscription. Stripe seeds
+      // phase 1 from the current subscription's items/period.
+      const schedule = await stripe.subscriptionSchedules.create(
+        { from_subscription: profile.stripe_subscription_id },
+        { idempotencyKey: 'sched-create-' + userId + '-' + Date.now() }
+      );
+
+      // The seeded phase 1 carries the current price + period. We append a
+      // phase 2 with the new price. Phase 1's end becomes phase 2's start
+      // (= next billing boundary).
+      const phase0 = (schedule.phases && schedule.phases[0]) || {};
+      const currentItems = (phase0.items || []).map(function (it) {
+        return { price: it.price, quantity: it.quantity || 1 };
+      });
+
+      const updated = await stripe.subscriptionSchedules.update(
+        schedule.id,
+        {
+          end_behavior: 'release', // hand back to a normal subscription after
+          proration_behavior: 'none',
+          phases: [
+            {
+              items: currentItems.length ? currentItems : undefined,
+              start_date: phase0.start_date,
+              end_date: phase0.end_date,
+            },
+            {
+              items: [{ price: targetPriceId, quantity: 1 }],
+              // starts when phase 1 ends (next billing boundary)
+            },
+          ],
+        },
+        { idempotencyKey: 'sched-update-' + userId + '-' + Date.now() }
+      );
+
+      // Effective date = phase 1 end (= next cycle).
+      var p0end = (updated.phases && updated.phases[0] && updated.phases[0].end_date) ||
+        phase0.end_date || null;
+      effectiveAtIso = p0end ? unixToIso(p0end) : null;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/schedule] stripe error:', err.message);
+      return res.status(502).json({ error: 'Payment provider error: ' + err.message });
+    }
+
+    // Record the pending intent (NOT a profiles.plan flip — that happens
+    // when the webhook reports the schedule landed at renewal).
+    try {
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          pending_plan: targetPlan,
+          pending_plan_currency: currency,
+          pending_plan_effective_at: effectiveAtIso,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/schedule] pending marker update threw:', err.message);
+    }
+
+    try {
+      await supabaseAdmin
+        .from('plan_changes')
+        .insert({
+          user_id: userId,
+          from_plan: profile.plan,
+          to_plan: targetPlan,
+          source: 'admin_schedule',
+          effective_at: effectiveAtIso,
+          note: 'scheduled at period end; actor=' + adminActor,
+        });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/schedule] history insert threw:', err.message);
+    }
+
+    return res.json({
+      ok: true,
+      user_id: userId,
+      scheduled: true,
+      target_plan: targetPlan,
+      effective_at: effectiveAtIso,
+    });
+  }
+);
+
+// ---------------------------------------------------------------------
+// POST /api/subscription/upgrade-link
+// Free -> paid. A free user has no subscription and no card on file, so
+// we can't schedule anything — they must subscribe. Generates a Stripe
+// Hosted Checkout Session for the target paid plan and returns its URL.
+// The admin sends this to the customer (in a case); when they complete
+// it, the EXISTING checkout.session.completed webhook provisions the
+// subscription. Card data stays entirely in Stripe.
+//
+// Body: { user_id, target_plan, currency?, admin_actor? }
+// ---------------------------------------------------------------------
+router.post(
+  '/upgrade-link',
+  requireAdminSharedSecret,
+  async function (req, res) {
+    const body = req.body || {};
+    const userId = String(body.user_id || '').trim();
+    const targetPlan = String(body.target_plan || '').toLowerCase().trim();
+    const currency = String(body.currency || 'cad').toLowerCase().trim();
+
+    if (!UUID_RE.test(userId)) {
+      return res.status(400).json({ error: 'Invalid user id.' });
+    }
+    if (targetPlan !== 'essential' && targetPlan !== 'complete') {
+      return res.status(400).json({ error: 'Target must be a paid plan (essential/complete).' });
+    }
+    if (currency !== 'cad') {
+      return res.status(400).json({ error: 'Only CAD is supported in v1.', reason: 'currency_unsupported' });
+    }
+
+    let priceId;
+    try {
+      priceId = resolvePriceId(targetPlan, currency).priceId;
+    } catch (err) {
+      return res.status(err.statusCode || 500).json({ error: err.message });
+    }
+
+    // Read profile for email + existing stripe customer (reuse if present).
+    let profile;
+    try {
+      const r = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, plan, stripe_customer_id, stripe_subscription_id')
+        .eq('id', userId)
+        .single();
+      if (r.error) {
+        if (r.error.code === 'PGRST116') return res.status(404).json({ error: 'User not found.' });
+        return res.status(500).json({ error: 'Could not read profile.' });
+      }
+      profile = r.data;
+    } catch (err) {
+      return res.status(500).json({ error: 'Profile lookup error.' });
+    }
+
+    if (profile.stripe_subscription_id) {
+      return res.status(409).json({
+        error: 'User already has a subscription. Use schedule-plan-change to change plans.',
+        reason: 'has_subscription',
+      });
+    }
+
+    let checkoutUrl;
+    try {
+      const stripe = getStripe();
+      const appBase = (process.env.APP_BASE_URL || '').replace(/\/$/, '');
+      const sessionParams = {
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: (appBase || '') + '/account/profile?upgrade=success',
+        cancel_url: (appBase || '') + '/account/profile?upgrade=cancelled',
+        client_reference_id: userId, // so the webhook can map back to the user
+        metadata: { user_id: userId, source: 'admin_upgrade_link', target_plan: targetPlan },
+        subscription_data: { metadata: { user_id: userId } },
+      };
+      if (profile.stripe_customer_id) {
+        sessionParams.customer = profile.stripe_customer_id;
+      } else if (profile.email) {
+        sessionParams.customer_email = profile.email;
+      }
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      checkoutUrl = session.url;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/upgrade-link] stripe error:', err.message);
+      return res.status(502).json({ error: 'Payment provider error: ' + err.message });
+    }
+
+    return res.json({
+      ok: true,
+      user_id: userId,
+      target_plan: targetPlan,
+      url: checkoutUrl,
     });
   }
 );
