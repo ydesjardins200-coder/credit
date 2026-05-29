@@ -1156,3 +1156,97 @@
   }
 }
 
+
+/* ============================================================
+   Welcome — "what happens next" orientation (Now / Next / Ongoing)
+   Editorial, calm. Three numbered beats. The "Now" beat is the
+   active step (tied to the form below); once the profile is complete
+   the block dims the "Now" beat and shifts focus to what's coming.
+   ============================================================ */
+.welcome-journey {
+  margin: 4px 0 24px;
+}
+.journey-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  counter-reset: journey;
+}
+@media (max-width: 720px) {
+  .journey-steps { grid-template-columns: 1fr; }
+}
+.journey-step {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px 18px 18px 20px;
+  counter-increment: journey;
+}
+.journey-step::before {
+  content: counter(journey);
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.journey-step-eye {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+.journey-step-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a2540;
+}
+.journey-step-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+
+/* The active "Now" step (while profile incomplete): accent-framed. */
+.welcome-journey[data-profile-state="incomplete"] .journey-step-now {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.welcome-journey[data-profile-state="incomplete"] .journey-step-now::before {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+.welcome-journey[data-profile-state="incomplete"] .journey-step-now .journey-step-eye {
+  color: var(--color-accent-hover);
+}
+
+/* Once complete: the "Now" step recedes (it's done), focus moves to
+   Next/Ongoing. Subtle check replaces the number. */
+.welcome-journey[data-profile-state="complete"] .journey-step-now {
+  opacity: 0.6;
+}
+.welcome-journey[data-profile-state="complete"] .journey-step-now::before {
+  content: "\2713";
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}

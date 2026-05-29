@@ -54,7 +54,6 @@
   function populateWelcomeDayCount(user) {
     var el = document.getElementById('welcome-day-count');
     var subtitleEl = document.getElementById('welcome-subtitle');
-    if (!el) return;
 
     var days = 1;
     try {
@@ -75,17 +74,39 @@
       }
     } catch (e) { /* fall through to days = 1 */ }
 
-    el.textContent = String(days);
+    if (el) el.textContent = String(days);
 
-    // Subtitle copy adapts: day 1 gets a welcoming "Let's get started."
-    // Days 2+ get the forward-looking "Here's what's next." (mirrors the
-    // pre-Wave-1 copy for returning users).
-    if (subtitleEl) {
-      var suffix = days === 1 ? "Let's get started." : "Here's what's next.";
-      subtitleEl.innerHTML =
-        "You're on day <strong id=\"welcome-day-count\">" + days +
-        "</strong> of your credit-building journey. " + suffix;
+    // Day-aware greeting headline. Day 1 leads with arrival; returning
+    // users get "Welcome back". Uses the first name stashed by
+    // personalizeGreeting (falls back to no-name if unavailable).
+    var greetingEl = document.getElementById('greeting');
+    if (greetingEl) {
+      var fn = '';
+      try { fn = window.__iboostFirstName || ''; } catch (e) { fn = ''; }
+      var suffix = fn ? (', ' + fn + '.') : '.';
+      greetingEl.textContent = (days === 1 ? "You're in" : "Welcome back") + suffix;
     }
+
+    // Copy adapts to tenure:
+    //   Day 1   — lead with arrival/reassurance, not a hollow "day 1".
+    //             The greeting (#greeting) becomes "You're in, [Name]."
+    //             (see personalizeGreeting), and the subtitle orients.
+    //   Day 2+  — the day-counter becomes meaningful; show the
+    //             forward-looking journey line.
+    if (subtitleEl) {
+      if (days === 1) {
+        subtitleEl.innerHTML =
+          "Welcome to iBoost. Here\u2019s how we\u2019ll build your credit together \u2014 " +
+          "it starts with a few quick details.";
+      } else {
+        subtitleEl.innerHTML =
+          "You're on day <strong id=\"welcome-day-count\">" + days +
+          "</strong> of your credit-building journey. Here's what's next.";
+      }
+    }
+
+    // Expose tenure for the greeting personalizer (day-1 vs returning).
+    try { window.__iboostDays = days; } catch (e) { /* noop */ }
   }
 
   // ---------------------------------------------------------------------
@@ -274,11 +295,14 @@
     }
 
     // 3. Already complete? Show success, hide form, we're done.
+    var journeyEl = document.getElementById('welcome-journey');
     if (window.iboostAuth.isProfileKycComplete && window.iboostAuth.isProfileKycComplete(profile)) {
       incompleteBlock.hidden = true;
       successBlock.hidden = false;
+      if (journeyEl) journeyEl.setAttribute('data-profile-state', 'complete');
       return;
     }
+    if (journeyEl) journeyEl.setAttribute('data-profile-state', 'incomplete');
 
     // 4. Country-aware labels + DOB max date
     // Pulls labels and placeholders from iboostLocale (CA defaults if null).
@@ -618,12 +642,14 @@
     // population in account/profile.js. The monolith no longer has a
     // #profile-avatar element to populate.
 
-    // Personalize the Welcome tab greeting.
-    // The inline script in account.html already set "Welcome back." —
-    // we replace it with "Welcome back, Marcus."
+    // Personalize the Welcome tab greeting. The exact wording (day-1
+    // "You're in, X." vs returning "Welcome back, X.") is decided in
+    // populateWelcomeDayCount where tenure is known; here we just stash
+    // the first name for it to use. Fallback: if the day function
+    // somehow doesn't run, set a sensible default now.
     const greetingEl = document.getElementById('greeting');
     if (greetingEl) {
-      // Replace any trailing period with ", firstName."
+      try { window.__iboostFirstName = firstName; } catch (e) { /* noop */ }
       greetingEl.textContent = greetingEl.textContent.replace(/\.$/, ', ' + firstName + '.');
     }
 

@@ -108,6 +108,34 @@
         </div>
       </article>
 
+      <!-- ===================== WHAT HAPPENS NEXT (orientation) =========
+           Reassurance + orientation for a brand-new user: "you're in,
+           here's the arc." Three beats — Now / Next / Ongoing. The
+           "Now" beat is tied visually to the form below (the active
+           step). account.js sets data-profile-state on this block to
+           'incomplete' or 'complete'; CSS dims the "Now" beat once the
+           profile is done so the focus shifts to what's coming.
+           ============================================================ -->
+      <div class="welcome-journey" id="welcome-journey" data-profile-state="incomplete">
+        <ol class="journey-steps">
+          <li class="journey-step journey-step-now">
+            <span class="journey-step-eye">Now</span>
+            <h3 class="journey-step-title">Tell us about you</h3>
+            <p class="journey-step-desc">A few details so we can prepare your credit file. Takes about a minute.</p>
+          </li>
+          <li class="journey-step">
+            <span class="journey-step-eye">Next</span>
+            <h3 class="journey-step-title">We review your file</h3>
+            <p class="journey-step-desc">Our onboarding specialist will give you a call soon to walk you through it.</p>
+          </li>
+          <li class="journey-step">
+            <span class="journey-step-eye">Ongoing</span>
+            <h3 class="journey-step-title">Watch your score climb</h3>
+            <p class="journey-step-desc">Monthly insights and a clear plan to improve — that's what you're here for.</p>
+          </li>
+        </ol>
+      </div>
+
       <!-- ===================== PROFILE COMPLETION =====================
            Replaces the old 'Get set up in 5 steps' checklist (deleted).
            Users see one of two states:
@@ -154,14 +182,14 @@
         <!-- Profile form card -->
         <article class="dash-card profile-form-card">
           <div class="profile-form-head">
-            <h3 class="profile-form-title">Complete your profile</h3>
+            <h3 class="profile-form-title">Let's prepare your file</h3>
             <p class="profile-form-sub">
-              We need these to prepare your file for bureau reporting. Your info stays private and is used only for iBoost.
+              The credit bureaus need these to match your history to you. Your info stays private — used only for iBoost.
             </p>
           </div>
 
-          <!-- Progress indicator — X of 7 fields complete. JS keeps it in
-               sync with the current form state + already-saved values. -->
+          <!-- Progress indicator — friendly "sections done" feel rather
+               than a clinical field count. JS keeps it in sync. -->
           <div class="profile-form-progress">
             <div class="profile-form-progress-label">
               <strong id="profile-form-progress-filled">0</strong> of 7 fields complete
@@ -362,8 +390,8 @@
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <div class="profile-complete-success-body">
-            <h3>Profile complete</h3>
-            <p>Your team will call within 24 hours to walk you through next steps.</p>
+            <h3>You're all set</h3>
+            <p>Our onboarding specialist will give you a call soon to walk you through your next steps.</p>
           </div>
           <a href="/account/profile" class="profile-complete-success-edit">Edit on Profile →</a>
         </article>
