@@ -753,8 +753,6 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, rgba(46,204,113,0.06), rgba(46,204,113,0.02));
-  border: 1px solid rgba(46, 204, 113, 0.3);
 }
 .profile-complete-success-icon {
   width: 36px;
@@ -1391,6 +1389,7 @@
    Step 2 — onboarding-call scheduler
    ============================================================ */
 .welcome-appointment { margin: 0 0 24px; }
+.profile-complete-success { margin: 0 0 24px; }
 .appointment-card { padding: 22px 24px; }
 .appointment-head { margin-bottom: 16px; }
 .appointment-title { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; color: #0a2540; }
@@ -1443,7 +1442,7 @@
 }
 
 /* ===================== STEP 3: Connect your toolkit ===================== */
-.welcome-toolkit { margin-top: 18px; }
+.welcome-toolkit { margin-top: 0; }
 .toolkit-card { padding: 22px 24px; }
 .toolkit-head { margin-bottom: 16px; }
 .toolkit-title { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; color: #0a2540; }
