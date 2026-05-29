@@ -129,9 +129,9 @@
             <p class="journey-step-desc">A complimentary call with our onboarding specialist to set you up for success.</p>
           </li>
           <li class="journey-step" data-journey-step="3">
-            <span class="journey-step-eye">Ongoing</span>
-            <h3 class="journey-step-title">Watch your score climb</h3>
-            <p class="journey-step-desc">Monthly insights and a clear plan to improve — that's what you're here for.</p>
+            <span class="journey-step-eye">Then</span>
+            <h3 class="journey-step-title">Connect your toolkit</h3>
+            <p class="journey-step-desc">Link your credit bureau and your bank so we can track your progress and build your plan.</p>
           </li>
         </ol>
       </div>
@@ -210,7 +210,39 @@
         </article>
       </div>
 
-      <!-- ===================== PROFILE COMPLETION =====================
+      <!-- ===================== STEP 3: CONNECT YOUR TOOLKIT =============
+           Appears once the welcome call is requested/confirmed. Prompts
+           the user to link their credit bureau (Credit tab) and bank
+           (Budget tab). The actual connections live on those tabs (bureau
+           + Flinks integrations); this card just routes the user there.
+           account.js unhides #welcome-toolkit when an appointment exists.
+           ============================================================ -->
+      <div class="welcome-toolkit" id="welcome-toolkit" hidden>
+        <article class="dash-card toolkit-card">
+          <div class="toolkit-head">
+            <h3 class="toolkit-title">Connect your toolkit</h3>
+            <p class="toolkit-sub">
+              Two quick links and iBoost can start working for you — track your credit and build your plan from real data.
+            </p>
+          </div>
+          <div class="toolkit-items">
+            <div class="toolkit-item">
+              <div class="toolkit-item-body">
+                <h4>Connect your credit bureau</h4>
+                <p>So we can read your file and watch your score climb.</p>
+              </div>
+              <a class="toolkit-cta" href="/account/credit">Open Credit &rarr;</a>
+            </div>
+            <div class="toolkit-item">
+              <div class="toolkit-item-body">
+                <h4>Connect your bank</h4>
+                <p>So your budget fills in automatically — no manual entry.</p>
+              </div>
+              <a class="toolkit-cta" href="/account/budget">Open Budget &rarr;</a>
+            </div>
+          </div>
+        </article>
+      </div>
            Replaces the old 'Get set up in 5 steps' checklist (deleted).
            Users see one of two states:
 

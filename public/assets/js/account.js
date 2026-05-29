@@ -1015,6 +1015,20 @@
     }
     markJourneyStep1Done();
 
+    // Once the welcome call is requested/confirmed: Step 2 is done, Step 3
+    // ("Connect your toolkit") becomes the active step and its card shows.
+    function advanceToToolkit() {
+      var journey = document.getElementById('welcome-journey');
+      if (journey) {
+        var s2 = journey.querySelector('[data-journey-step="2"]');
+        var s3 = journey.querySelector('[data-journey-step="3"]');
+        if (s2) { s2.classList.add('journey-step-done'); s2.classList.remove('journey-step-now'); }
+        if (s3) s3.classList.add('journey-step-now');
+      }
+      var toolkit = document.getElementById('welcome-toolkit');
+      if (toolkit) toolkit.hidden = false;
+    }
+
     // --- load existing appointment to pick the state ---
     try {
       var res = await authedFetch('/api/support/appointment');
@@ -1031,6 +1045,7 @@
             if (rm) rm.textContent = 'Requested for ' + fmtApptWhen(appt) + '. We\u2019ll confirm shortly.';
             showApptView('requested');
           }
+          advanceToToolkit(); // call booked -> Step 3 active, toolkit card shown
           return; // already has an appointment — don't show the form
         }
       }
@@ -1068,6 +1083,7 @@
           var rm2 = document.getElementById('appointment-requested-msg');
           if (rm2) rm2.textContent = 'Requested for ' + fmtApptWhen(d.appointment) + '. We\u2019ll confirm shortly.';
           showApptView('requested');
+          advanceToToolkit(); // call just requested -> reveal Step 3 toolkit
         } catch (err) {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Request my call'; }
           apptErr(err.message);
