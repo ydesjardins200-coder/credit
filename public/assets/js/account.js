@@ -846,10 +846,231 @@
     }
   }
 
-  // escapeHtml — delegated to shared/dom-utils.js (Phase A of the
-  // account architecture refactor; see docs/account-architecture.md).
-  // The function previously lived inline here AND in checkout.js as
-  // byte-identical duplicates. Now there's one source of truth in
+  // =====================================================================
+  // Step 2 — onboarding-call scheduler (welcome tab)
+  // =====================================================================
+  // Shows only once KYC is complete. Lets the user request a
+  // complimentary onboarding call; creates an onboarding_appointment
+  // support-case via POST /api/support/appointment. Three states:
+  // schedule / requested / confirmed, driven by the existing active
+  // appointment fetched on load.
+  async function initAppointment(user) {
+    var wrap = document.getElementById('welcome-appointment');
+    if (!wrap) return;
+
+    function apiBase() {
+      var cfg = window.IBOOST_CONFIG || {};
+      return (cfg.API_BASE_URL || '').replace(/\/$/, '');
+    }
+    async function authedFetch(path, opts) {
+      opts = opts || {};
+      var token = null;
+      try {
+        if (window.iboostAuth && window.iboostAuth.getSessionSettled) {
+          var s = await window.iboostAuth.getSessionSettled();
+          token = s && s.session && s.session.access_token;
+        }
+      } catch (e) { /* fall through */ }
+      var headers = Object.assign(
+        { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        opts.headers || {}
+      );
+      if (token) headers.Authorization = 'Bearer ' + token;
+      return fetch(apiBase() + path, Object.assign({}, opts, { headers: headers }));
+    }
+
+    // Only relevant once the profile/KYC is complete. If incomplete, the
+    // card stays hidden (the KYC form is the active step).
+    var profile = null;
+    try { profile = await window.iboostAuth.getProfile(); } catch (e) {}
+    var kycDone = window.iboostAuth.isProfileKycComplete &&
+      window.iboostAuth.isProfileKycComplete(profile);
+    if (!kycDone) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+
+    var dateSel = document.getElementById('appointment-date');
+    var hourSel = document.getElementById('appointment-hour');
+    var tzSel = document.getElementById('appointment-tz');
+    var altPhone = document.getElementById('appointment-alt-phone');
+    var form = document.getElementById('appointment-form');
+    var submitBtn = document.getElementById('appointment-submit');
+    var alertEl = document.getElementById('appointment-alert');
+
+    // --- populate day dropdown: next ~10 business days ---
+    function isoDate(d) {
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+    function dayLabel(d) {
+      var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+    }
+    if (dateSel) {
+      var added = 0;
+      var cursor = new Date();
+      cursor.setDate(cursor.getDate() + 1); // start tomorrow
+      while (added < 10) {
+        var dow = cursor.getDay();
+        if (dow !== 0 && dow !== 6) {
+          var opt = document.createElement('option');
+          opt.value = isoDate(cursor);
+          opt.textContent = dayLabel(cursor);
+          dateSel.appendChild(opt);
+          added++;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    // --- populate hour dropdown 8..17 ---
+    function hourLabel(h) {
+      var ampm = h < 12 ? 'AM' : 'PM';
+      var h12 = h % 12; if (h12 === 0) h12 = 12;
+      return h12 + ':00 ' + ampm;
+    }
+    if (hourSel) {
+      for (var h = 8; h <= 17; h++) {
+        var o = document.createElement('option');
+        o.value = String(h);
+        o.textContent = hourLabel(h);
+        hourSel.appendChild(o);
+      }
+    }
+
+    // --- timezone: common NA zones, default to detected ---
+    var TZ_OPTIONS = [
+      { v: 'America/Toronto', l: 'Eastern (Toronto/Montreal)' },
+      { v: 'America/Winnipeg', l: 'Central (Winnipeg)' },
+      { v: 'America/Edmonton', l: 'Mountain (Edmonton)' },
+      { v: 'America/Vancouver', l: 'Pacific (Vancouver)' },
+      { v: 'America/Halifax', l: 'Atlantic (Halifax)' },
+      { v: 'America/New_York', l: 'Eastern (US)' },
+      { v: 'America/Chicago', l: 'Central (US)' },
+      { v: 'America/Denver', l: 'Mountain (US)' },
+      { v: 'America/Los_Angeles', l: 'Pacific (US)' }
+    ];
+    var detected = '';
+    try { detected = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    if (tzSel) {
+      // If detected isn't in our list, add it at the top so we still
+      // capture the user's actual zone.
+      var known = TZ_OPTIONS.some(function (t) { return t.v === detected; });
+      if (detected && !known) {
+        TZ_OPTIONS.unshift({ v: detected, l: detected });
+      }
+      TZ_OPTIONS.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.v; o.textContent = t.l;
+        if (t.v === detected) o.selected = true;
+        tzSel.appendChild(o);
+      });
+      if (!detected) tzSel.value = 'America/Toronto';
+    }
+
+    // --- alt phone live formatting (same as signup) ---
+    function formatPhoneLive(raw) {
+      var digits = (raw || '').replace(/\D/g, '').slice(0, 10);
+      if (digits.length === 0) return '';
+      if (digits.length < 4)  return '(' + digits;
+      if (digits.length < 7)  return '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+      return '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+    }
+    if (altPhone) {
+      altPhone.addEventListener('input', function () {
+        var f = formatPhoneLive(altPhone.value);
+        if (altPhone.value !== f) altPhone.value = f;
+      });
+    }
+
+    // --- state rendering ---
+    function showApptView(view) {
+      wrap.setAttribute('data-appointment-state', view);
+      wrap.querySelectorAll('[data-appt-view]').forEach(function (el) {
+        el.hidden = (el.getAttribute('data-appt-view') !== view);
+      });
+    }
+    function fmtApptWhen(appt) {
+      if (!appt || !appt.appointment_requested_date) return '';
+      var parts = String(appt.appointment_requested_date).split('-');
+      var dd = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+      var when = dayLabel(dd) + ' at ' + hourLabel(appt.appointment_requested_hour);
+      var tz = appt.appointment_timezone ? (' (' + appt.appointment_timezone + ')') : '';
+      return when + tz;
+    }
+    function markJourneyStep1Done() {
+      // Step 1 gets a checkmark, Step 2 becomes the active step.
+      var journey = document.getElementById('welcome-journey');
+      if (!journey) return;
+      var s1 = journey.querySelector('[data-journey-step="1"]');
+      var s2 = journey.querySelector('[data-journey-step="2"]');
+      if (s1) { s1.classList.add('journey-step-done'); s1.classList.remove('journey-step-now'); }
+      if (s2) s2.classList.add('journey-step-now');
+    }
+    markJourneyStep1Done();
+
+    // --- load existing appointment to pick the state ---
+    try {
+      var res = await authedFetch('/api/support/appointment');
+      if (res.ok) {
+        var data = await res.json();
+        var appt = data.appointment;
+        if (appt) {
+          if (appt.appointment_status === 'confirmed') {
+            var cm = document.getElementById('appointment-confirmed-msg');
+            if (cm) cm.textContent = fmtApptWhen(appt) + '. We\u2019ll talk soon.';
+            showApptView('confirmed');
+          } else {
+            var rm = document.getElementById('appointment-requested-msg');
+            if (rm) rm.textContent = 'Requested for ' + fmtApptWhen(appt) + '. We\u2019ll confirm shortly.';
+            showApptView('requested');
+          }
+          return; // already has an appointment — don't show the form
+        }
+      }
+    } catch (e) { /* fall through to schedule view */ }
+    showApptView('schedule');
+
+    // --- submit ---
+    if (form) {
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+        var date = dateSel ? dateSel.value : '';
+        var hour = hourSel ? parseInt(hourSel.value, 10) : 0;
+        var tz = tzSel ? tzSel.value : '';
+        var altP = altPhone ? altPhone.value.trim() : '';
+
+        function apptErr(m) {
+          if (alertEl) { alertEl.textContent = m; alertEl.hidden = false; }
+        }
+        if (!date) return apptErr('Please choose a day.');
+        if (!(hour >= 8 && hour <= 17)) return apptErr('Please choose a time.');
+        // Alt phone optional, but if given must be valid NANP.
+        if (altP && !/^\([2-9]\d{2}\)\s\d{3}-\d{4}$/.test(altP)) {
+          return apptErr('Please enter a valid phone, e.g. (514) 555-0100, or leave it blank.');
+        }
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Requesting\u2026'; }
+        try {
+          var r = await authedFetch('/api/support/appointment', {
+            method: 'POST',
+            body: JSON.stringify({ date: date, hour: hour, timezone: tz, alt_phone: altP })
+          });
+          var d = await r.json();
+          if (!r.ok || !d.ok) throw new Error((d && d.error) || 'Could not request your call.');
+          var rm2 = document.getElementById('appointment-requested-msg');
+          if (rm2) rm2.textContent = 'Requested for ' + fmtApptWhen(d.appointment) + '. We\u2019ll confirm shortly.';
+          showApptView('requested');
+        } catch (err) {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Request my call'; }
+          apptErr(err.message);
+        }
+      });
+    }
+  }
+
   // window.iboostShared.escapeHtml. We keep a local alias so the many
   // existing call sites don't have to change.
   function escapeHtml(s) {
@@ -990,6 +1211,11 @@
     // handler. Also flips between the incomplete/complete layouts
     // based on isProfileKycComplete().
     initProfileForm(user);
+
+    // Step 2 — onboarding-call scheduler. Self-manages its visibility
+    // (only shows once KYC is complete) and its state (schedule /
+    // requested / confirmed).
+    initAppointment(user);
 
     // Sign-out button + cross-tab SIGNED_OUT redirect — delegated to
     // shell (Phase B). The shell version preserves the same behavior:

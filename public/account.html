@@ -118,22 +118,96 @@
            ============================================================ -->
       <div class="welcome-journey" id="welcome-journey" data-profile-state="incomplete">
         <ol class="journey-steps">
-          <li class="journey-step journey-step-now">
+          <li class="journey-step journey-step-now" data-journey-step="1">
             <span class="journey-step-eye">Now</span>
             <h3 class="journey-step-title">Tell us about you</h3>
             <p class="journey-step-desc">A few details so we can prepare your credit file. Takes about a minute.</p>
           </li>
-          <li class="journey-step">
+          <li class="journey-step" data-journey-step="2">
             <span class="journey-step-eye">Next</span>
-            <h3 class="journey-step-title">We review your file</h3>
-            <p class="journey-step-desc">Our onboarding specialist will give you a call soon to walk you through it.</p>
+            <h3 class="journey-step-title">Book your welcome call</h3>
+            <p class="journey-step-desc">A complimentary call with our onboarding specialist to set you up for success.</p>
           </li>
-          <li class="journey-step">
+          <li class="journey-step" data-journey-step="3">
             <span class="journey-step-eye">Ongoing</span>
             <h3 class="journey-step-title">Watch your score climb</h3>
             <p class="journey-step-desc">Monthly insights and a clear plan to improve — that's what you're here for.</p>
           </li>
         </ol>
+      </div>
+
+      <!-- ===================== STEP 2: BOOK WELCOME CALL =================
+           Appears once KYC is complete. Lets the user request a
+           complimentary onboarding call (preferred weekday Mon–Fri +
+           hour 8am–5pm, timezone, optional call-specific phone). Submit
+           creates an onboarding_appointment support-case for the admin.
+           Three states (JS toggles via data-appointment-state on the
+           card): 'schedule' (pick a time), 'requested' (awaiting
+           confirmation), 'confirmed' (team confirmed the time).
+           Hidden until profile complete. ============================ -->
+      <div class="welcome-appointment" id="welcome-appointment" hidden data-appointment-state="schedule">
+
+        <!-- State: schedule (the form) -->
+        <article class="dash-card appointment-card" data-appt-view="schedule">
+          <div class="appointment-head">
+            <h3 class="appointment-title">Book your welcome call</h3>
+            <p class="appointment-sub">
+              Pick a time that works and our onboarding specialist will call you. Monday–Friday, 8am–5pm.
+            </p>
+          </div>
+          <form id="appointment-form" class="appointment-form">
+            <div class="profile-form-field-row">
+              <div class="profile-form-field">
+                <label for="appointment-date">Preferred day</label>
+                <select id="appointment-date"><option value="">Choose a day</option></select>
+              </div>
+              <div class="profile-form-field">
+                <label for="appointment-hour">Preferred time</label>
+                <select id="appointment-hour"><option value="">Choose a time</option></select>
+              </div>
+            </div>
+            <div class="profile-form-field">
+              <label for="appointment-tz">Time zone</label>
+              <select id="appointment-tz"></select>
+            </div>
+            <div class="profile-form-field">
+              <label for="appointment-alt-phone">
+                Alternate phone for this call <span class="profile-form-optional">(optional)</span>
+              </label>
+              <input type="tel" id="appointment-alt-phone" inputmode="tel"
+                placeholder="(514) 555-0100" autocomplete="off" />
+              <p class="profile-form-hint">Leave blank to use the phone on your profile.</p>
+            </div>
+            <div id="appointment-alert" class="alert alert-error" hidden></div>
+            <div class="appointment-actions">
+              <button type="submit" class="btn btn-primary" id="appointment-submit">
+                Request my call
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <!-- State: requested (awaiting confirmation) -->
+        <article class="dash-card appointment-card appointment-card-status" data-appt-view="requested" hidden>
+          <div class="appointment-status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="appointment-status-body">
+            <h3>Call requested</h3>
+            <p id="appointment-requested-msg">We'll confirm your time shortly.</p>
+          </div>
+        </article>
+
+        <!-- State: confirmed -->
+        <article class="dash-card appointment-card appointment-card-status appointment-card-confirmed" data-appt-view="confirmed" hidden>
+          <div class="appointment-status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="appointment-status-body">
+            <h3>Your call is confirmed</h3>
+            <p id="appointment-confirmed-msg">We'll talk soon.</p>
+          </div>
+        </article>
       </div>
 
       <!-- ===================== PROFILE COMPLETION =====================
