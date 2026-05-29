@@ -994,3 +994,89 @@ a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
 /* The editable rows show the Edit button in the 3rd grid column, like
    the goal row. (Static rows used an empty <div> there.) */
 .profile-edit-row .dash-info-btn { align-self: start; }
+
+/* ============================================================
+   Customer plan-change / cancel modals + retention (Stage 5)
+   Editorial-financial styling to match the dashboard.
+   ============================================================ */
+.dash-modal-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10, 37, 64, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.dash-modal {
+  background: #fff; border-radius: 14px; width: 100%;
+  padding: 26px 26px 22px;
+  box-shadow: 0 20px 60px rgba(10, 37, 64, 0.25);
+  max-height: 90vh; overflow-y: auto;
+}
+.dash-modal-title { margin: 0 0 6px; font-size: 1.25rem; color: #0A2540; font-weight: 700; }
+.dash-modal-sub { margin: 0 0 18px; font-size: 0.9rem; color: #64748b; line-height: 1.5; }
+.dash-modal-actions { display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+.dash-btn-primary {
+  background: #16a34a; color: #fff; border: none; border-radius: 8px;
+  padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  text-decoration: none; display: inline-block;
+}
+.dash-btn-primary:hover:not(:disabled) { background: #15803d; }
+.dash-btn-primary:disabled { opacity: 0.6; cursor: default; }
+.dash-btn-ghost {
+  background: transparent; color: #475569; border: 1px solid #e2e8f0;
+  border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.dash-btn-ghost:hover { background: #f8fafc; }
+.dash-btn-danger {
+  background: #fff; color: #b91c1c; border: 1px solid #fca5a5;
+  border-radius: 8px; padding: 10px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.dash-btn-danger:hover:not(:disabled) { background: #fef2f2; }
+.dash-btn-danger:disabled { opacity: 0.6; cursor: default; }
+
+.dash-plan-switch {
+  display: flex; align-items: stretch; gap: 14px;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 16px; margin-bottom: 8px;
+}
+.dash-plan-switch-current, .dash-plan-switch-target { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.dash-plan-switch-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; }
+.dash-plan-switch-current strong, .dash-plan-switch-target strong { font-size: 1.05rem; color: #0A2540; }
+.dash-plan-switch-price { font-size: 0.85rem; color: #475569; }
+.dash-plan-switch-arrow { display: flex; align-items: center; color: #16a34a; font-size: 1.4rem; }
+
+.dash-reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.dash-reason {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border: 1px solid #e2e8f0; border-radius: 10px; cursor: pointer; font-size: 0.92rem; color: #334155;
+}
+.dash-reason:hover { border-color: #cbd5e1; background: #f8fafc; }
+.dash-reason input { accent-color: #16a34a; }
+
+.dash-offer {
+  background: #e7f7ee; border: 1px solid #3ee082; border-radius: 12px;
+  padding: 16px; margin-bottom: 6px;
+}
+.dash-offer strong { display: block; color: #166534; margin-bottom: 6px; font-size: 0.98rem; }
+.dash-offer p { margin: 0 0 12px; color: #334155; font-size: 0.88rem; line-height: 1.5; }
+.dash-offer-muted { background: #f8fafc; border-color: #e2e8f0; }
+.dash-offer-muted strong { color: #475569; }
+
+.dash-alert-error {
+  background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
+  border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-top: 12px;
+}
+.dash-alert-success {
+  background: #dcfce7; border: 1px solid #16a34a; color: #166534;
+  border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; margin-top: 12px;
+}
+
+.dash-plan-banner {
+  border-radius: 10px; padding: 12px 14px; margin: 0 0 16px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.dash-plan-banner strong { font-size: 0.92rem; }
+.dash-plan-banner span { font-size: 0.82rem; line-height: 1.45; }
+.dash-plan-banner-info { background: #fef3c7; border: 1px solid #fde68a; }
+.dash-plan-banner-info strong { color: #78350f; }
+.dash-plan-banner-info span { color: #92400e; }

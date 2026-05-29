@@ -720,12 +720,41 @@
           window.location.href = '/checkout.html?plan=essential';
         });
       } else {
-        // Paid user: standard "Change plan" CTA
+        // Paid user: open the inline change/cancel modal (schedules via
+        // /api/billing/change-plan or cancels via /api/billing/cancel —
+        // both effective next cycle, no proration). This REPLACES the old
+        // /checkout.html?mode=change redirect, which created drift by
+        // writing the DB without touching Stripe.
         changeBtn.textContent = 'Change plan';
         changeBtn.addEventListener('click', function () {
-          window.location.href = '/checkout.html?plan=' +
-            encodeURIComponent(plan) + '&mode=change';
+          openPlanChangeModal(profile, planMap);
         });
+      }
+    }
+
+    // Pending scheduled plan-change banner (paid->paid). Mirrors the
+    // cancel banner. Shown when a change is scheduled for the next cycle.
+    var pendingBanner = document.getElementById('profile-plan-pending-banner');
+    if (!pendingBanner && card && profile && profile.pending_plan) {
+      // The HTML may not have this element yet; create it inline above the
+      // perks so it shows regardless of template version.
+      pendingBanner = document.createElement('div');
+      pendingBanner.id = 'profile-plan-pending-banner';
+      pendingBanner.className = 'dash-plan-banner dash-plan-banner-info';
+      var pendMeta = planMap[profile.pending_plan];
+      var pendLabel = (pendMeta && pendMeta.name) || profile.pending_plan;
+      var pendDate = profile.pending_plan_effective_at
+        ? formatLongDate(profile.pending_plan_effective_at)
+        : (profile.next_billing_date ? formatLongDate(profile.next_billing_date) : null);
+      pendingBanner.innerHTML =
+        '<strong>Changing to ' + escapeHtml(pendLabel) +
+          (pendDate ? ' on ' + escapeHtml(pendDate) : ' next cycle') + '</strong>' +
+        '<span>Your current plan continues until then. The new price applies at your next renewal.</span>';
+      var anchor = document.getElementById('profile-plan-perks');
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(pendingBanner, anchor);
+      } else {
+        card.appendChild(pendingBanner);
       }
     }
 
@@ -838,6 +867,227 @@
         }
       });
     }
+  }
+
+  // ===================================================================
+  // Customer self-service plan change + cancel (with retention).
+  // Paid<->paid -> POST /api/billing/change-plan (schedule next cycle).
+  // Paid->free  -> retention flow -> POST /api/billing/cancel.
+  // No card data here; Stripe Hosted Checkout handled free->paid already.
+  // ===================================================================
+
+  async function postBilling(path, payload) {
+    var base = getApiBase();
+    var settled = await window.iboostAuth.getSessionSettled();
+    var session = settled && settled.session;
+    if (!session || !session.access_token) {
+      window.location.href = '/login.html';
+      return { ok: false, error: 'Not signed in' };
+    }
+    try {
+      var resp = await fetch(base + path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify(payload || {}),
+      });
+      var data = await resp.json().catch(function () { return {}; });
+      if (!resp.ok) return { ok: false, error: data.error || ('HTTP ' + resp.status), data: data };
+      return { ok: true, data: data };
+    } catch (err) {
+      return { ok: false, error: err.message || 'Network error' };
+    }
+  }
+
+  function closeModal(backdrop) {
+    if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+  }
+
+  function buildModal(innerHtml, maxWidth) {
+    var backdrop = document.createElement('div');
+    backdrop.className = 'dash-modal-backdrop';
+    backdrop.innerHTML = '<div class="dash-modal" role="dialog" aria-modal="true" style="max-width:' +
+      (maxWidth || 480) + 'px;">' + innerHtml + '</div>';
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', function (ev) { if (ev.target === backdrop) closeModal(backdrop); });
+    return backdrop;
+  }
+
+  // The two paid plans, in order, for "switch to the other one".
+  var PAID_PLANS = ['essential', 'complete'];
+
+  function openPlanChangeModal(profile, planMap) {
+    var current = profile.plan;
+    var other = PAID_PLANS.filter(function (p) { return p !== current; })[0];
+    var curMeta = planMap[current] || {};
+    var otherMeta = planMap[other] || {};
+    var cur = profile.plan_currency || 'cad';
+    var price = function (m) {
+      var a = cur === 'cad' ? m.price_cad : m.price_usd;
+      return a == null ? '' : '$' + a + ' ' + cur.toUpperCase() + '/mo';
+    };
+    var isUpgrade = other === 'complete';
+
+    var backdrop = buildModal(
+      '<h3 class="dash-modal-title">Change your plan</h3>' +
+      '<p class="dash-modal-sub">Changes take effect at your next billing date — ' +
+        'no proration, no partial refund. You keep your current plan until then.</p>' +
+      '<div class="dash-plan-switch">' +
+        '<div class="dash-plan-switch-current">' +
+          '<span class="dash-plan-switch-label">Current</span>' +
+          '<strong>' + escapeHtml(curMeta.name || current) + '</strong>' +
+          '<span class="dash-plan-switch-price">' + escapeHtml(price(curMeta)) + '</span>' +
+        '</div>' +
+        '<div class="dash-plan-switch-arrow">\u2192</div>' +
+        '<div class="dash-plan-switch-target">' +
+          '<span class="dash-plan-switch-label">' + (isUpgrade ? 'Upgrade to' : 'Switch to') + '</span>' +
+          '<strong>' + escapeHtml(otherMeta.name || other) + '</strong>' +
+          '<span class="dash-plan-switch-price">' + escapeHtml(price(otherMeta)) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="dash-plan-alert"></div>' +
+      '<div class="dash-modal-actions">' +
+        '<button type="button" class="dash-btn-ghost" id="dash-plan-cancel-sub">Cancel subscription</button>' +
+        '<div style="flex:1"></div>' +
+        '<button type="button" class="dash-btn-ghost" id="dash-plan-close">Not now</button>' +
+        '<button type="button" class="dash-btn-primary" id="dash-plan-confirm">' +
+          (isUpgrade ? 'Upgrade' : 'Switch') + ' to ' + escapeHtml(otherMeta.name || other) + '</button>' +
+      '</div>',
+      520
+    );
+
+    var alertEl = backdrop.querySelector('#dash-plan-alert');
+    backdrop.querySelector('#dash-plan-close').addEventListener('click', function () { closeModal(backdrop); });
+
+    // Cancel subscription -> retention flow.
+    backdrop.querySelector('#dash-plan-cancel-sub').addEventListener('click', function () {
+      closeModal(backdrop);
+      openCancelRetentionModal(profile, planMap);
+    });
+
+    backdrop.querySelector('#dash-plan-confirm').addEventListener('click', async function () {
+      var btn = this;
+      btn.disabled = true; btn.textContent = 'Scheduling…';
+      alertEl.innerHTML = '';
+      var r = await postBilling('/api/billing/change-plan', { target_plan: other });
+      if (!r.ok) {
+        btn.disabled = false; btn.textContent = (isUpgrade ? 'Upgrade' : 'Switch');
+        alertEl.innerHTML = '<div class="dash-alert-error">' + escapeHtml(r.error) + '</div>';
+        return;
+      }
+      alertEl.innerHTML = '<div class="dash-alert-success">Done — your plan changes to ' +
+        escapeHtml(otherMeta.name || other) + ' at your next billing date.</div>';
+      btn.style.display = 'none';
+      backdrop.querySelector('#dash-plan-cancel-sub').style.display = 'none';
+      backdrop.querySelector('#dash-plan-close').textContent = 'Done';
+      // Reload the card after a beat so the pending banner shows.
+      setTimeout(function () { window.location.reload(); }, 1400);
+    });
+  }
+
+  // Retention: reason -> one tier-aware save-offer -> cancel anyway.
+  function openCancelRetentionModal(profile, planMap) {
+    var current = profile.plan;
+    var curMeta = planMap[current] || {};
+    var REASONS = [
+      { v: 'too_expensive', t: 'It\u2019s too expensive' },
+      { v: 'not_using', t: 'I\u2019m not using it' },
+      { v: 'no_results', t: 'I\u2019m not seeing results' },
+      { v: 'other', t: 'Another reason' },
+    ];
+    var backdrop = buildModal(
+      '<h3 class="dash-modal-title">Before you go</h3>' +
+      '<p class="dash-modal-sub">Tell us why you\u2019re cancelling — it helps us improve, ' +
+        'and we may be able to help.</p>' +
+      '<div class="dash-reason-list">' +
+        REASONS.map(function (r) {
+          return '<label class="dash-reason"><input type="radio" name="cancel-reason" value="' +
+            r.v + '"> <span>' + escapeHtml(r.t) + '</span></label>';
+        }).join('') +
+      '</div>' +
+      '<div id="dash-retention-offer"></div>' +
+      '<div id="dash-cancel-alert"></div>' +
+      '<div class="dash-modal-actions">' +
+        '<button type="button" class="dash-btn-ghost" id="dash-cancel-close">Keep my plan</button>' +
+        '<div style="flex:1"></div>' +
+        '<button type="button" class="dash-btn-danger" id="dash-cancel-proceed" disabled>Continue</button>' +
+      '</div>',
+      520
+    );
+
+    var offerEl = backdrop.querySelector('#dash-retention-offer');
+    var alertEl = backdrop.querySelector('#dash-cancel-alert');
+    var proceedBtn = backdrop.querySelector('#dash-cancel-proceed');
+    var chosenReason = null;
+
+    backdrop.querySelector('#dash-cancel-close').addEventListener('click', function () { closeModal(backdrop); });
+
+    backdrop.querySelectorAll('input[name="cancel-reason"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        chosenReason = radio.value;
+        proceedBtn.disabled = false;
+        renderOffer(chosenReason);
+      });
+    });
+
+    function renderOffer(reason) {
+      // Tier-aware save offer.
+      if (reason === 'too_expensive' && current === 'complete') {
+        offerEl.innerHTML =
+          '<div class="dash-offer">' +
+            '<strong>Keep your progress for less</strong>' +
+            '<p>Switch to Essential instead of cancelling — you keep your core ' +
+              'features at a lower price, effective next cycle.</p>' +
+            '<button type="button" class="dash-btn-primary" id="dash-offer-downgrade">Switch to Essential</button>' +
+          '</div>';
+        backdrop.querySelector('#dash-offer-downgrade').addEventListener('click', async function () {
+          this.disabled = true; this.textContent = 'Scheduling…';
+          var r = await postBilling('/api/billing/change-plan', { target_plan: 'essential' });
+          if (!r.ok) { this.disabled = false; this.textContent = 'Switch to Essential';
+            alertEl.innerHTML = '<div class="dash-alert-error">' + escapeHtml(r.error) + '</div>'; return; }
+          offerEl.innerHTML = '<div class="dash-alert-success">Switched to Essential at your next billing date.</div>';
+          proceedBtn.style.display = 'none';
+          backdrop.querySelector('#dash-cancel-close').textContent = 'Done';
+          setTimeout(function () { window.location.reload(); }, 1400);
+        });
+      } else if (reason === 'not_using' || reason === 'no_results') {
+        offerEl.innerHTML =
+          '<div class="dash-offer">' +
+            '<strong>Let us help you get results</strong>' +
+            '<p>A quick call with a specialist can get you back on track. ' +
+              'Want us to reach out?</p>' +
+            '<a class="dash-btn-primary" href="/account.html#welcome">Book a call</a>' +
+          '</div>';
+      } else {
+        offerEl.innerHTML =
+          '<div class="dash-offer dash-offer-muted">' +
+            '<strong>If you cancel, you\u2019ll lose</strong>' +
+            '<p>Access to your ' + escapeHtml(curMeta.name || current) +
+              ' features and monthly credit insights at your next billing date. ' +
+              'You can re-subscribe any time.</p>' +
+          '</div>';
+      }
+    }
+
+    proceedBtn.addEventListener('click', async function () {
+      if (!chosenReason) return;
+      proceedBtn.disabled = true; proceedBtn.textContent = 'Cancelling…';
+      alertEl.innerHTML = '';
+      var r = await postBilling('/api/billing/cancel', { reason: chosenReason });
+      if (!r.ok) {
+        proceedBtn.disabled = false; proceedBtn.textContent = 'Continue';
+        alertEl.innerHTML = '<div class="dash-alert-error">' + escapeHtml(r.error) + '</div>';
+        return;
+      }
+      offerEl.innerHTML = '';
+      alertEl.innerHTML = '<div class="dash-alert-success">Your subscription will end at your ' +
+        'next billing date. You\u2019ll keep access until then.</div>';
+      proceedBtn.style.display = 'none';
+      backdrop.querySelector('#dash-cancel-close').textContent = 'Done';
+      setTimeout(function () { window.location.reload(); }, 1600);
+    });
   }
 
   async function renderPlanHistory(listEl, pending, history) {
