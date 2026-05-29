@@ -54,12 +54,17 @@ router.post('/cases', requireAuth, async function (req, res, next) {
     }
 
     // Insert the case. case_number/status/unread flags use DB defaults.
+    // Default category to explicit 'help' (the Get-help form doesn't send
+    // one) so the admin Type column is unambiguous now that there are 3+
+    // case types. We never let the client set an internal category.
+    var safeCategory = category || 'help';
+    if (safeCategory === 'payment_failed') safeCategory = 'help'; // internal-only; not client-settable
     const { data: caseRow, error: caseErr } = await req.supabase
       .from('support_cases')
       .insert({
         user_id: userId,
         subject: subject || null,
-        category: category || null,
+        category: safeCategory,
       })
       .select('id, case_number, status, created_at')
       .single();
@@ -108,6 +113,12 @@ router.get('/cases/mine', requireAuth, async function (req, res, next) {
     const { data, error } = await req.supabase
       .from('support_cases')
       .select('id, case_number, subject, category, status, unread_by_customer, rating, created_at, updated_at, resolved_at')
+      // Internal-only categories never surface to the customer (e.g.
+      // payment_failed cases are agent outreach work items; the customer
+      // sees the past-due banner, not a CS thread). Null-safe: keep
+      // legacy null-category (help) cases visible — a bare .neq would
+      // also drop nulls since (null != x) is null, not true.
+      .or('category.is.null,category.neq.payment_failed')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -307,7 +318,8 @@ router.get('/unread-count', requireAuth, async function (req, res, next) {
     const { count, error } = await req.supabase
       .from('support_cases')
       .select('id', { count: 'exact', head: true })
-      .eq('unread_by_customer', true);
+      .eq('unread_by_customer', true)
+      .or('category.is.null,category.neq.payment_failed');
     if (error) {
       return res.status(500).json({ error: 'Could not load count: ' + error.message });
     }

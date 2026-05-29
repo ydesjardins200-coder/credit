@@ -533,6 +533,49 @@ async function handlePaymentFailed(invoice) {
   }
   // eslint-disable-next-line no-console
   console.log('[webhook] payment failed: user=' + profile.id + ' marked past_due');
+
+  // Create an INTERNAL customer-service case so a human follows up
+  // (call/email the customer). We're inside the first-failure block
+  // (guarded by the payment_failed_at null check above), so Stripe's
+  // dunning retries never reach here — exactly one case per failure
+  // episode, no separate dedup query needed. Unassigned, so it shows in
+  // the CS queue for a collection agent to take. category
+  // 'payment_failed' is excluded from the customer's own case list, so
+  // the customer never sees it (they see the past-due banner instead).
+  try {
+    const failedAt = new Date();
+    const planLabel = profile.plan || 'subscription';
+    const { data: caseRow, error: caseErr } = await supabaseAdmin
+      .from('support_cases')
+      .insert({
+        user_id: profile.id,
+        category: 'payment_failed',
+        subject: 'Payment failed — outreach needed',
+        // unassigned (assigned_to null) → appears in the CS queue
+      })
+      .select('id')
+      .single();
+    if (caseErr) {
+      // Don't fail the webhook over a case-creation hiccup; the past-due
+      // state (and Collection tab) is the source of truth. Log + move on.
+      console.log('[webhook] payment_failed case create error: ' + caseErr.message);
+    } else if (caseRow) {
+      const summary = 'Renewal payment failed for the ' + planLabel +
+        ' plan on ' + failedAt.toISOString().slice(0, 10) +
+        '. Account is past due. Reach out to the customer (call, or email ' +
+        'if unreachable) to help them update their payment method.';
+      await supabaseAdmin
+        .from('support_messages')
+        .insert({
+          case_id: caseRow.id,
+          author_type: 'agent', // system-authored, internal
+          author_id: null,
+          body: summary,
+        });
+    }
+  } catch (e) {
+    console.log('[webhook] payment_failed case create threw: ' + (e && e.message));
+  }
 }
 
 // invoice.payment_succeeded fires on every successful charge — initial
@@ -568,6 +611,40 @@ async function handlePaymentSucceeded(invoice) {
   }
   // eslint-disable-next-line no-console
   console.log('[webhook] payment recovered: user=' + profile.id + ' back to active');
+
+  // Auto-resolve the open payment_failed case (if any): the problem
+  // fixed itself (card updated or a retry succeeded), so the outreach
+  // work item is done. Post a system note + mark resolved, so the CS
+  // queue self-cleans alongside the Collection tab.
+  try {
+    const { data: openCases } = await supabaseAdmin
+      .from('support_cases')
+      .select('id')
+      .eq('user_id', profile.id)
+      .eq('category', 'payment_failed')
+      .eq('status', 'open');
+    for (const c of (openCases || [])) {
+      await supabaseAdmin
+        .from('support_messages')
+        .insert({
+          case_id: c.id,
+          author_type: 'agent',
+          author_id: null,
+          body: 'Payment recovered on ' + new Date().toISOString().slice(0, 10) +
+            ' — account is active again. Auto-resolved.',
+        });
+      await supabaseAdmin
+        .from('support_cases')
+        .update({
+          status: 'resolved',
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', c.id);
+    }
+  } catch (e) {
+    console.log('[webhook] payment_succeeded auto-resolve threw: ' + (e && e.message));
+  }
 }
 
 // express.raw() is applied to this route in index.js, so req.body is a
