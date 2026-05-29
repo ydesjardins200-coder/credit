@@ -211,15 +211,50 @@
             <fieldset class="profile-form-section profile-step-panel" data-step="0">
               <legend class="profile-form-legend">Date of birth</legend>
               <div class="profile-form-field">
-                <label for="profile-form-dob" class="sr-only">Date of birth</label>
-                <input
-                  type="date"
-                  id="profile-form-dob"
-                  name="date_of_birth"
-                  max="2026-04-23"
-                  required
-                  autocomplete="bday"
-                />
+                <!-- Three selects (day / month / year) instead of the
+                     native date picker — far faster for a birth date than
+                     paginating a calendar back decades. account.js
+                     populates the options, adjusts the day count to the
+                     selected month/year, and assembles the value back
+                     into an ISO YYYY-MM-DD string in readFormValues() so
+                     the stored format is unchanged. The hidden input
+                     keeps the original name/autocomplete contract. -->
+                <div class="profile-dob-row" role="group" aria-label="Date of birth">
+                  <div class="profile-dob-field">
+                    <label for="profile-form-dob-day" class="profile-dob-label">Day</label>
+                    <select id="profile-form-dob-day" autocomplete="bday-day">
+                      <option value="">Day</option>
+                    </select>
+                  </div>
+                  <div class="profile-dob-field">
+                    <label for="profile-form-dob-month" class="profile-dob-label">Month</label>
+                    <select id="profile-form-dob-month" autocomplete="bday-month">
+                      <option value="">Month</option>
+                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3">March</option>
+                      <option value="4">April</option>
+                      <option value="5">May</option>
+                      <option value="6">June</option>
+                      <option value="7">July</option>
+                      <option value="8">August</option>
+                      <option value="9">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  </div>
+                  <div class="profile-dob-field">
+                    <label for="profile-form-dob-year" class="profile-dob-label">Year</label>
+                    <select id="profile-form-dob-year" autocomplete="bday-year">
+                      <option value="">Year</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- Hidden input preserves the original field name so any
+                     code relying on it still finds it; account.js keeps
+                     it synced to the assembled ISO date. -->
+                <input type="hidden" id="profile-form-dob" name="date_of_birth" />
                 <p class="profile-form-hint">Must be 18 or older to build credit with iBoost.</p>
               </div>
             </fieldset>

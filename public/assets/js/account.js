@@ -318,21 +318,103 @@
     if (regionInput) regionInput.placeholder = placeholders.region;
     if (postalInput) postalInput.placeholder = placeholders.postal;
 
-    // DOB max = today (ISO). Prevents picking future dates in the picker.
-    const dobInput = document.getElementById('profile-form-dob');
-    if (dobInput) {
-      var today = new Date();
-      var isoToday =
-        today.getFullYear() + '-' +
-        String(today.getMonth() + 1).padStart(2, '0') + '-' +
-        String(today.getDate()).padStart(2, '0');
-      dobInput.max = isoToday;
+    // DOB dropdowns (day / month / year). Populate options, keep the
+    // day count in sync with the selected month/year, and assemble the
+    // chosen date back into the hidden #profile-form-dob as an ISO
+    // YYYY-MM-DD string so readFormValues() + the save are unchanged.
+    const dobInput = document.getElementById('profile-form-dob'); // hidden
+    const dobDay = document.getElementById('profile-form-dob-day');
+    const dobMonth = document.getElementById('profile-form-dob-month');
+    const dobYear = document.getElementById('profile-form-dob-year');
+
+    function daysInMonth(month, year) {
+      // month is 1-12. If year unknown, assume a leap year so Feb shows
+      // 29 (we don't want to hide a valid day before the year is picked).
+      if (!month) return 31;
+      var y = year || 2000; // 2000 is a leap year
+      return new Date(y, month, 0).getDate(); // day 0 of next month
     }
+
+    function populateDobDays() {
+      if (!dobDay) return;
+      var prev = dobDay.value;
+      var month = parseInt(dobMonth && dobMonth.value, 10) || 0;
+      var year = parseInt(dobYear && dobYear.value, 10) || 0;
+      var max = daysInMonth(month, year);
+      // Rebuild options 1..max, preserving the prior selection if still valid.
+      var html = '<option value="">Day</option>';
+      for (var d = 1; d <= max; d++) {
+        html += '<option value="' + d + '">' + d + '</option>';
+      }
+      dobDay.innerHTML = html;
+      if (prev && parseInt(prev, 10) <= max) dobDay.value = prev;
+    }
+
+    function populateDobYears() {
+      if (!dobYear) return;
+      var nowYear = new Date().getFullYear();
+      var maxYear = nowYear - 18; // must be 18+
+      var minYear = nowYear - 100;
+      var html = '<option value="">Year</option>';
+      for (var y = maxYear; y >= minYear; y--) {
+        html += '<option value="' + y + '">' + y + '</option>';
+      }
+      dobYear.innerHTML = html;
+    }
+
+    // Sync the hidden ISO input from the three selects. Empty unless all
+    // three are chosen — so the existing "please enter your DOB"
+    // validation fires naturally when incomplete.
+    function syncDobHidden() {
+      if (!dobInput) return;
+      var d = parseInt(dobDay && dobDay.value, 10) || 0;
+      var m = parseInt(dobMonth && dobMonth.value, 10) || 0;
+      var y = parseInt(dobYear && dobYear.value, 10) || 0;
+      if (d && m && y) {
+        dobInput.value = y + '-' +
+          String(m).padStart(2, '0') + '-' +
+          String(d).padStart(2, '0');
+      } else {
+        dobInput.value = '';
+      }
+    }
+
+    populateDobYears();
+    populateDobDays();
+
+    if (dobMonth) dobMonth.addEventListener('change', function () {
+      populateDobDays(); // month changed → adjust day count
+      syncDobHidden();
+      updateProgress();
+    });
+    if (dobYear) dobYear.addEventListener('change', function () {
+      populateDobDays(); // year changed → Feb 28/29 correctness
+      syncDobHidden();
+      updateProgress();
+    });
+    if (dobDay) dobDay.addEventListener('change', function () {
+      syncDobHidden();
+      updateProgress();
+    });
 
     // Pre-fill any partially-filled fields. Preserves work across
     // sessions — user filled 3 fields yesterday, finishes today.
     if (profile) {
-      if (profile.date_of_birth && dobInput) dobInput.value = profile.date_of_birth;
+      // DOB: split a saved ISO date (YYYY-MM-DD) back into the three
+      // selects, then sync the hidden input.
+      if (profile.date_of_birth) {
+        var dobParts = String(profile.date_of_birth).split('-');
+        if (dobParts.length === 3) {
+          var py = parseInt(dobParts[0], 10);
+          var pm = parseInt(dobParts[1], 10);
+          var pd = parseInt(dobParts[2], 10);
+          if (dobYear && py) dobYear.value = String(py);
+          if (dobMonth && pm) dobMonth.value = String(pm);
+          populateDobDays(); // rebuild days for the prefilled month/year
+          if (dobDay && pd) dobDay.value = String(pd);
+          syncDobHidden();
+        }
+      }
       var fieldMap = {
         'profile-form-address-line1': profile.address_line1,
         'profile-form-address-line2': profile.address_line2,
