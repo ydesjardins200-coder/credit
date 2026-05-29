@@ -329,6 +329,11 @@ router.post(
         .from('profiles')
         .update({
           cancel_at_period_end: false,
+          // A released schedule isn't recreated by resume, so clear any
+          // stale pending-change marker too.
+          pending_plan: null,
+          pending_plan_currency: null,
+          pending_plan_effective_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
@@ -344,12 +349,16 @@ router.post(
     // 4) Mark any pending admin_cancel rows for this user as rescinded.
     // There should be at most one (the most recent un-cancelled, future-
     // effective_at admin_cancel row), but UPDATE-by-filter handles N safely.
+    // Also clear any pending admin_schedule rows: if a scheduled change
+    // existed, the cancel released its Stripe schedule and resume does NOT
+    // recreate it — so a lingering admin_schedule row is stale and must
+    // not keep showing as a pending change.
     try {
       const r = await supabaseAdmin
         .from('plan_changes')
         .update({ cancelled_at: new Date().toISOString() })
         .eq('user_id', userId)
-        .eq('source', 'admin_cancel')
+        .in('source', ['admin_cancel', 'admin_schedule'])
         .is('cancelled_at', null)
         .gt('effective_at', new Date().toISOString());
       if (r.error) {
