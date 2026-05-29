@@ -250,4 +250,106 @@ async function cancelToFree(userId, reason, note, actor) {
   return { ok: true, status: 200, body: { ok: true, scheduled: true, target_plan: 'free', effective_at: effectiveAtIso } };
 }
 
-module.exports = { schedulePlanChange, cancelToFree };
+// ---- Cancel a pending scheduled plan change (undo) ---------------------
+// Releases the Stripe Subscription Schedule (the sub returns to normal on
+// its CURRENT plan, the phase-2 change never happens — no proration, no
+// charge, same renewal date), clears the pending marker, and marks the
+// pending admin_schedule history row cancelled. Used when the user (or an
+// operator) changes their mind before the scheduled change lands.
+async function cancelScheduledChange(userId, actor) {
+  let profile;
+  try {
+    const r = await supabaseAdmin
+      .from('profiles')
+      .select('id, plan, stripe_subscription_id, pending_plan')
+      .eq('id', userId)
+      .single();
+    if (r.error) {
+      if (r.error.code === 'PGRST116') return { ok: false, status: 404, body: { error: 'User not found.' } };
+      return { ok: false, status: 500, body: { error: 'Could not read profile.' } };
+    }
+    profile = r.data;
+  } catch (e) {
+    return { ok: false, status: 500, body: { error: 'Profile lookup error.' } };
+  }
+
+  if (!profile.pending_plan) {
+    return { ok: false, status: 409, body: { error: 'No scheduled change to cancel.', reason: 'no_pending_change' } };
+  }
+  if (!profile.stripe_subscription_id) {
+    return { ok: false, status: 400, body: { error: 'No active subscription.', reason: 'no_subscription' } };
+  }
+
+  // Release the schedule (if one is attached). Releasing returns the sub
+  // to a normal subscription on its current plan; the future phase is
+  // dropped. Idempotent-ish: if no schedule is found we still clear the
+  // marker so the UI recovers from any drift.
+  try {
+    const stripe = getStripe();
+    let scheduleId = null;
+    try {
+      const sub = await stripe.subscriptions.retrieve(profile.stripe_subscription_id);
+      scheduleId = sub && sub.schedule
+        ? (typeof sub.schedule === 'string' ? sub.schedule : sub.schedule.id)
+        : null;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/cancel-scheduled] sub retrieve failed:', e && e.message);
+    }
+    if (scheduleId) {
+      await stripe.subscriptionSchedules.release(scheduleId);
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel-scheduled] release failed:', err.message);
+    return { ok: false, status: 502, body: { error: 'Could not cancel the scheduled change: ' + err.message } };
+  }
+
+  // Clear the pending marker.
+  try {
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        pending_plan: null,
+        pending_plan_currency: null,
+        pending_plan_effective_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel-scheduled] marker clear threw:', e && e.message);
+  }
+
+  // Mark the pending admin_schedule history row(s) cancelled.
+  try {
+    await supabaseAdmin
+      .from('plan_changes')
+      .update({ cancelled_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('source', 'admin_schedule')
+      .is('cancelled_at', null)
+      .gt('effective_at', new Date().toISOString());
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel-scheduled] mark-cancelled threw:', e && e.message);
+  }
+
+  // Audit row noting the scheduled change was cancelled (stays on current plan).
+  try {
+    await supabaseAdmin.from('plan_changes').insert({
+      user_id: userId,
+      from_plan: profile.plan,
+      to_plan: profile.plan, // no actual change — they keep current plan
+      source: 'admin_resume', // reuse: "undo a pending change, no money moves"
+      note: 'cancelled scheduled change to ' + profile.pending_plan + '; actor=' + (actor || 'unknown'),
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel-scheduled] audit insert threw:', e && e.message);
+  }
+
+  return { ok: true, status: 200, body: { ok: true, cancelled_scheduled_change: true, plan: profile.plan } };
+}
+
+module.exports = { schedulePlanChange, cancelToFree, cancelScheduledChange };

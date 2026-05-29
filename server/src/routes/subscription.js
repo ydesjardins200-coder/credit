@@ -36,6 +36,7 @@ const requireAdminSharedSecret = require('../middleware/requireAdminSharedSecret
 const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
 const { resolvePriceId } = require('../lib/plan-prices');
+const { cancelScheduledChange } = require('../lib/subscription-ops');
 
 // Same env var + fallback the rest of the credit backend uses (checkout.js,
 // billing.js). Stripe requires success_url/cancel_url to be fully-qualified
@@ -679,6 +680,26 @@ router.post(
       target_plan: targetPlan,
       url: checkoutUrl,
     });
+  }
+);
+
+// ---------------------------------------------------------------------
+// POST /api/subscription/cancel-scheduled-change  (admin-secret-gated)
+// Operator undoes a user's pending scheduled plan change. Delegates to
+// the shared subscription-ops so customer + admin share one code path.
+// ---------------------------------------------------------------------
+router.post(
+  '/cancel-scheduled-change',
+  requireAdminSharedSecret,
+  async function (req, res) {
+    const body = req.body || {};
+    const userId = String(body.user_id || '').trim();
+    const adminActor = body.admin_actor || 'unknown';
+    if (!UUID_RE.test(userId)) {
+      return res.status(400).json({ error: 'Invalid user id.' });
+    }
+    const result = await cancelScheduledChange(userId, adminActor);
+    return res.status(result.status).json(result.body);
   }
 );
 

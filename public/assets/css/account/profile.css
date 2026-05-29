@@ -1080,3 +1080,13 @@ a.dash-invoice-dl[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
 .dash-plan-banner-info { background: #fef3c7; border: 1px solid #fde68a; }
 .dash-plan-banner-info strong { color: #78350f; }
 .dash-plan-banner-info span { color: #92400e; }
+
+/* "Cancel this change" link on the pending-change banner */
+.dash-banner-undo {
+  align-self: flex-start; margin-top: 8px;
+  background: transparent; border: 1px solid #92400e;
+  color: #92400e; border-radius: 6px;
+  padding: 5px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.dash-banner-undo:hover:not(:disabled) { background: rgba(146, 64, 14, 0.08); }
+.dash-banner-undo:disabled { opacity: 0.6; cursor: default; }

@@ -33,7 +33,7 @@ const router = express.Router();
 
 const requireAuth = require('../middleware/requireAuth');
 const { getStripe } = require('../lib/stripe');
-const { schedulePlanChange, cancelToFree } = require('../lib/subscription-ops');
+const { schedulePlanChange, cancelToFree, cancelScheduledChange } = require('../lib/subscription-ops');
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL || 'https://iboostcredit.netlify.app';
@@ -117,6 +117,21 @@ router.post('/cancel', requireAuth, async function (req, res, next) {
     const reason = (req.body && req.body.reason) || 'customer_request';
     const note = (req.body && req.body.note) || '';
     const result = await cancelToFree(userId, reason, note, 'self:' + userId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ---------------------------------------------------------------------
+// POST /api/billing/cancel-scheduled-change  (self-service)
+// Undo a pending scheduled plan change — releases the schedule, the user
+// stays on their current plan. No body needed.
+// ---------------------------------------------------------------------
+router.post('/cancel-scheduled-change', requireAuth, async function (req, res, next) {
+  try {
+    const userId = req.user.id;
+    const result = await cancelScheduledChange(userId, 'self:' + userId);
     return res.status(result.status).json(result.body);
   } catch (err) {
     return next(err);

@@ -749,12 +749,26 @@
       pendingBanner.innerHTML =
         '<strong>Changing to ' + escapeHtml(pendLabel) +
           (pendDate ? ' on ' + escapeHtml(pendDate) : ' next cycle') + '</strong>' +
-        '<span>Your current plan continues until then. The new price applies at your next renewal.</span>';
+        '<span>Your current plan continues until then. The new price applies at your next renewal.</span>' +
+        '<button type="button" class="dash-banner-undo" id="profile-cancel-scheduled">Cancel this change</button>';
       var anchor = document.getElementById('profile-plan-perks');
       if (anchor && anchor.parentNode) {
         anchor.parentNode.insertBefore(pendingBanner, anchor);
       } else {
         card.appendChild(pendingBanner);
+      }
+      var undoBtn = document.getElementById('profile-cancel-scheduled');
+      if (undoBtn) {
+        undoBtn.addEventListener('click', async function () {
+          undoBtn.disabled = true; undoBtn.textContent = 'Cancelling…';
+          var r = await postBilling('/api/billing/cancel-scheduled-change', {});
+          if (!r.ok) {
+            undoBtn.disabled = false; undoBtn.textContent = 'Cancel this change';
+            alert(r.error || 'Could not cancel the scheduled change.');
+            return;
+          }
+          window.location.reload();
+        });
       }
     }
 
