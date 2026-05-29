@@ -67,7 +67,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 28px;
+  /* Align the logo + user cluster with the .dash-main content edges
+     (max-width 1200 + 28px padding). The bar itself stays full-width
+     (white bg + border span the window); only its content is inset. */
+  padding: 14px max(28px, calc((100% - 1200px) / 2 + 28px));
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -173,7 +176,9 @@
   display: flex;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0 28px;
+  /* Match the topbar + content alignment (see .dash-topbar). The first
+     tab's left edge lines up with the content + logo. */
+  padding: 0 max(28px, calc((100% - 1200px) / 2 + 28px));
   gap: 4px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -211,6 +216,13 @@
 }
 
 .dash-tab:hover { color: #0A2540; text-decoration: none; }
+
+/* First tab: drop the left padding so its text aligns flush with the
+   content edge + logo (the rest of .dash-tab's 22px left padding would
+   otherwise inset it). The ::after underline uses left:12px, so nudge
+   the first tab's underline to start at its new text edge too. */
+.dash-tab:first-child { padding-left: 2px; }
+.dash-tab:first-child::after { left: 0; }
 
 .dash-tab:focus-visible {
   outline: 2px solid #2ECC71;
