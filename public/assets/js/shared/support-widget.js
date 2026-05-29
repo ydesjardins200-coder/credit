@@ -102,24 +102,39 @@
   }
 
   function setBadge(n) {
-    state.unreadCount = n || 0;
+    var newCount = n || 0;
+    var prevCount = state.unreadCount || 0;
+    state.unreadCount = newCount;
     var b = document.getElementById('support-envelope-badge');
+    var env = document.getElementById('support-envelope-btn');
     if (!b) return;
-    if (state.unreadCount > 0) {
+    if (newCount > 0) {
       b.hidden = false;
-      b.textContent = state.unreadCount > 9 ? '9+' : String(state.unreadCount);
+      b.textContent = newCount > 9 ? '9+' : String(newCount);
     } else {
       b.hidden = true;
       b.textContent = '';
+    }
+    // Subtle pulse when the count goes UP — a new message arrived (not
+    // on first load from 0, and not when it decreases because the user
+    // read something). state._initialized guards the first paint.
+    if (env && state._initialized && newCount > prevCount) {
+      env.classList.remove('support-envelope-pulse');
+      // Force reflow so re-adding the class restarts the animation.
+      void env.offsetWidth;
+      env.classList.add('support-envelope-pulse');
     }
   }
 
   async function refreshUnread() {
     try {
-      var res = await authedFetch('/api/support/cases/mine');
+      // Cheap count-only endpoint — poll-friendly (index-only count),
+      // not the full case list.
+      var res = await authedFetch('/api/support/unread-count');
       if (!res.ok) return;
       var data = await res.json();
       setBadge(data.unread_count || 0);
+      state._initialized = true; // subsequent increases may pulse
     } catch (e) { /* silent — badge is best-effort */ }
   }
 
@@ -417,10 +432,51 @@
     load();
   }
 
+  // ---- background polling ------------------------------------------------
+  // Poll the cheap unread-count every 45s so the envelope updates without
+  // a page refresh. Load-safe: count-only query, paused while the tab is
+  // hidden, and stopped entirely after ~15min of the tab being hidden
+  // (resumes on focus). At realistic concurrency this is negligible DB
+  // load even well past 1000 users.
+  var POLL_MS = 45000;
+  var IDLE_STOP_MS = 15 * 60 * 1000;
+  var pollTimer = null;
+  var hiddenSince = null;
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(function () {
+      // Don't poll while hidden.
+      if (document.hidden) {
+        if (hiddenSince && (Date.now() - hiddenSince) > IDLE_STOP_MS) {
+          stopPolling(); // gone too long — stop until they return
+        }
+        return;
+      }
+      refreshUnread();
+    }, POLL_MS);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function handleVisibility() {
+    if (document.hidden) {
+      hiddenSince = Date.now();
+    } else {
+      hiddenSince = null;
+      // Returning to the tab: refresh immediately + ensure polling runs.
+      refreshUnread();
+      startPolling();
+    }
+  }
+
   // ---- boot --------------------------------------------------------------
   function init() {
     injectChrome();
     refreshUnread();
+    document.addEventListener('visibilitychange', handleVisibility);
+    startPolling();
   }
 
   if (document.readyState === 'loading') {

@@ -297,6 +297,26 @@ router.post('/cases/:id/rating', requireAuth, async function (req, res, next) {
   }
 });
 
+// ---- GET /api/support/unread-count -------------------------------------
+// Cheap, poll-friendly: just the count of the caller's cases that have
+// an unread agent message. Index-only count, RLS-bounded to their own
+// rows. Used by the envelope's background poll so we don't fetch the
+// full case list every 45s.
+router.get('/unread-count', requireAuth, async function (req, res, next) {
+  try {
+    const { count, error } = await req.supabase
+      .from('support_cases')
+      .select('id', { count: 'exact', head: true })
+      .eq('unread_by_customer', true);
+    if (error) {
+      return res.status(500).json({ error: 'Could not load count: ' + error.message });
+    }
+    return res.json({ unread_count: count || 0 });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // ---- GET /api/support/appointment -------------------------------------
 // The caller's active onboarding appointment, if any. "Active" = an
 // onboarding_appointment case that isn't resolved/closed. Returns null
