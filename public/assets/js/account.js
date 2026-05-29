@@ -433,10 +433,126 @@
     });
     updateProgress();
 
-    // 7. Submit handler
+    // Submit button + alert element — declared here (before the step
+    // controller) because the controller references them in showStep().
     const submitBtn = document.getElementById('profile-form-submit');
     const alertEl   = document.getElementById('profile-form-alert');
 
+    // ---- Step controller (Typeform-style one-step-at-a-time) ----------
+    // Reuses readFormValues() + the same validation rules as submit; it
+    // only changes PRESENTATION (which fieldset is visible) and gates
+    // the final submit behind reaching the last step. Three steps map to
+    // the three fieldsets tagged data-step 0/1/2 (DOB / address / goal).
+    var stepPanels = Array.prototype.slice.call(
+      formEl.querySelectorAll('.profile-step-panel')
+    );
+    var backBtn = document.getElementById('profile-step-back');
+    var nextBtn = document.getElementById('profile-step-next');
+    var stepCurrentEl = document.getElementById('profile-step-current');
+    var stepDots = Array.prototype.slice.call(
+      document.querySelectorAll('[data-step-dot]')
+    );
+    var TOTAL_STEPS = stepPanels.length; // 3
+    var currentStep = 0;
+
+    // Per-step validation. Returns an error string, or null if valid.
+    // Mirrors the submit-handler rules exactly, partitioned by step.
+    function validateStep(step) {
+      var vals = readFormValues();
+      if (step === 0) {
+        if (!vals.date_of_birth) return 'Please enter your date of birth.';
+        try {
+          var dob = new Date(vals.date_of_birth);
+          var eighteen = new Date();
+          eighteen.setFullYear(eighteen.getFullYear() - 18);
+          if (dob > eighteen) return 'You must be 18 or older to use iBoost.';
+        } catch (e) {
+          return 'Please enter a valid date of birth.';
+        }
+      } else if (step === 1) {
+        if (!vals.address_line1) return 'Please enter your street address.';
+        if (!vals.address_city) return 'Please enter your city.';
+        if (!/^[A-Za-z]{2}$/.test(vals.address_region)) {
+          var rl = window.iboostLocale.getAddressLabels(country).region.toLowerCase();
+          var rex = window.iboostLocale.getAddressPlaceholders(country).region;
+          return 'Please enter your 2-letter ' + rl + ' code (e.g. ' + rex + ').';
+        }
+        if (!vals.address_postal) return 'Please enter your postal/ZIP code.';
+      } else if (step === 2) {
+        if (!vals.credit_goal_kind) return 'Please choose a credit goal.';
+        if (vals.credit_goal_kind === 'other' && !vals.credit_goal_detail) {
+          return 'Please tell us about your goal in the text box.';
+        }
+      }
+      return null;
+    }
+
+    function showStep(step) {
+      currentStep = step;
+      stepPanels.forEach(function (panel, i) {
+        panel.hidden = (i !== step);
+      });
+      // Indicator
+      if (stepCurrentEl) stepCurrentEl.textContent = String(step + 1);
+      stepDots.forEach(function (dot, i) {
+        dot.classList.toggle('is-active', i === step);
+        dot.classList.toggle('is-done', i < step);
+      });
+      // Buttons: Back hidden on first step; Continue vs Save on last.
+      if (backBtn) backBtn.hidden = (step === 0);
+      var isLast = (step === TOTAL_STEPS - 1);
+      if (nextBtn) nextBtn.hidden = isLast;
+      if (submitBtn) submitBtn.hidden = !isLast;
+      // Clear any stale error when changing step.
+      if (alertEl) { alertEl.hidden = true; alertEl.textContent = ''; }
+      // Focus the first input of the step for keyboard flow.
+      try {
+        var firstInput = stepPanels[step].querySelector('input, textarea, select');
+        if (firstInput && firstInput.type !== 'radio') firstInput.focus();
+      } catch (e) { /* noop */ }
+    }
+
+    function goNext() {
+      var err = validateStep(currentStep);
+      if (err) { showErr(err); return; }
+      if (currentStep < TOTAL_STEPS - 1) showStep(currentStep + 1);
+    }
+    function goBack() {
+      if (currentStep > 0) showStep(currentStep - 1);
+    }
+
+    if (nextBtn) nextBtn.addEventListener('click', goNext);
+    if (backBtn) backBtn.addEventListener('click', goBack);
+
+    // Enter key on a typed field advances (but not in the textarea,
+    // where Enter should insert a newline).
+    formEl.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          if (currentStep < TOTAL_STEPS - 1) goNext();
+          else if (submitBtn) submitBtn.click();
+        }
+      });
+    });
+
+    // Goal grid auto-advances: picking a goal moves toward submit. But
+    // if 'other' is picked (detail required), DON'T auto-advance — the
+    // user needs to type in the revealed textarea first.
+    formEl.querySelectorAll('input[name="credit_goal_kind"]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        // updateGoalDetailVisibility already ran (wired earlier).
+        // Goal is the last step, so there's no "advance" — instead we
+        // surface the Save button prominence. No auto-submit (the user
+        // may want to add detail). Nothing to do here beyond what the
+        // existing change handler does; kept for clarity/future tweak.
+      });
+    });
+
+    // Start at step 0.
+    showStep(0);
+
+    // 7. Submit handler
     formEl.addEventListener('submit', async function (ev) {
       ev.preventDefault();
 
