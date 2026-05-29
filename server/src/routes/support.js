@@ -336,13 +336,19 @@ router.get('/unread-count', requireAuth, async function (req, res, next) {
 // state.
 router.get('/appointment', requireAuth, async function (req, res, next) {
   try {
+    // The appointment's existence is driven by appointment_status
+    // (requested/confirmed), NOT the support case's open/resolved
+    // lifecycle. An agent resolving the onboarding case (an internal
+    // action) must not make the customer's booked call disappear and
+    // re-prompt them to book again. So we look for the most recent
+    // onboarding case that still carries an active appointment_status.
     const { data, error } = await req.supabase
       .from('support_cases')
       .select('id, case_number, status, appointment_requested_date, ' +
         'appointment_requested_hour, appointment_timezone, ' +
         'appointment_alt_phone, appointment_status, appointment_confirmed_at, created_at')
       .eq('category', 'onboarding_appointment')
-      .in('status', ['open']) // resolved/closed appointments are done
+      .in('appointment_status', ['requested', 'confirmed'])
       .order('created_at', { ascending: false })
       .limit(1);
 
@@ -385,12 +391,14 @@ router.post('/appointment', requireAuth, async function (req, res, next) {
       return res.status(400).json({ error: 'Please choose a time between 8am and 5pm.' });
     }
 
-    // One active appointment per user — return the existing open one.
+    // One active appointment per user — return the existing one. Keyed on
+    // appointment_status (requested/confirmed), not case open/resolved, so
+    // a resolved-but-still-booked call blocks a duplicate request.
     const { data: existing } = await req.supabase
       .from('support_cases')
       .select('id, case_number, status, appointment_requested_date, appointment_requested_hour, appointment_timezone, appointment_status')
       .eq('category', 'onboarding_appointment')
-      .eq('status', 'open')
+      .in('appointment_status', ['requested', 'confirmed'])
       .limit(1);
     if (existing && existing[0]) {
       return res.json({ ok: true, already: true, appointment: existing[0] });
