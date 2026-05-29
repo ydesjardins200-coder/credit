@@ -618,6 +618,23 @@ router.post(
       return res.status(502).json({ error: 'Payment provider error: ' + err.message });
     }
 
+    // Persist the link on the profile so the admin card can show/re-share
+    // it. Cleared on provisioning (webhook) or when no longer Free.
+    try {
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          upgrade_link_url: checkoutUrl,
+          upgrade_link_plan: targetPlan,
+          upgrade_link_created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[sub/upgrade-link] persist link threw:', e && e.message);
+    }
+
     return res.json({
       ok: true,
       user_id: userId,

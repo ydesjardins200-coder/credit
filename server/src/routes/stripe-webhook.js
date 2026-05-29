@@ -87,6 +87,11 @@ async function grantPlan({ userId, planKey, currency, stripeCustomerId, stripeSu
     // past-due flag (e.g. a user who lapsed then re-subscribed).
     subscription_status: 'active',
     payment_failed_at: null,
+    // Provisioned now — the upgrade link (if any) has done its job. Clear
+    // it so the admin card stops showing a now-consumed link.
+    upgrade_link_url: null,
+    upgrade_link_plan: null,
+    upgrade_link_created_at: null,
     updated_at: new Date().toISOString(),
   };
 
