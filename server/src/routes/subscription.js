@@ -141,6 +141,25 @@ router.post(
     let updatedSub;
     try {
       const stripe = getStripe();
+
+      // If a Subscription Schedule governs this sub (pending plan change),
+      // Stripe refuses a direct cancel. Release the schedule first (hands
+      // control back to the subscription on its current plan, abandoning
+      // the pending change), then cancel at period end.
+      let scheduleId = null;
+      try {
+        const sub = await stripe.subscriptions.retrieve(profile.stripe_subscription_id);
+        scheduleId = sub && sub.schedule
+          ? (typeof sub.schedule === 'string' ? sub.schedule : sub.schedule.id)
+          : null;
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[sub/cancel] sub retrieve failed:', e && e.message);
+      }
+      if (scheduleId) {
+        await stripe.subscriptionSchedules.release(scheduleId);
+      }
+
       updatedSub = await stripe.subscriptions.update(
         profile.stripe_subscription_id,
         { cancel_at_period_end: true },
@@ -164,6 +183,10 @@ router.post(
         .update({
           cancel_at_period_end: true,
           next_billing_date: effectiveAtIso, // keep in sync with Stripe truth
+          // Abandon any pending scheduled change — they're cancelling.
+          pending_plan: null,
+          pending_plan_currency: null,
+          pending_plan_effective_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);

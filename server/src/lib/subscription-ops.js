@@ -164,6 +164,32 @@ async function cancelToFree(userId, reason, note, actor) {
   let updatedSub;
   try {
     const stripe = getStripe();
+
+    // If a Subscription Schedule governs this sub (e.g. a pending plan
+    // change), Stripe refuses a direct cancel_at_period_end on the sub.
+    // Release the schedule first — that detaches it and hands control back
+    // to the underlying subscription (which keeps running on its current
+    // plan), abandoning the pending change. Then we can cancel normally.
+    let scheduleId = null;
+    try {
+      const sub = await stripe.subscriptions.retrieve(profile.stripe_subscription_id);
+      scheduleId = sub && sub.schedule
+        ? (typeof sub.schedule === 'string' ? sub.schedule : sub.schedule.id)
+        : null;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/cancel] sub retrieve failed:', e && e.message);
+    }
+    if (scheduleId) {
+      try {
+        await stripe.subscriptionSchedules.release(scheduleId);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('[sub-ops/cancel] schedule release failed:', e && e.message);
+        return { ok: false, status: 502, body: { error: 'Could not release the pending change before cancelling: ' + e.message } };
+      }
+    }
+
     updatedSub = await stripe.subscriptions.update(
       profile.stripe_subscription_id,
       { cancel_at_period_end: true },
@@ -182,6 +208,10 @@ async function cancelToFree(userId, reason, note, actor) {
       .update({
         cancel_at_period_end: true,
         next_billing_date: effectiveAtIso,
+        // Abandon any pending scheduled change — they're leaving, not upgrading.
+        pending_plan: null,
+        pending_plan_currency: null,
+        pending_plan_effective_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
