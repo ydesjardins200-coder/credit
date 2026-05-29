@@ -187,6 +187,29 @@ router.post('/create-session', requireAuth, async function (req, res, next) {
       });
     }
 
+    // Double-billing guard: create-session starts a NEW subscription. If
+    // the user already has one, this would create a second sub and bill
+    // them twice. An existing subscriber changing plans must go through
+    // the change/cancel flow (schedule at next cycle), not a new session.
+    try {
+      const { data: prof } = await supabaseAdmin
+        .from('profiles')
+        .select('stripe_subscription_id')
+        .eq('id', userId)
+        .single();
+      if (prof && prof.stripe_subscription_id) {
+        return res.status(409).json({
+          error: 'You already have an active subscription. Use Change plan to switch plans.',
+          reason: 'has_subscription',
+        });
+      }
+    } catch (e) {
+      // Non-fatal read error — don't block checkout for a new user over a
+      // transient read; the webhook + unique constraints are the backstop.
+      // eslint-disable-next-line no-console
+      console.error('[checkout] subscription guard read failed:', e && e.message);
+    }
+
     // Resolve the active provider for payment_processor. This drives
     // the whole branch. Caching is 10s per the integrations-read lib.
     let activeProvider;

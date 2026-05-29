@@ -1,0 +1,209 @@
+// Shared subscription operations — ONE source of truth for the Stripe
+// plan-change mechanics, called by BOTH the admin route (operator action,
+// secret-gated) and the customer billing route (self-service, auth-gated).
+//
+// Keeping this logic in one place avoids two divergent copies of
+// billing-critical code. The callers differ only in WHO is authorized;
+// the Stripe + DB mechanics are identical.
+//
+// Policy: changes take effect at the next billing cycle, no proration,
+// no partial refund.
+//   - scheduleePlanChange: paid<->paid via Stripe Subscription Schedule
+//   - cancelToFree:         paid->free via cancel-at-period-end
+//
+// Each returns { ok, status, body } where body is the JSON payload the
+// route should return (or an { error, reason } on failure).
+
+'use strict';
+
+const { getStripe } = require('./stripe');
+const { supabaseAdmin } = require('./supabase');
+const { resolvePriceId } = require('./plan-prices');
+
+function unixToIso(unixSeconds) {
+  if (!unixSeconds) return null;
+  return new Date(unixSeconds * 1000).toISOString();
+}
+function readPeriodEndUnix(sub) {
+  const item = sub && sub.items && sub.items.data && sub.items.data[0];
+  return (item && item.current_period_end) || (sub && sub.current_period_end) || null;
+}
+
+// ---- paid <-> paid : schedule the swap at period end -------------------
+async function schedulePlanChange(userId, targetPlan, currency, actor) {
+  targetPlan = String(targetPlan || '').toLowerCase();
+  currency = String(currency || 'cad').toLowerCase();
+
+  if (targetPlan !== 'essential' && targetPlan !== 'complete') {
+    return { ok: false, status: 400, body: { error: 'Target must be a paid plan (essential/complete).' } };
+  }
+  if (currency !== 'cad') {
+    return { ok: false, status: 400, body: { error: 'Only CAD is supported in v1.', reason: 'currency_unsupported' } };
+  }
+
+  let targetPriceId;
+  try {
+    targetPriceId = resolvePriceId(targetPlan, currency).priceId;
+  } catch (err) {
+    return { ok: false, status: err.statusCode || 500, body: { error: err.message } };
+  }
+
+  let profile;
+  try {
+    const r = await supabaseAdmin
+      .from('profiles')
+      .select('id, plan, plan_currency, stripe_subscription_id, cancel_at_period_end')
+      .eq('id', userId)
+      .single();
+    if (r.error) {
+      if (r.error.code === 'PGRST116') return { ok: false, status: 404, body: { error: 'User not found.' } };
+      return { ok: false, status: 500, body: { error: 'Could not read profile.' } };
+    }
+    profile = r.data;
+  } catch (e) {
+    return { ok: false, status: 500, body: { error: 'Profile lookup error.' } };
+  }
+
+  if (!profile.stripe_subscription_id) {
+    return { ok: false, status: 400, body: { error: 'No active subscription to change. Free users must subscribe via checkout.', reason: 'no_subscription' } };
+  }
+  if (profile.cancel_at_period_end) {
+    return { ok: false, status: 409, body: { error: 'Subscription is scheduled to cancel; resume it before changing plans.', reason: 'pending_cancel' } };
+  }
+  if (profile.plan === targetPlan) {
+    return { ok: false, status: 409, body: { error: 'Already on the ' + targetPlan + ' plan.', reason: 'no_change' } };
+  }
+
+  let effectiveAtIso;
+  try {
+    const stripe = getStripe();
+    const schedule = await stripe.subscriptionSchedules.create(
+      { from_subscription: profile.stripe_subscription_id },
+      { idempotencyKey: 'sched-create-' + userId + '-' + Date.now() }
+    );
+    const phase0 = (schedule.phases && schedule.phases[0]) || {};
+    const currentItems = (phase0.items || []).map(function (it) {
+      return { price: it.price, quantity: it.quantity || 1 };
+    });
+    const updated = await stripe.subscriptionSchedules.update(
+      schedule.id,
+      {
+        end_behavior: 'release',
+        proration_behavior: 'none',
+        phases: [
+          { items: currentItems.length ? currentItems : undefined, start_date: phase0.start_date, end_date: phase0.end_date },
+          { items: [{ price: targetPriceId, quantity: 1 }] },
+        ],
+      },
+      { idempotencyKey: 'sched-update-' + userId + '-' + Date.now() }
+    );
+    const p0end = (updated.phases && updated.phases[0] && updated.phases[0].end_date) || phase0.end_date || null;
+    effectiveAtIso = p0end ? unixToIso(p0end) : null;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/schedule] stripe error:', err.message);
+    return { ok: false, status: 502, body: { error: 'Payment provider error: ' + err.message } };
+  }
+
+  try {
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        pending_plan: targetPlan,
+        pending_plan_currency: currency,
+        pending_plan_effective_at: effectiveAtIso,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/schedule] pending marker threw:', e && e.message);
+  }
+  try {
+    await supabaseAdmin.from('plan_changes').insert({
+      user_id: userId,
+      from_plan: profile.plan,
+      to_plan: targetPlan,
+      source: 'admin_schedule',
+      effective_at: effectiveAtIso,
+      note: 'scheduled at period end; actor=' + (actor || 'unknown'),
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/schedule] history insert threw:', e && e.message);
+  }
+
+  return { ok: true, status: 200, body: { ok: true, scheduled: true, target_plan: targetPlan, effective_at: effectiveAtIso } };
+}
+
+// ---- paid -> free : cancel at period end -------------------------------
+async function cancelToFree(userId, reason, note, actor) {
+  let profile;
+  try {
+    const r = await supabaseAdmin
+      .from('profiles')
+      .select('id, plan, stripe_subscription_id, cancel_at_period_end')
+      .eq('id', userId)
+      .single();
+    if (r.error) {
+      if (r.error.code === 'PGRST116') return { ok: false, status: 404, body: { error: 'User not found.' } };
+      return { ok: false, status: 500, body: { error: 'Could not read profile.' } };
+    }
+    profile = r.data;
+  } catch (e) {
+    return { ok: false, status: 500, body: { error: 'Profile lookup error.' } };
+  }
+
+  if (!profile.stripe_subscription_id) {
+    return { ok: false, status: 400, body: { error: 'No active subscription.', reason: 'no_subscription' } };
+  }
+  if (profile.cancel_at_period_end) {
+    return { ok: false, status: 409, body: { error: 'Already scheduled to cancel.', reason: 'already_canceling' } };
+  }
+
+  let updatedSub;
+  try {
+    const stripe = getStripe();
+    updatedSub = await stripe.subscriptions.update(
+      profile.stripe_subscription_id,
+      { cancel_at_period_end: true },
+      { idempotencyKey: 'cancel-' + userId + '-' + Date.now() }
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel] stripe error:', err.message);
+    return { ok: false, status: 502, body: { error: 'Payment provider error: ' + err.message } };
+  }
+
+  const effectiveAtIso = unixToIso(readPeriodEndUnix(updatedSub));
+  try {
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        cancel_at_period_end: true,
+        next_billing_date: effectiveAtIso,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel] profile update threw:', e && e.message);
+  }
+  try {
+    await supabaseAdmin.from('plan_changes').insert({
+      user_id: userId,
+      from_plan: profile.plan,
+      to_plan: 'free',
+      source: 'admin_cancel',
+      effective_at: effectiveAtIso,
+      note: 'reason=' + (reason || 'customer_request') + (note ? '; ' + note : '') + '; actor=' + (actor || 'unknown'),
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/cancel] history insert threw:', e && e.message);
+  }
+
+  return { ok: true, status: 200, body: { ok: true, scheduled: true, target_plan: 'free', effective_at: effectiveAtIso } };
+}
+
+module.exports = { schedulePlanChange, cancelToFree };

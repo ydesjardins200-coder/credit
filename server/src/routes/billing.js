@@ -33,6 +33,7 @@ const router = express.Router();
 
 const requireAuth = require('../middleware/requireAuth');
 const { getStripe } = require('../lib/stripe');
+const { schedulePlanChange, cancelToFree } = require('../lib/subscription-ops');
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL || 'https://iboostcredit.netlify.app';
@@ -82,6 +83,41 @@ router.post('/portal-session', requireAuth, async function (req, res, next) {
     }
 
     return res.json({ url: session.url });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ---------------------------------------------------------------------
+// POST /api/billing/change-plan  (self-service, paid <-> paid)
+// The authenticated user changes their own plan. Effective next cycle,
+// no proration. Free users hit this with no sub -> 400 directing them to
+// checkout. Body: { target_plan }
+// ---------------------------------------------------------------------
+router.post('/change-plan', requireAuth, async function (req, res, next) {
+  try {
+    const userId = req.user.id;
+    const targetPlan = (req.body && req.body.target_plan) || '';
+    const result = await schedulePlanChange(userId, targetPlan, 'cad', 'self:' + userId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// ---------------------------------------------------------------------
+// POST /api/billing/cancel  (self-service, paid -> free)
+// The authenticated user cancels their own subscription at period end.
+// The retention flow lives on the frontend; by the time this is called
+// the user has chosen to proceed. Body: { reason?, note? }
+// ---------------------------------------------------------------------
+router.post('/cancel', requireAuth, async function (req, res, next) {
+  try {
+    const userId = req.user.id;
+    const reason = (req.body && req.body.reason) || 'customer_request';
+    const note = (req.body && req.body.note) || '';
+    const result = await cancelToFree(userId, reason, note, 'self:' + userId);
+    return res.status(result.status).json(result.body);
   } catch (err) {
     return next(err);
   }
