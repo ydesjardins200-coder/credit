@@ -313,6 +313,20 @@
       var submitBtn = document.getElementById('contact-submit');
       if (!form) return;
 
+      // Live phone formatting — same NANP format as the signup form.
+      var phoneInput = document.getElementById('contact-phone');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+          var digits = (phoneInput.value || '').replace(/\D/g, '').slice(0, 10);
+          var f = '';
+          if (digits.length === 0) f = '';
+          else if (digits.length < 4) f = '(' + digits;
+          else if (digits.length < 7) f = '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+          else f = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6, 10);
+          if (phoneInput.value !== f) phoneInput.value = f;
+        });
+      }
+
       function showError(msg) {
         alertEl.textContent = msg;
         alertEl.hidden = false;
