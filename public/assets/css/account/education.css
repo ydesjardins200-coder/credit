@@ -281,6 +281,8 @@
   min-height: 160px;
   font-family: inherit;
   text-align: left;
+  text-decoration: none;
+  color: inherit;
 }
 
 .dash-edu-rec:hover {

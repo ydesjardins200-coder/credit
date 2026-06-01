@@ -96,6 +96,73 @@
     renderCurriculum(progress);
     renderOverview(progress);
     renderContinue(progress);
+    renderRecommended(progress);
+  }
+
+  // "Recommended for you": up to 3 real lessons the user hasn't completed,
+  // in curriculum order, skipping locked chapters. Honest and adaptive —
+  // it advances as lessons get completed. (When the bureau score exists,
+  // this can be upgraded to weight by what's actually holding the score
+  // back; for now it surfaces the next high-impact lessons.)
+  function renderRecommended(progress) {
+    var E = window.iboostEducation;
+    var header = document.getElementById('dash-edu-rec-header');
+    var row = document.getElementById('dash-edu-rec-row');
+    if (!E || !row || !header) return;
+    var userScore = null; // gated chapters excluded until a real score exists
+
+    // Candidate lessons: not complete, not in a locked chapter.
+    var lockedChapterNumbers = {};
+    E.chapters.forEach(function (ch) {
+      if (E.chapterLocked(ch, userScore)) lockedChapterNumbers[ch.number] = true;
+    });
+    var candidates = E.allLessons().filter(function (l) {
+      if (lockedChapterNumbers[l.chapterNumber]) return false;
+      var p = progress[l.id];
+      return !(p && p.status === 'complete');
+    });
+
+    // Prefer not-yet-started over in-progress (in-progress already shows in
+    // "continue where you left off"), then take the first 3 in order.
+    var notStarted = candidates.filter(function (l) { return !progress[l.id]; });
+    var pick = (notStarted.length ? notStarted : candidates).slice(0, 3);
+
+    if (!pick.length) { header.hidden = true; row.hidden = true; return; }
+
+    var ICONS = {
+      1: '<path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>',
+      2: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      3: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/>',
+      4: '<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>'
+    };
+    var BADGES = { 1: 'Foundation', 2: 'Quick win', 3: 'Habit', 4: 'Advanced' };
+
+    row.innerHTML = pick.map(function (l) {
+      var icon = ICONS[l.chapterNumber] || ICONS[1];
+      var badge = BADGES[l.chapterNumber] || 'Lesson';
+      var desc = firstSentence(l.intro) || ('Chapter ' + l.chapterNumber + ' · ' + l.chapterTitle);
+      return '<a class="dash-edu-rec" href="' + E.lessonUrl(l.slug) + '">' +
+          '<div class="dash-edu-rec-ico">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + icon + '</svg>' +
+          '</div>' +
+          '<h3 class="dash-edu-rec-title">' + escapeHtml(l.title) + '</h3>' +
+          '<p class="dash-edu-rec-desc">' + escapeHtml(desc) + '</p>' +
+          '<div class="dash-edu-rec-meta">' +
+            '<span>' + l.minutes + ' min</span>' +
+            '<span class="dash-edu-rec-badge">' + escapeHtml(badge) + '</span>' +
+          '</div>' +
+        '</a>';
+    }).join('');
+    header.hidden = false;
+    row.hidden = false;
+  }
+
+  // Trim an intro down to a short card description (first sentence, capped).
+  function firstSentence(text) {
+    if (!text) return '';
+    var s = String(text).split(/(?<=[.!?])\s/)[0] || String(text);
+    if (s.length > 90) s = s.slice(0, 87).replace(/\s+\S*$/, '') + '\u2026';
+    return s;
   }
 
   // Update the "N of M complete" header, the bar, and the stat tiles
