@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Lesson — iBoost</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brand/shield-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brand/shield-192.png" />
+  <link rel="apple-touch-icon" href="/assets/img/brand/shield-192.png" />
+  <link rel="stylesheet" href="/assets/css/main-shared.css" />
+  <link rel="stylesheet" href="/assets/css/shared/account-shell.css" />
+  <link rel="stylesheet" href="/assets/css/account/education.css" />
+</head>
+<body class="dash-body">
+
+  <div class="dash-dev-banner" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <strong>Some features are still in preview</strong>
+    <span>&mdash; real credit data appears after your first monthly report</span>
+  </div>
+
+  <header class="dash-topbar">
+    <a href="/" class="dash-logo-link" aria-label="iBoost home">
+      <img src="/assets/img/brand/logo-horizontal-light.svg" alt="iBoost" width="140" height="48" />
+    </a>
+    <div class="dash-user">
+      <div class="dash-user-avatar" id="user-avatar" aria-hidden="true">—</div>
+      <div class="dash-user-info">
+        <div class="dash-user-name" id="user-name">Welcome</div>
+        <div class="dash-user-email" id="user-email">…</div>
+      </div>
+      <button type="button" id="signout-btn" class="dash-signout">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Tab nav: Education stays the active tab while reading a lesson. -->
+  <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+    <a href="/account.html?tab=welcome" class="dash-tab" role="tab" aria-selected="false">Welcome</a>
+    <a href="/account/credit" class="dash-tab" role="tab" aria-selected="false">Credit</a>
+    <a href="/account/offers" class="dash-tab" role="tab" aria-selected="false">Offers</a>
+    <a href="/account/budget" class="dash-tab" role="tab" aria-selected="false">Budget</a>
+    <a href="/account/education" class="dash-tab is-active" role="tab" aria-selected="true" aria-current="page">Education</a>
+    <a href="/account/profile" class="dash-tab" role="tab" aria-selected="false">Profile</a>
+  </nav>
+
+  <main class="dash-main">
+    <div id="lesson-root" class="lesson-root">
+      <div class="dash-edu-curriculum-loading">Loading lesson…</div>
+    </div>
+  </main>
+
+  <!-- Script order: config -> supabase -> auth -> shared shell -> registry
+       + content -> lesson runtime. -->
+  <script src="/assets/js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/lib/retry.js" defer></script>
+  <script src="/assets/js/shared/dom-utils.js" defer></script>
+  <script src="/assets/js/shared/account-shell.js" defer></script>
+  <script src="/assets/js/shared/support-widget.js" defer></script>
+  <script src="/assets/js/account/education-curriculum.js" defer></script>
+  <script src="/assets/js/account/education-content.js" defer></script>
+  <script src="/assets/js/account/education-lesson.js" defer></script>
+</body>
+</html>

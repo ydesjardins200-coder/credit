@@ -145,7 +145,7 @@
   }
 
   function lessonUrl(slug) {
-    return '/account/education/' + slug + '.html';
+    return '/account/education/lesson.html?slug=' + encodeURIComponent(slug);
   }
 
   window.iboostEducation = {
