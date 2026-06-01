@@ -73,7 +73,7 @@
         <h1>Education library</h1>
         <p class="dash-panel-sub">Clear, jargon-free lessons on credit and personal finance. Free for all members.</p>
       </div>
-      <button type="button" class="dash-search-btn">
+      <button type="button" class="dash-search-btn" id="edu-search-toggle" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -81,6 +81,18 @@
         Search lessons
       </button>
     </div>
+
+    <!-- Search row: revealed by the button. Filters the curriculum live
+         (title + intro) into a flat results list. -->
+    <div class="dash-edu-search" id="edu-search" hidden>
+      <svg class="dash-edu-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="edu-search-input" class="dash-edu-search-input" placeholder="Search lessons by title or topic…" autocomplete="off" />
+      <button type="button" class="dash-edu-search-clear" id="edu-search-clear" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="dash-edu-search-results" id="edu-search-results" hidden></div>
 
     <!-- Progress overview — populated by education.js from DB progress.
          Numbers shown here are placeholders until the fetch resolves. -->
@@ -135,7 +147,7 @@
     <!-- Chapters / curriculum — rendered from the curriculum registry
          (education-curriculum.js) by education.js. Single source of truth;
          counts/durations/lessons are computed, never hardcoded. -->
-    <div class="dash-edu-sect-header">
+    <div class="dash-edu-sect-header" id="dash-edu-curriculum-header">
       <h2>Full curriculum</h2>
       <p class="dash-edu-sect-sub">A guided path from "what's a credit score?" to advanced strategies.</p>
     </div>

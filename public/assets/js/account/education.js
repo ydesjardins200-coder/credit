@@ -97,6 +97,122 @@
     renderOverview(progress);
     renderContinue(progress);
     renderRecommended(progress);
+    wireSearch(progress);
+  }
+
+  // Search: the toggle reveals an input; typing filters the curriculum
+  // (title + intro) into a flat results list and hides the browse view.
+  // Clearing/closing restores the normal page.
+  function wireSearch(progress) {
+    var E = window.iboostEducation;
+    var toggle = document.getElementById('edu-search-toggle');
+    var bar = document.getElementById('edu-search');
+    var input = document.getElementById('edu-search-input');
+    var clearBtn = document.getElementById('edu-search-clear');
+    var results = document.getElementById('edu-search-results');
+    if (!E || !toggle || !bar || !input || !results) return;
+
+    // The browse-view sections to hide while a search is active.
+    var browseEls = [
+      document.querySelector('.dash-edu-progress'),
+      document.getElementById('edu-continue'),
+      document.getElementById('dash-edu-rec-header'),
+      document.getElementById('dash-edu-rec-row'),
+      document.getElementById('dash-edu-curriculum-header'),
+      document.getElementById('dash-edu-curriculum')
+    ].filter(Boolean);
+
+    // Remember which browse elements were already hidden (e.g. continue
+    // card, rec section) so we can restore their exact state, not force
+    // them visible.
+    var wasHidden = browseEls.map(function (el) { return el.hidden; });
+
+    function setBrowseHidden(hide) {
+      browseEls.forEach(function (el, i) {
+        el.hidden = hide ? true : wasHidden[i];
+      });
+    }
+
+    function openSearch() {
+      bar.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      input.focus();
+    }
+    function closeSearch() {
+      input.value = '';
+      runQuery('');
+      bar.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', function () {
+      if (bar.hidden) openSearch(); else closeSearch();
+    });
+    if (clearBtn) clearBtn.addEventListener('click', function () {
+      input.value = ''; runQuery(''); input.focus();
+    });
+    input.addEventListener('input', function () { runQuery(input.value); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeSearch();
+    });
+
+    function runQuery(raw) {
+      var q = (raw || '').trim().toLowerCase();
+      if (!q) {
+        results.hidden = true;
+        results.innerHTML = '';
+        setBrowseHidden(false); // restore browse view
+        return;
+      }
+      setBrowseHidden(true); // hide browse view while searching
+
+      var lockedNums = {};
+      E.chapters.forEach(function (ch) {
+        if (E.chapterLocked(ch, null)) lockedNums[ch.number] = true;
+      });
+
+      var matches = E.allLessons().filter(function (l) {
+        if (lockedNums[l.chapterNumber]) return false; // don't surface locked lessons
+        var hay = (l.title + ' ' + (l.intro || '')).toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+
+      if (!matches.length) {
+        results.hidden = false;
+        results.innerHTML = '<div class="dash-edu-search-empty">No lessons match \u201C' +
+          escapeHtml(raw.trim()) + '\u201D. Try a different word.</div>';
+        return;
+      }
+
+      var arrow =
+        '<div class="dash-edu-lesson-arrow">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<polyline points="9 18 15 12 9 6"/>' +
+          '</svg>' +
+        '</div>';
+
+      var rows = matches.map(function (l) {
+        var p = progress[l.id] || null;
+        var stateClass = '';
+        var label = 'Not started';
+        if (p && p.status === 'complete') { stateClass = ' dash-edu-lesson-done'; label = '100%'; }
+        else if (p && p.percent > 0) { stateClass = ' dash-edu-lesson-current'; label = p.percent + '%'; }
+        return '<a href="' + E.lessonUrl(l.slug) + '" class="dash-edu-lesson' + stateClass + '">' +
+            '<div class="dash-edu-lesson-icon"></div>' +
+            '<div class="dash-edu-lesson-body">' +
+              '<h4 class="dash-edu-lesson-title">' + escapeHtml(l.title) + '</h4>' +
+              '<div class="dash-edu-lesson-progress">Chapter ' + l.chapterNumber + ' · ' + escapeHtml(l.chapterTitle) + ' · ' + label + '</div>' +
+            '</div>' +
+            '<div class="dash-edu-lesson-time">' + l.minutes + ' min</div>' +
+            arrow +
+          '</a>';
+      }).join('');
+
+      results.hidden = false;
+      results.innerHTML =
+        '<div class="dash-edu-search-count">' + matches.length + ' lesson' + (matches.length === 1 ? '' : 's') + ' found</div>' +
+        '<div class="dash-edu-lessons">' + rows + '</div>';
+    }
   }
 
   // "Recommended for you": up to 3 real lessons the user hasn't completed,

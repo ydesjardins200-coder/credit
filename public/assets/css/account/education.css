@@ -655,3 +655,30 @@
 .lesson-next-meta { color: var(--color-muted); font-size: 0.82rem; }
 .lesson-next-end { cursor: default; }
 .lesson-next-end:hover { border-color: #e5e7eb; }
+
+/* ===================== Lesson search ===================== */
+.dash-edu-search {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+  padding: 10px 14px; margin-bottom: 20px;
+}
+.dash-edu-search-ico { width: 18px; height: 18px; color: var(--color-muted); flex-shrink: 0; }
+.dash-edu-search-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 0.98rem; color: #0a2540; font-family: inherit;
+}
+.dash-edu-search-input::placeholder { color: #9ca3af; }
+.dash-edu-search-clear {
+  background: transparent; border: none; color: var(--color-muted);
+  font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+.dash-edu-search-clear:hover { color: #0a2540; }
+.dash-edu-search-results { margin-bottom: 24px; }
+.dash-edu-search-count {
+  font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--color-muted); margin-bottom: 10px;
+}
+.dash-edu-search-empty {
+  padding: 24px; text-align: center; color: var(--color-muted);
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+}
