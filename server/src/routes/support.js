@@ -135,7 +135,8 @@ router.post('/contact', async function (req, res) {
       .single();
 
     if (caseErr) {
-      return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+      console.error('[contact] case insert failed:', caseErr.message, caseErr.details || '', caseErr.code || '');
+      return res.status(500).json({ error: 'Could not submit your message. Please try again.', debug: caseErr.message });
     }
 
     // First message = the contact's message. author_id = matched user or
@@ -150,13 +151,15 @@ router.post('/contact', async function (req, res) {
       });
 
     if (msgErr) {
-      return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+      console.error('[contact] message insert failed:', msgErr.message, msgErr.details || '', msgErr.code || '');
+      return res.status(500).json({ error: 'Could not submit your message. Please try again.', debug: msgErr.message });
     }
 
     // Identical response regardless of match — no account-existence signal.
     return res.json({ ok: true, case_number: caseRow.case_number });
   } catch (err) {
-    return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+    console.error('[contact] unexpected error:', err && err.message, err && err.stack);
+    return res.status(500).json({ error: 'Could not submit your message. Please try again.', debug: err && err.message });
   }
 });
 
