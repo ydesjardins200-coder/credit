@@ -846,3 +846,61 @@ body.iboost-mm:not(.has-dark-hero) .site-nav-link:hover { background: rgba(15, 2
   border-bottom: 1px solid #eef2f7;
 }
 .site-drawer-link:hover { color: #16a34a; }
+
+/* ===================================================================
+ * Dark-navy header in ALL states (override).
+ * Previously the header flipped to a translucent WHITE on scroll (and on
+ * pages without a dark hero), which made the nav links wash out and become
+ * hard to read. Keep the header dark navy consistently and the links light.
+ * Placed last so it wins over the earlier white-background rules.
+ * =================================================================== */
+:root { --iboost-header-navy: rgba(10, 24, 51, 0.92); }
+
+/* Scrolled (dark-hero pages) + always (non-dark-hero pages): dark navy. */
+.iboost-mm .site-header.is-scrolled,
+body.iboost-mm:not(.has-dark-hero) .site-header {
+  background: var(--iboost-header-navy) !important;
+  backdrop-filter: saturate(160%) blur(14px) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(14px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Keep nav links LIGHT in those states (was switching to dark). */
+.iboost-mm .site-header.is-scrolled .site-nav-link,
+body.iboost-mm:not(.has-dark-hero) .site-nav-link,
+.iboost-mm .site-header.is-scrolled .site-nav-trigger,
+body.iboost-mm:not(.has-dark-hero) .site-nav-trigger {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.iboost-mm .site-header.is-scrolled .site-nav-link:hover,
+body.iboost-mm:not(.has-dark-hero) .site-nav-link:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+/* Ghost "Sign in" button: light outline in the dark states. */
+.iboost-mm .site-header.is-scrolled .site-nav-ghost,
+body.iboost-mm:not(.has-dark-hero) .site-nav-ghost {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: transparent !important;
+}
+.iboost-mm .site-header.is-scrolled .site-nav-ghost:hover,
+body.iboost-mm:not(.has-dark-hero) .site-nav-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+/* Logo: use the on-dark logo (the 'dark'-named file reads on dark bg,
+   matching the existing dark-hero convention) in the dark states. */
+.iboost-mm .site-header.is-scrolled .site-logo-dark,
+body.iboost-mm:not(.has-dark-hero) .site-logo-dark { display: inline-block !important; }
+.iboost-mm .site-header.is-scrolled .site-logo-light,
+body.iboost-mm:not(.has-dark-hero) .site-logo-light { display: none !important; }
+
+/* Hamburger bars light in the dark states. */
+.iboost-mm .site-header.is-scrolled .site-hamburger span,
+body.iboost-mm:not(.has-dark-hero) .site-hamburger span {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
