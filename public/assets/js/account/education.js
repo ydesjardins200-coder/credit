@@ -60,9 +60,23 @@
     // overview from real data. If the fetch fails, render with no
     // progress (the library still works; just shows everything as
     // not-started).
+    var token = session && session.access_token;
+
+    // Load the curriculum from the DB (via the API) before rendering.
+    var curriculumHost = document.getElementById('dash-edu-curriculum');
+    try {
+      await window.iboostEducation.load(token);
+    } catch (e) {
+      console.error('[education] curriculum load failed:', e);
+      if (curriculumHost) {
+        curriculumHost.innerHTML = '<div class="dash-edu-curriculum-loading">' +
+          'We couldn\u2019t load the lessons right now. Please refresh in a moment.</div>';
+      }
+      return;
+    }
+
     var progress = {};
     try {
-      var token = session && session.access_token;
       var cfg = window.IBOOST_CONFIG || {};
       var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
       var resp = await fetch(base + '/api/education/progress', {

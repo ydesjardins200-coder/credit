@@ -17,6 +17,60 @@ const express = require('express');
 const router = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 
+// GET /api/education/lessons — the full curriculum (chapters + published
+// lessons), shaped the way the frontend curriculum registry used to be.
+// requireAuth so it's members-only (education is free to all members);
+// RLS also restricts the tables to authenticated reads.
+router.get('/lessons', requireAuth, async function (req, res, next) {
+  try {
+    const { data: chapters, error: chErr } = await req.supabase
+      .from('education_chapters')
+      .select('id, number, title, tagline, score_gate')
+      .order('number', { ascending: true });
+    if (chErr) {
+      return res.status(500).json({ error: 'Could not load chapters: ' + chErr.message });
+    }
+
+    const { data: lessons, error: lErr } = await req.supabase
+      .from('education_lessons')
+      .select('id, chapter_id, progress_key, slug, title, minutes, intro, body, sort_order, is_published')
+      .eq('is_published', true)
+      .order('sort_order', { ascending: true });
+    if (lErr) {
+      return res.status(500).json({ error: 'Could not load lessons: ' + lErr.message });
+    }
+
+    // Group lessons under their chapter, preserving sort order.
+    const byChapter = {};
+    (lessons || []).forEach(function (l) {
+      (byChapter[l.chapter_id] = byChapter[l.chapter_id] || []).push(l);
+    });
+
+    const result = (chapters || []).map(function (ch) {
+      return {
+        number: ch.number,
+        title: ch.title,
+        tagline: ch.tagline,
+        scoreGate: ch.score_gate || null,
+        lessons: (byChapter[ch.id] || []).map(function (l) {
+          return {
+            id: l.progress_key,   // stable id used by progress + as the registry id
+            slug: l.slug,
+            title: l.title,
+            minutes: l.minutes,
+            intro: l.intro || null,
+            body: l.body || [],
+          };
+        }),
+      };
+    });
+
+    return res.json({ chapters: result });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // GET /api/education/progress — list the caller's progress.
 router.get('/progress', requireAuth, async function (req, res, next) {
   try {

@@ -103,11 +103,26 @@
     window.iboostAccountShell.wireSignout();
 
     var E = window.iboostEducation;
-    var C = window.iboostEducationContent;
     var slug = getSlug();
-    var lesson = E && E.lessonBySlug(slug);
     var root = document.getElementById('lesson-root');
     if (!root) return;
+
+    var token = await getToken();
+
+    // Load the curriculum (lessons now live in the DB, fetched via API).
+    try {
+      await E.load(token);
+    } catch (e) {
+      console.error('[lesson] curriculum load failed:', e);
+      root.innerHTML = '<div class="lesson-missing">' +
+        '<h1>Couldn\u2019t load this lesson</h1>' +
+        '<p>Please refresh in a moment.</p>' +
+        '<a class="lesson-back-link" href="/account/education">\u2190 Back to the library</a>' +
+        '</div>';
+      return;
+    }
+
+    var lesson = E.lessonBySlug(slug);
 
     if (!lesson) {
       root.innerHTML = '<div class="lesson-missing">' +
@@ -120,9 +135,9 @@
 
     document.title = lesson.title + ' — iBoost';
 
-    var content = C && C.get(slug);
+    // Content now arrives with the lesson (body + intro from the DB).
+    var content = (lesson.body && lesson.body.length) ? { intro: lesson.intro, body: lesson.body } : null;
     var neighbors = E.neighbors(slug);
-    var token = await getToken();
 
     // Existing progress (to reflect completed state on load).
     var existing = await fetchProgressFor(lesson.id, token);
