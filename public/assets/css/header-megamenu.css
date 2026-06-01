@@ -812,3 +812,37 @@ body.iboost-mm.has-dark-hero {
     display: none !important;
   }
 }
+
+/* ===================================================================
+ * Simplified launch nav — plain top-level links (no mega-menu).
+ * Mirrors .site-nav-trigger typography so the simplified header matches
+ * the existing look across light/dark hero variants.
+ * =================================================================== */
+.iboost-mm .site-nav-link {
+  padding: 10px 14px;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  border-radius: 8px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+.iboost-mm .site-nav-link:hover { background: rgba(255, 255, 255, 0.08); }
+body.iboost-mm:not(.has-dark-hero) .site-nav-link { color: #475569 !important; }
+body.iboost-mm:not(.has-dark-hero) .site-nav-link:hover { background: rgba(15, 23, 42, 0.05); }
+
+/* Simplified mobile drawer: plain links instead of accordions. */
+.site-drawer-link {
+  display: block;
+  padding: 14px 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-decoration: none;
+  border-bottom: 1px solid #eef2f7;
+}
+.site-drawer-link:hover { color: #16a34a; }
