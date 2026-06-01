@@ -305,13 +305,19 @@
   <script>
     // Contact form submit -> POST /api/support/contact (public endpoint).
     (function () {
-      var cfg = window.IBOOST_CONFIG || {};
-      var API = (cfg.API_BASE_URL || '').replace(/\/$/, '');
       var form = document.getElementById('contact-form');
       var alertEl = document.getElementById('contact-alert');
       var successEl = document.getElementById('contact-success');
       var submitBtn = document.getElementById('contact-submit');
       if (!form) return;
+
+      // Resolve the API base lazily — config.js loads deferred (after this
+      // inline script parses), so reading it now would be empty. Read it
+      // at submit time, by which point config.js has run.
+      function apiBase() {
+        var cfg = window.IBOOST_CONFIG || {};
+        return (cfg.API_BASE_URL || '').replace(/\/$/, '');
+      }
 
       // Live phone formatting — same NANP format as the signup form.
       var phoneInput = document.getElementById('contact-phone');
@@ -356,7 +362,7 @@
         submitBtn.textContent = 'Sending…';
 
         try {
-          var resp = await fetch(API + '/api/support/contact', {
+          var resp = await fetch(apiBase() + '/api/support/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify(payload),
