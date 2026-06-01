@@ -455,3 +455,11 @@
   .dash-offer-feat-row > *:last-child { grid-column: auto; }
   .dash-offer-cat-header h3 { font-size: 0.92rem; }
 }
+
+/* DB-backed render: cards may be <a> (affiliate link) instead of <button>.
+   Keep them visually identical to the button cards. */
+a.dash-offer, a.dash-offer-mini { text-decoration: none; color: inherit; }
+.dash-offer-loading {
+  padding: 32px; text-align: center; color: var(--color-muted, #64748b);
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+}
