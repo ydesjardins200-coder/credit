@@ -1,7 +1,8 @@
 /* ===================================================================
  * Use-case landing pages (new-to-canada, mortgage-ready, rebuild-credit)
- * Reuses the shared hero-about / section / final-cta structure from
- * main.css; this file adds the page-specific content components.
+ * Built on index's hero-about / section / features-stack / feature-row /
+ * final-cta structure (all styled in main.css). This file only adds the
+ * few page-specific bits.
  * =================================================================== */
 
 /* Hero CTA row */
@@ -21,9 +22,8 @@
 }
 .uc-hero-link:hover { color: #fff; }
 
-/* Narrow reading column for prose sections */
+/* Narrow reading column for the intro prose section */
 .uc-narrow { max-width: 760px; }
-
 .uc-prose p {
   font-size: 1.06rem;
   line-height: 1.72;
@@ -32,75 +32,5 @@
 }
 .uc-prose p:last-child { margin-bottom: 0; }
 
-/* Alternating section background */
+/* Subtle alternating background for the feature-rows section */
 .uc-section-alt { background: var(--color-surface); }
-
-/* Numbered steps */
-.uc-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 8px;
-}
-.uc-step {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 24px 26px;
-  box-shadow: var(--shadow-sm);
-}
-.uc-step-num {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  color: #fff;
-  font-weight: 800;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.uc-step-body h3 {
-  margin: 4px 0 6px;
-  font-size: 1.15rem;
-  color: var(--color-fg);
-}
-.uc-step-body p {
-  margin: 0;
-  color: var(--color-fg-soft);
-  line-height: 1.6;
-}
-
-/* Feature grid */
-.uc-features {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-top: 8px;
-}
-.uc-feature {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 26px;
-}
-.uc-feature h3 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-  color: var(--color-fg);
-}
-.uc-feature p {
-  margin: 0;
-  color: var(--color-fg-soft);
-  line-height: 1.6;
-}
-
-@media (max-width: 720px) {
-  .uc-features { grid-template-columns: 1fr; }
-  .uc-step { padding: 20px; gap: 16px; }
-}
