@@ -22,14 +22,143 @@ const express = require('express');
 const router = express.Router();
 
 const requireAuth = require('../middleware/requireAuth');
+const { supabaseAdmin } = require('../lib/supabase');
 
 const MAX_BODY = 5000;       // a single message
 const MAX_SUBJECT = 200;
+const MAX_NAME = 120;
+const MAX_EMAIL = 200;
+const MAX_PHONE = 40;
+
+// Simple in-memory per-IP rate limiter for the PUBLIC contact endpoint.
+// No dependency; adequate for a single Railway instance. Not a security
+// boundary on its own — paired with a honeypot field and input caps. If
+// the contact form ever sees real abuse, add a captcha (Turnstile/hCaptcha).
+var contactHits = new Map(); // ip -> [timestamps]
+const CONTACT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const CONTACT_MAX_PER_WINDOW = 5;          // 5 submissions/hour/IP
+function contactRateLimited(ip) {
+  const now = Date.now();
+  const arr = (contactHits.get(ip) || []).filter(function (t) { return now - t < CONTACT_WINDOW_MS; });
+  if (arr.length >= CONTACT_MAX_PER_WINDOW) { contactHits.set(ip, arr); return true; }
+  arr.push(now);
+  contactHits.set(ip, arr);
+  // Opportunistic cleanup so the map doesn't grow unbounded.
+  if (contactHits.size > 5000) {
+    for (const [k, v] of contactHits) {
+      if (!v.some(function (t) { return now - t < CONTACT_WINDOW_MS; })) contactHits.delete(k);
+    }
+  }
+  return false;
+}
+
+function looksLikeEmail(s) {
+  return typeof s === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
+}
 
 function looksLikeUuid(s) {
   return typeof s === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 }
+
+// ---- POST /api/support/contact -----------------------------------------
+// PUBLIC (no auth) — the website contact form. Creates a support_case
+// tagged source='contact_form', category='Website - Contact Form'.
+//
+// Submitter matching: we silently look up whether the email (or phone)
+// belongs to an existing account. If so, the case is linked to that
+// user_id (a normal member case). If not, it's an anonymous case with the
+// contact details stored on the case. The RESPONSE IS IDENTICAL either
+// way — we never reveal whether an account exists (avoids account
+// enumeration / leaking who's a member).
+//
+// Abuse protection: per-IP rate limit + honeypot field ('company'). Bots
+// fill hidden fields; a non-empty honeypot is silently accepted (we
+// return success but don't create anything) so the bot sees no signal.
+router.post('/contact', async function (req, res) {
+  try {
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || 'unknown';
+
+    const b = req.body || {};
+    // Honeypot: a hidden field real users never fill. If present, pretend
+    // success and drop it silently.
+    if (b.company && String(b.company).trim()) {
+      return res.json({ ok: true });
+    }
+
+    if (contactRateLimited(ip)) {
+      return res.status(429).json({ error: 'Too many messages from this connection. Please try again later.' });
+    }
+
+    const name = (b.name ? String(b.name) : '').trim();
+    const email = (b.email ? String(b.email) : '').trim();
+    const phone = (b.phone ? String(b.phone) : '').trim();
+    const message = (b.message ? String(b.message) : '').trim();
+    const subject = (b.subject ? String(b.subject) : '').trim();
+
+    if (!name) return res.status(400).json({ error: 'Please enter your name.' });
+    if (!looksLikeEmail(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+    if (!message) return res.status(400).json({ error: 'Please enter a message.' });
+    if (name.length > MAX_NAME || email.length > MAX_EMAIL || phone.length > MAX_PHONE) {
+      return res.status(400).json({ error: 'One of the fields is too long.' });
+    }
+    if (message.length > MAX_BODY) return res.status(400).json({ error: 'Message is too long.' });
+    if (subject.length > MAX_SUBJECT) return res.status(400).json({ error: 'Subject is too long.' });
+
+    // Silent matching: email first, then phone. Service-role read.
+    let matchedUserId = null;
+    try {
+      const { data: byEmail } = await supabaseAdmin
+        .from('profiles').select('id').ilike('email', email).limit(1);
+      if (byEmail && byEmail[0]) {
+        matchedUserId = byEmail[0].id;
+      } else if (phone) {
+        const { data: byPhone } = await supabaseAdmin
+          .from('profiles').select('id').eq('phone', phone).limit(1);
+        if (byPhone && byPhone[0]) matchedUserId = byPhone[0].id;
+      }
+    } catch (e) { /* matching is best-effort; fall through as anonymous */ }
+
+    // Create the case. category is fixed server-side (never client-set).
+    const { data: caseRow, error: caseErr } = await supabaseAdmin
+      .from('support_cases')
+      .insert({
+        user_id: matchedUserId,                 // null if anonymous
+        subject: subject || null,
+        category: 'Website - Contact Form',
+        source: 'contact_form',
+        contact_name: name,
+        contact_email: email,
+        contact_phone: phone || null,
+      })
+      .select('id, case_number')
+      .single();
+
+    if (caseErr) {
+      return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+    }
+
+    // First message = the contact's message. author_id = matched user or
+    // null (anonymous). author_type stays 'customer' (it's their message).
+    const { error: msgErr } = await supabaseAdmin
+      .from('support_messages')
+      .insert({
+        case_id: caseRow.id,
+        author_type: 'customer',
+        author_id: matchedUserId,
+        body: message,
+      });
+
+    if (msgErr) {
+      return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+    }
+
+    // Identical response regardless of match — no account-existence signal.
+    return res.json({ ok: true, case_number: caseRow.case_number });
+  } catch (err) {
+    return res.status(500).json({ error: 'Could not submit your message. Please try again.' });
+  }
+});
 
 // ---- POST /api/support/cases -------------------------------------------
 // Body: { subject?, category?, body }  — body (the question) required.
