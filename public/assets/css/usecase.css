@@ -34,3 +34,100 @@
 
 /* Subtle alternating background for the feature-rows section */
 .uc-section-alt { background: var(--color-surface); }
+
+/* ===================================================================
+ * Contextual feature-row visuals (one per row, themed to the content).
+ * White card on the dark .feature-visual container, matching the
+ * payment-showcase aesthetic.
+ * =================================================================== */
+.uc-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 40px rgba(10, 37, 64, 0.08), 0 4px 12px rgba(10, 37, 64, 0.05);
+  padding: 1.1rem 1.2rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.uc-card-head { display: flex; align-items: center; justify-content: space-between; }
+.uc-card-title { font-weight: 700; font-size: 0.95rem; color: var(--color-fg); }
+.uc-card-tag {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px; background: var(--color-accent-soft); color: #166534;
+}
+.uc-card-tag-muted { background: #f1f5f9; color: #64748b; }
+.uc-card-foot {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: var(--color-muted); border-top: 1px solid var(--color-border); padding-top: 0.7rem;
+}
+.uc-card-foot svg { width: 15px; height: 15px; color: var(--color-accent); flex: 0 0 auto; }
+
+/* Timeline: a credit file building month by month */
+.uc-timeline { display: flex; flex-direction: column; gap: 7px; }
+.uc-tl-row { display: flex; align-items: center; gap: 10px; }
+.uc-tl-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.uc-tl-dot-on { background: var(--color-accent); }
+.uc-tl-dot-off { background: #cbd5e1; }
+.uc-tl-month { font-size: 0.85rem; color: var(--color-fg-soft); flex: 1; }
+.uc-tl-state { font-size: 0.78rem; font-weight: 600; }
+.uc-tl-state-on { color: #166534; }
+.uc-tl-state-off { color: #94a3b8; }
+
+/* Meter: a horizontal strength/readiness bar */
+.uc-meter { display: flex; flex-direction: column; gap: 0.5rem; }
+.uc-meter-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--color-fg-soft); }
+.uc-meter-track { height: 12px; border-radius: 100px; background: #eef2f7; position: relative; overflow: hidden; }
+.uc-meter-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 100px;
+  background: linear-gradient(90deg, #2ECC71, #06b6d4);
+}
+.uc-meter-scale { display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8; }
+.uc-meter-marker {
+  position: absolute; top: -3px; width: 2px; height: 18px; background: var(--color-fg);
+  border-radius: 2px;
+}
+.uc-meter-note { font-size: 0.8rem; color: var(--color-fg-soft); }
+.uc-meter-note strong { color: var(--color-fg); }
+
+/* Trend SVG block */
+.uc-trend { width: 100%; }
+.uc-trend svg { width: 100%; height: auto; display: block; }
+
+/* Checklist */
+.uc-check { display: flex; flex-direction: column; gap: 9px; }
+.uc-check-row { display: flex; align-items: flex-start; gap: 9px; font-size: 0.86rem; color: var(--color-fg-soft); line-height: 1.4; }
+.uc-check-ico {
+  flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--color-accent-soft); color: #166534;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.uc-check-ico svg { width: 11px; height: 11px; }
+
+/* Lesson card list */
+.uc-lessons { display: flex; flex-direction: column; gap: 8px; }
+.uc-lesson {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 10px; background: #fafbfc;
+}
+.uc-lesson-num {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px;
+  background: var(--color-fg); color: #fff; font-size: 0.72rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.uc-lesson-txt { font-size: 0.85rem; color: var(--color-fg); font-weight: 500; }
+
+/* Two-column "we do / we won't" */
+.uc-dodont { display: grid; grid-template-columns: 1fr; gap: 9px; }
+.uc-dd-row { display: flex; align-items: flex-start; gap: 9px; font-size: 0.85rem; line-height: 1.4; }
+.uc-dd-do { color: var(--color-fg-soft); }
+.uc-dd-ico-do, .uc-dd-ico-no {
+  flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.uc-dd-ico-do { background: var(--color-accent-soft); color: #166534; }
+.uc-dd-ico-no { background: #fee2e2; color: #991b1b; }
+.uc-dd-ico-do svg, .uc-dd-ico-no svg { width: 11px; height: 11px; }
