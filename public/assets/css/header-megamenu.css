@@ -904,3 +904,58 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-light { display: none !important; 
 body.iboost-mm:not(.has-dark-hero) .site-hamburger span {
   background: rgba(255, 255, 255, 0.9) !important;
 }
+
+/* ===================================================================
+ * Compact "Use cases" dropdown (single column, narrow) + mobile drawer
+ * sub-group. Overrides the wide mega-menu defaults for the simplified
+ * launch nav.
+ * =================================================================== */
+.iboost-mm .site-mega.site-mega-compact {
+  min-width: 340px;
+  padding: 10px;
+}
+.iboost-mm .site-mega-cols-1 { grid-template-columns: 1fr; }
+.iboost-mm .site-mega-compact .site-mega-item {
+  display: block;
+  padding: 11px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.13s;
+}
+.iboost-mm .site-mega-compact .site-mega-item:hover { background: #f1f5f9; }
+.iboost-mm .site-mega-compact .site-mega-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0a2540;
+}
+.iboost-mm .site-mega-compact .site-mega-desc {
+  display: block;
+  font-size: 0.83rem;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Mobile drawer: "Use cases" sub-group */
+.site-drawer-group {
+  padding: 8px 0 6px;
+  border-bottom: 1px solid #eef2f7;
+}
+.site-drawer-group-title {
+  margin: 6px 4px 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+.site-drawer-sublink {
+  display: block;
+  padding: 10px 4px 10px 16px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #334155;
+  text-decoration: none;
+}
+.site-drawer-sublink:hover { color: #16a34a; }
