@@ -561,3 +561,12 @@
   }
   .dash-edu-lesson-arrow { display: none; }
 }
+
+/* Curriculum loading placeholder (shown briefly before JS renders from
+   the registry). Kept minimal — the registry render replaces it. */
+.dash-edu-curriculum-loading {
+  padding: 24px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
