@@ -56,11 +56,100 @@
     window.iboostAccountShell.populateUserInfo(user, firstName, initials);
     window.iboostAccountShell.wireSignout();
 
-    // Render the curriculum from the registry (single source of truth).
-    // Progress overlay (per-lesson % + the overview bar) lands in Step 2
-    // when DB tracking is wired; for now lessons render with no progress
-    // state and the links point to the lesson pages.
-    renderCurriculum(null);
+    // Fetch the user's lesson progress, then render the curriculum +
+    // overview from real data. If the fetch fails, render with no
+    // progress (the library still works; just shows everything as
+    // not-started).
+    var progress = {};
+    try {
+      var token = session && session.access_token;
+      var cfg = window.IBOOST_CONFIG || {};
+      var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
+      var resp = await fetch(base + '/api/education/progress', {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': token ? ('Bearer ' + token) : ''
+        }
+      });
+      if (resp.ok) {
+        var body = await resp.json();
+        progress = (body && body.progress) || {};
+      }
+    } catch (e) {
+      console.error('[education] progress fetch failed:', e);
+    }
+
+    renderCurriculum(progress);
+    renderOverview(progress);
+    renderContinue(progress);
+  }
+
+  // Update the "N of M complete" header, the bar, and the stat tiles
+  // from real progress.
+  function renderOverview(progress) {
+    var E = window.iboostEducation;
+    if (!E) return;
+    var all = E.allLessons();
+    var total = all.length;
+    var done = all.filter(function (l) {
+      var p = progress[l.id];
+      return p && p.status === 'complete';
+    }).length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
+    // Minutes read = sum of minutes for completed lessons.
+    var minsRead = all.reduce(function (sum, l) {
+      var p = progress[l.id];
+      return (p && p.status === 'complete') ? sum + l.minutes : sum;
+    }, 0);
+
+    setText('edu-progress-title', done + ' of ' + total + ' lessons complete');
+    var fill = document.getElementById('edu-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+    var bar = document.getElementById('edu-progress-bar');
+    if (bar) bar.setAttribute('aria-valuenow', String(pct));
+    setText('edu-stat-minutes', String(minsRead));
+    setText('edu-stat-done', String(done));
+
+    var meta;
+    if (done === 0) meta = 'Start your first lesson below.';
+    else if (done >= total) meta = 'You\u2019ve completed the whole library. Nicely done.';
+    else meta = 'Keep going \u2014 you\u2019re building the habit.';
+    setText('edu-progress-meta', meta);
+  }
+
+  // Show "continue where you left off" if there's an in-progress (not
+  // complete) lesson; otherwise hide the card. Picks the most recently
+  // updated in-progress lesson.
+  function renderContinue(progress) {
+    var E = window.iboostEducation;
+    var card = document.getElementById('edu-continue');
+    if (!E || !card) return;
+
+    var candidate = null;
+    E.allLessons().forEach(function (l) {
+      var p = progress[l.id];
+      if (p && p.status === 'in_progress') {
+        if (!candidate || (p.updated_at || '') > (candidate.updated_at || '')) {
+          candidate = { lesson: l, percent: p.percent || 0, updated_at: p.updated_at };
+        }
+      }
+    });
+
+    if (!candidate) { card.hidden = true; return; }
+
+    var l = candidate.lesson;
+    card.href = E.lessonUrl(l.slug);
+    setText('edu-continue-title', l.title);
+    setText('edu-continue-meta',
+      'Chapter ' + l.chapterNumber + ' · ' + l.chapterTitle + ' · ' + l.minutes + ' min');
+    var fill = document.getElementById('edu-continue-fill');
+    if (fill) fill.style.width = (candidate.percent || 0) + '%';
+    card.hidden = false;
+  }
+
+  function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
   }
 
   // Build the full curriculum from window.iboostEducation. `progress` is

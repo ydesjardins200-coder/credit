@@ -158,7 +158,10 @@
   align-items: center;
   position: relative;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
+.dash-edu-continue:hover { text-decoration: none; }
 
 .dash-edu-continue::before {
   content: '';
