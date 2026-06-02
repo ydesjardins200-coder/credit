@@ -11,6 +11,14 @@
 (function () {
   'use strict';
 
+  // Capture a partner referral code (?ref=ib_...) as early as possible and
+  // stash it, so it survives even if the visitor browses before signing up
+  // or goes through email confirmation. Read back at attribution time.
+  try {
+    var _ref = (new URLSearchParams(window.location.search).get('ref') || '').trim();
+    if (_ref) { try { window.localStorage.setItem('iboost_ref', _ref); } catch (e) {} }
+  } catch (e) { /* URL APIs unavailable */ }
+
   const form = document.getElementById('signup-form');
   if (!form) return;
 
@@ -45,6 +53,45 @@
   // is pre-selected in the picker. Accepted values: free, essential,
   // complete (matching checkout.js's PLANS catalog). Invalid values
   // are dropped silently — checkout falls back to its default (complete).
+
+  // Best-effort partner attribution. If the signup URL carried ?ref=ib_...
+  // (a partner referral link), capture it and tell the backend to link this
+  // account to the referring lead. Falls back silently — attribution must
+  // never affect the signup outcome. Reads the API base lazily (config.js
+  // loads deferred, so don't read it at parse time).
+  function getRefCode() {
+    try {
+      var r = (new URLSearchParams(window.location.search).get('ref') || '').trim();
+      if (r) {
+        // Persist so it survives an email-confirmation round trip (where
+        // there's no session at signup time and the URL param is lost).
+        try { window.localStorage.setItem('iboost_ref', r); } catch (e) {}
+        return r;
+      }
+      try { return (window.localStorage.getItem('iboost_ref') || '').trim() || null; } catch (e) { return null; }
+    } catch (e) { return null; }
+  }
+
+  async function attributePartnerReferral() {
+    var cfg = window.IBOOST_CONFIG || {};
+    var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
+    if (!base) return;
+    var ref = getRefCode();
+    var settled = await window.iboostAuth.getSessionSettled();
+    var session = settled && settled.session;
+    var token = session && session.access_token;
+    if (!token) return;
+    // Fire the attribution. Email-match fallback runs server-side even when
+    // ref is null, so we call regardless of whether a ref code is present.
+    await fetch(base + '/api/partners/attribute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({ ref: ref }),
+    }).catch(function () { /* best-effort */ });
+  }
 
   function getPostSignupPath() {
     var target = '/checkout.html';
@@ -336,6 +383,11 @@
     }
 
     if (data && data.session) {
+      // Best-effort partner attribution: if the user arrived via a partner
+      // referral link (?ref=ib_...), tell the backend to link this new
+      // account to that lead. Never blocks or errors the signup flow.
+      try { await attributePartnerReferral(); } catch (e) { /* non-fatal */ }
+
       // Profile should be complete because the form just captured phone +
       // country. But check anyway — cheap and catches the case where the
       // trigger hasn't fired yet or a field was somehow dropped.

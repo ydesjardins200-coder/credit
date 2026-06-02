@@ -30,6 +30,7 @@ const router = express.Router();
 
 const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
+const { accrueOnCollectedPayment } = require('../lib/partner-accrual');
 
 // Map a Stripe Price ID back to a plan key, so a webhook that only has
 // the price (e.g. future subscription.updated events) can still resolve
@@ -634,6 +635,31 @@ async function handlePaymentSucceeded(invoice) {
 
   const profile = await findUserByStripeCustomerId(stripeCustomerId);
   if (!profile) return; // unknown customer — nothing to clear
+
+  // Partner rev-share accrual (the anchor rule lives here: we accrue ONLY
+  // on a collected payment, never on signup). Best-effort and idempotent —
+  // it must never break the webhook, so it's wrapped and its result is just
+  // logged. Runs on every collected payment, BEFORE the past-due early
+  // return below (a routine successful renewal must still accrue).
+  try {
+    const accrual = await accrueOnCollectedPayment({
+      userId: profile.id,
+      email: profile.email,
+      invoiceId: invoice.id,
+      eventId: invoice.id, // invoice id is the stable idempotency key
+      amountCents: invoice.amount_paid != null ? invoice.amount_paid : invoice.amount_due,
+      currency: invoice.currency || null,
+      plan: profile.plan || null,
+    });
+    if (accrual && accrual.accrued) {
+      console.log('[webhook] partner accrual: user=' + profile.id +
+        ' partner=' + accrual.partner_id + ' accrued=' + accrual.amount_cents + 'c');
+    } else if (accrual && !accrual.ok) {
+      console.log('[webhook] partner accrual error: ' + (accrual.error || 'unknown'));
+    }
+  } catch (e) {
+    console.log('[webhook] partner accrual threw: ' + (e && e.message));
+  }
 
   // Nothing to clear if not currently flagged. Avoids a needless write
   // on every routine successful renewal.

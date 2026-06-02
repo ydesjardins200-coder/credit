@@ -23,8 +23,10 @@ const crypto = require('crypto');
 const router = express.Router();
 
 const requireAdminSharedSecret = require('../middleware/requireAdminSharedSecret');
+const requireAuth = require('../middleware/requireAuth');
 const { supabaseAdmin } = require('../lib/supabase');
 const { ingestOne } = require('../lib/lead-ingest');
+const { attributeUser } = require('../lib/partner-accrual');
 
 // ---- credential helpers ----
 function genApiKey(isTest) {
@@ -122,7 +124,30 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
       .eq('is_active', true)
       .maybeSingle();
 
-    return res.json({ partner: publicPartner(partner), deal: deal || null });
+    // Accrual + funnel summary (best-effort; never fails the detail load).
+    let summary = { leads: 0, converted: 0, accrued_cents: 0, currencies: {} };
+    try {
+      const { count: leadCount } = await supabaseAdmin
+        .from('leads').select('id', { count: 'exact', head: true }).eq('partner_id', partner.id);
+      const { count: convCount } = await supabaseAdmin
+        .from('leads').select('id', { count: 'exact', head: true })
+        .eq('partner_id', partner.id).eq('status', 'converted_collected');
+      // Sum accrued by currency (never sum across currencies).
+      const { data: events } = await supabaseAdmin
+        .from('rev_share_events')
+        .select('accrued_cents, currency, status')
+        .eq('partner_id', partner.id);
+      const byCur = {};
+      let totalAccrued = 0;
+      (events || []).forEach(function (e) {
+        const cur = (e.currency || 'cad').toLowerCase();
+        byCur[cur] = (byCur[cur] || 0) + (Number(e.accrued_cents) || 0);
+        totalAccrued += (Number(e.accrued_cents) || 0);
+      });
+      summary = { leads: leadCount || 0, converted: convCount || 0, accrued_cents: totalAccrued, currencies: byCur };
+    } catch (e) { /* summary is best-effort */ }
+
+    return res.json({ partner: publicPartner(partner), deal: deal || null, summary: summary });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -335,6 +360,23 @@ router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (re
     return res.json({ ok: true, lead: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ POST /api/partners/attribute ============
+// Called by the signup flow right after an account is created, to link the
+// new account to the lead that referred it (referral code, falling back to
+// email match). Authenticated as the new user; best-effort; never errors
+// the signup flow. Body: { ref?: "ib_..." }.
+router.post('/attribute', requireAuth, async function (req, res) {
+  try {
+    const ref = req.body && req.body.ref ? String(req.body.ref) : null;
+    const result = await attributeUser(req.user.id, req.user.email, ref);
+    // Always 200 — attribution is best-effort and must not surface as a
+    // signup error. The client ignores the body.
+    return res.json({ ok: true, attributed: !!(result && result.attributed) });
+  } catch (err) {
+    return res.json({ ok: false, attributed: false });
   }
 });
 
