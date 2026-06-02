@@ -226,6 +226,8 @@ RECURRING_COLLECTED each subsequent collected payment within the recurring
 
 Outreach reuses the existing signup/account-creation flow. The only genuinely new runtime piece is **carrying the referral attribution through signup** and **hooking the Stripe collected-payment webhook to accrue rev-share.**
 
+> **Email delivery:** the automated outreach is sent via Customer.io — see [`docs/email-platform.md`](./email-platform.md). The partner outreach is one of the marketing/commercial email types there (CASL consent applies). This is why the partner platform (Phase 2) precedes the email platform (Phase 3) in the build roadmap.
+
 ---
 
 ## Admin partner portal (v1)

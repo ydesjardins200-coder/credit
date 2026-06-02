@@ -56,6 +56,16 @@ The partner acquisition platform — a multi-partner system where lenders send i
 - The admin partner-onboarding / deal-config UI
 - Anything touching the `partners`, `leads`, or rev-share tables
 
+### [`email-platform.md`](./email-platform.md)
+The email platform — Customer.io (startup program accepted), the engine for all future iBoost email. iBoost sends zero email today. Covers why it's deliberately not bound yet (temporary domain → reputation can't transfer), the transactional-vs-marketing split with the full email list mapped, the CASL consent flag (Canada-first), the catch-all inbox → support case reuse, and why it's built LAST (most triggers don't exist until Flinks/Equifax + the partner platform ship). **Roadmap Phase 3 — gated on the real domain + the earlier phases.**
+
+**Read this first** if you're working on:
+- Any email iBoost sends (transactional or marketing)
+- Customer.io integration
+- The CASL/consent mechanism at signup
+- The catch-all email → support case feature
+- Invoice or case-update notifications
+
 ### [`account-architecture.md`](./account-architecture.md)
 Active refactor plan: splitting the monolithic `account.html` (13,700+ lines across HTML/JS/CSS) into per-tab pages under `/account/{welcome,credit,offers,budget,education,profile}` with a shared utilities/auth/components layer. Covers the target folder layout, URL structure, migration phases (A=shared extraction, B=shell extraction, C=Profile-first single-tab proof, D=remaining tabs, E=cleanup), risks, and success criteria. Each phase ships a working app — no long-lived feature branches.
 
@@ -64,6 +74,38 @@ Active refactor plan: splitting the monolithic `account.html` (13,700+ lines acr
 - Adding a new tab or major feature to the account experience
 - Touching `account.js` or `account.css`
 - Setting up shared modules or worrying about code organization
+
+---
+
+## Build roadmap (canonical sequencing)
+
+The three major initiatives ship in this order. **Do not start a later phase before the earlier ones are live** — each depends on the one before it.
+
+```
+PHASE 1 — Core product stack
+  Flinks (budget intelligence) + Equifax (bureau reading/reporting) live.
+  The product fulfills its actual promise. Nothing downstream matters
+  until this works.
+  Specs: budget-app-vision.md, credit-bureau-integration.md, brain-architecture.md
+                            │
+                            ▼
+PHASE 2 — Partner acquisition platform
+  Lenders send rejected-borrower leads; iBoost converts + tracks rev-share.
+  The monetization engine. Needs the finished product (Phase 1) to convert
+  leads into real value — never pour leads into an unfinished product.
+  Spec: partner-platform.md
+                            │
+                            ▼
+PHASE 3 — Email platform (Customer.io)
+  All iBoost email: transactional + marketing + catch-all → case.
+  Built LAST because most of its triggers don't exist until Phases 1 & 2
+  ship (banking alerts need Flinks, bureau-report emails need Equifax,
+  partner outreach needs the partner platform). Also gated on the real
+  domain (reputation can't transfer from the temporary one).
+  Spec: email-platform.md
+```
+
+**Near-term exception:** two transactional emails (invoices, case-update notifications) may be pulled forward to launch ahead of the full Phase 3 — see `email-platform.md`. Yan's call.
 
 ---
 
@@ -111,6 +153,7 @@ The first three docs describe **what we're building**. The matrix describes **wh
 | Bureau integration | ✅ Spec complete | ❌ Gated on bureau vendor selection |
 | Tier feature matrix | ✅ Decisions complete | ✅ Yes (permissions module + lock overlay component) |
 | Partner platform | ✅ Spec complete | ❌ Gated on Flinks + Equifax live; then top monetization priority |
+| Email platform | ✅ Spec complete | ❌ Roadmap Phase 3 — gated on real domain + Phases 1 & 2 |
 
 The BRAIN's Phase 1 is still the most actionable spec-level item.
 
@@ -133,6 +176,8 @@ For specific work:
 > "Working on bureau integrations — see `docs/credit-bureau-integration.md`. Bureau path decision: [direct/reseller/undecided]."
 
 > "Working on the partner acquisition platform — see `docs/partner-platform.md`. Status: gated on Flinks + Equifax; [partner terms known/pending]."
+
+> "Working on email / Customer.io — see `docs/email-platform.md`. Status: Phase 3, gated on real domain; target domain [chosen/not chosen]."
 
 ---
 
