@@ -363,6 +363,34 @@ router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (re
   }
 });
 
+// ============ GET /api/partners/prefill?ref=ib_... ============
+// Public, used by the signup page to pre-fill the email/name for a visitor
+// who arrived via a partner referral link. The referral code is an
+// unguessable random token (acts as the capability). Returns minimal PII
+// and ONLY for a fresh lead (not yet attributed, not suppressed) — once the
+// lead has signed up or been suppressed, returns nothing.
+router.get('/prefill', async function (req, res) {
+  try {
+    const ref = (req.query.ref ? String(req.query.ref) : '').trim();
+    // Guard: only well-formed referral codes (ib_ + hex) are even looked up.
+    if (!/^ib_[a-f0-9]{6,}$/.test(ref)) return res.json({});
+
+    const { data: lead } = await supabaseAdmin
+      .from('leads')
+      .select('email, full_name, status, attributed_user_id')
+      .eq('referral_code', ref)
+      .maybeSingle();
+
+    if (!lead) return res.json({});
+    if (lead.attributed_user_id) return res.json({});          // already signed up
+    if (lead.status === 'suppressed') return res.json({});     // existing customer
+
+    return res.json({ email: lead.email || null, full_name: lead.full_name || null });
+  } catch (err) {
+    return res.json({});
+  }
+});
+
 // ============ POST /api/partners/attribute ============
 // Called by the signup flow right after an account is created, to link the
 // new account to the lead that referred it (referral code, falling back to

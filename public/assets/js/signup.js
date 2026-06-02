@@ -29,6 +29,39 @@
   const firstNameInput = document.getElementById('first_name');
   const lastNameInput = document.getElementById('last_name');
   const emailInput = document.getElementById('email');
+
+  // If the visitor arrived via a partner referral link (?ref=ib_...), the
+  // lead's email/name are already known — pre-fill the form so they don't
+  // retype what the partner already sent. Best-effort: silent on any error,
+  // never blocks the page. Reads the API base lazily (config.js is deferred).
+  (async function prefillFromReferral() {
+    try {
+      var ref = getRefCode();
+      if (!ref) return;
+      var cfg = window.IBOOST_CONFIG || {};
+      var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
+      if (!base) return;
+      var resp = await fetch(base + '/api/partners/prefill?ref=' + encodeURIComponent(ref), {
+        headers: { Accept: 'application/json' },
+      });
+      if (!resp.ok) return;
+      var data = await resp.json();
+      if (!data) return;
+      // Only fill empty fields — never clobber something the user typed.
+      if (data.email && emailInput && !emailInput.value) {
+        emailInput.value = data.email;
+        emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (data.full_name && firstNameInput && !firstNameInput.value) {
+        var parts = String(data.full_name).trim().split(/\s+/);
+        firstNameInput.value = parts[0] || '';
+        if (lastNameInput && !lastNameInput.value && parts.length > 1) {
+          lastNameInput.value = parts.slice(1).join(' ');
+        }
+        firstNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    } catch (e) { /* best-effort */ }
+  })();
   const phoneInput = document.getElementById('phone');
 
   const t = {
