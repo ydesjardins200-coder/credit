@@ -148,7 +148,7 @@ async function findUserByStripeCustomerId(stripeCustomerId) {
   if (!stripeCustomerId) return null;
   const { data, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at, card_last_four, card_brand, pending_plan')
+    .select('id, email, plan, cancel_at_period_end, stripe_subscription_id, next_billing_date, subscription_status, payment_failed_at, card_last_four, card_brand, pending_plan')
     .eq('stripe_customer_id', stripeCustomerId)
     .single();
   if (error) {
