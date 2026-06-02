@@ -813,6 +813,36 @@ router.post('/', async function (req, res) {
           cardLast4,
           cardBrand,
         });
+
+        // Partner rev-share accrual for the FIRST conversion. We accrue here
+        // (not only on invoice.payment_succeeded) because this event carries
+        // the user id directly in metadata — it does NOT depend on the
+        // profile's stripe_customer_id being written yet. invoice.payment_
+        // succeeded and checkout.session.completed fire near-simultaneously
+        // with no ordering guarantee, so relying on the invoice event alone
+        // races against the customer-id write and can silently miss the
+        // first conversion. Accrual is idempotent (keyed on the invoice id),
+        // so both events hitting it is safe — whichever wins, one accrual.
+        try {
+          const invoiceId = session.invoice || ('cs_' + session.id); // stable key
+          const accrual = await accrueOnCollectedPayment({
+            userId: userId,
+            email: (session.customer_details && session.customer_details.email) || null,
+            invoiceId: invoiceId,
+            eventId: event.id,
+            amountCents: session.amount_total != null ? session.amount_total : null,
+            currency: session.currency || 'cad',
+            plan: planKey || null,
+          });
+          if (accrual && accrual.accrued) {
+            console.log('[webhook] partner accrual (checkout): user=' + userId +
+              ' partner=' + accrual.partner_id + ' accrued=' + accrual.amount_cents + 'c');
+          } else if (accrual && !accrual.ok) {
+            console.log('[webhook] partner accrual (checkout) error: ' + (accrual.error || 'unknown'));
+          }
+        } catch (e) {
+          console.log('[webhook] partner accrual (checkout) threw: ' + (e && e.message));
+        }
         break;
       }
 
