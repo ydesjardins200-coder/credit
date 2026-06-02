@@ -46,6 +46,16 @@ Per-tab, per-feature gating decisions for `/account.html`. Records what Free vs 
 - The Plan card in Profile / upgrade-flow UX
 - Adding/removing features from any plan tier
 
+### [`partner-platform.md`](./partner-platform.md)
+The partner acquisition platform — a multi-partner system where lenders send iBoost their rejected-borrower leads (first partner: ~10,000/week). Covers the deals-as-data model (per-partner configurable payout basis, rate, tiers, thresholds, attribution window, recurring duration), the anchor rule (pay only on collected revenue, never on free signups), the authenticated idempotent intake webhook, the referral-code → email-match attribution chain, the two-ledger accrual model, the admin partner portal, and the compliance gate (PIPEDA consent-to-share, CROA outreach). **Gated behind Flinks + Equifax — then the top monetization priority.**
+
+**Read this first** if you're working on:
+- Lead ingestion / the partner webhook
+- Rev-share accrual or reconciliation
+- Attribution (connecting a signup back to a referred lead)
+- The admin partner-onboarding / deal-config UI
+- Anything touching the `partners`, `leads`, or rev-share tables
+
 ### [`account-architecture.md`](./account-architecture.md)
 Active refactor plan: splitting the monolithic `account.html` (13,700+ lines across HTML/JS/CSS) into per-tab pages under `/account/{welcome,credit,offers,budget,education,profile}` with a shared utilities/auth/components layer. Covers the target folder layout, URL structure, migration phases (A=shared extraction, B=shell extraction, C=Profile-first single-tab proof, D=remaining tabs, E=cleanup), risks, and success criteria. Each phase ships a working app — no long-lived feature branches.
 
@@ -100,6 +110,7 @@ The first three docs describe **what we're building**. The matrix describes **wh
 | Budget app vision | ✅ Spec complete | ❌ Gated on Flinks contract |
 | Bureau integration | ✅ Spec complete | ❌ Gated on bureau vendor selection |
 | Tier feature matrix | ✅ Decisions complete | ✅ Yes (permissions module + lock overlay component) |
+| Partner platform | ✅ Spec complete | ❌ Gated on Flinks + Equifax live; then top monetization priority |
 
 The BRAIN's Phase 1 is still the most actionable spec-level item.
 
@@ -120,6 +131,8 @@ For specific work:
 > "Working on the Budget app — see `docs/budget-app-vision.md`. Flinks status: [signed/pending]."
 
 > "Working on bureau integrations — see `docs/credit-bureau-integration.md`. Bureau path decision: [direct/reseller/undecided]."
+
+> "Working on the partner acquisition platform — see `docs/partner-platform.md`. Status: gated on Flinks + Equifax; [partner terms known/pending]."
 
 ---
 
