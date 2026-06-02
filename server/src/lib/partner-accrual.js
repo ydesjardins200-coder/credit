@@ -180,7 +180,10 @@ async function accrueOnCollectedPayment(args) {
       .eq('attributed_user_id', a.userId)
       .limit(1);
     const lead = leadRows && leadRows[0];
-    if (!lead) return { ok: true, accrued: false, reason: 'not attributed' };
+    if (!lead) {
+      console.log('[accrual] no lead attributed to user=' + a.userId + ' (invoice=' + a.invoiceId + ')');
+      return { ok: true, accrued: false, reason: 'not attributed' };
+    }
     if (lead.status === 'suppressed') return { ok: true, accrued: false, reason: 'suppressed' };
 
     // The partner's active deal.
@@ -190,7 +193,10 @@ async function accrueOnCollectedPayment(args) {
       .eq('partner_id', lead.partner_id)
       .eq('is_active', true)
       .maybeSingle();
-    if (!deal) return { ok: true, accrued: false, reason: 'no active deal' };
+    if (!deal) {
+      console.log('[accrual] lead ' + lead.id + ' has no active deal (partner=' + lead.partner_id + ')');
+      return { ok: true, accrued: false, reason: 'no active deal' };
+    }
 
     // How many prior collected payments has this lead produced? (Determines
     // first-payment vs recurring, and the 1-based payment index.)
