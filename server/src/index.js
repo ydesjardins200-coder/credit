@@ -18,6 +18,7 @@ const supportRouter = require('./routes/support');
 const educationRouter = require('./routes/education');
 const offersRouter = require('./routes/offers');
 const budgetRouter = require('./routes/budget');
+const partnersRouter = require('./routes/partners');
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use('/api/support', supportRouter);
 app.use('/api/education', educationRouter);
 app.use('/api/offers', offersRouter);
 app.use('/api/budget', budgetRouter);
+app.use('/api/partners', partnersRouter);
 
 app.get('/', (req, res) => {
   res.json({ service: 'iboost-api', status: 'ok' });
