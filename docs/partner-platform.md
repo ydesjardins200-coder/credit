@@ -56,6 +56,23 @@ This doc exists so the build can start now and be mechanical, and so the go-live
 
 ---
 
+## Testing strategy — the dummy partner
+
+Before any real partner is added, the entire pipeline is validated with a **dummy partner configured with $0 commission**, fed **synthetic test leads** (test accounts / fake data — never real referral leads, never real PII).
+
+Why this is the right harness:
+- It exercises **every stage** end-to-end: ingest → attribution → signup → collected payment → accrual. The whole machine runs.
+- **$0 commission = zero financial exposure.** If the accrual math has a bug during testing, the worst-case payout is nothing. You can run real(ish) flows safely.
+- It validates the **deal-config system itself** — proving a configured deal (even a $0 one) correctly drives accrual. That's the hardest, most expensive-to-get-wrong part, de-risked.
+
+The `partners.is_test` flag is what makes this safe and permanent:
+- Test-partner data is **excluded** from real reporting / MRR / reconciliation / payout runs.
+- The dummy partner stays **permanently active as a canary** — push a test lead through it anytime to confirm the pipeline still works after a change, without touching real data or money.
+
+This keeps all pre-real-partner work fully inside the safe zone: no real PII, no real money, no compliance exposure — but a functional, testable system, exactly per the build-now / go-live-later split.
+
+---
+
 ## Core concept: deals are data, not code
 
 The defining architectural decision: **a partner's deal terms live in the database and are configured through the admin. Adding a partner is a data operation — a new row plus config — never a deployment.**
@@ -100,6 +117,7 @@ Partner identity and operational state.
 - `id` (uuid, pk)
 - `name`, `slug`
 - `status` (`active` | `paused` | `disabled`)
+- `is_test` (boolean, default false) — **the dummy-partner flag.** A test/sandbox partner used to exercise the full pipeline with $0 commission and synthetic leads. Test-partner data is **excluded from real reporting, MRR, and reconciliation/payout runs.** Kept permanently as a pipeline canary even after real partners onboard. Mirrors the spirit of the `manual` payment mode — a fenced-off dev-convenience path. See Testing Strategy.
 - `contact_name`, `contact_email` (their account manager)
 - intake credentials: `api_key_hash`, `hmac_secret` (for webhook auth — see Intake)
 - `created_at`, `notes`
