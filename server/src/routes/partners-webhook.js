@@ -32,17 +32,11 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const { supabaseAdmin } = require('../lib/supabase');
+const { ingestOne } = require('../lib/lead-ingest');
 
 const MAX_BATCH = 500;          // max leads per POST
-const MAX_FIELD = 300;          // generic field length cap
 
 function sha256(s) { return crypto.createHash('sha256').update(s).digest('hex'); }
-function looksLikeEmail(s) { return typeof s === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s); }
-function genReferralCode() {
-  // Short, URL-safe, collision-resistant enough with a unique constraint
-  // backstop. e.g. "ib_9f3a2c8e1b".
-  return 'ib_' + crypto.randomBytes(6).toString('hex');
-}
 
 // Timing-safe hex compare.
 function safeEqual(a, b) {
@@ -130,78 +124,5 @@ router.post('/', async function (req, res) {
     return res.status(500).json({ error: 'Intake failed.' });
   }
 });
-
-// Ingest a single lead. Returns a per-item result (never throws).
-async function ingestOne(partner, lead, index) {
-  try {
-    if (!lead || typeof lead !== 'object') {
-      return { ok: false, index: index, error: 'Not an object.' };
-    }
-    const email = (lead.email ? String(lead.email) : '').trim();
-    if (!looksLikeEmail(email)) {
-      return { ok: false, index: index, error: 'Invalid or missing email.' };
-    }
-    const idemKey = (lead.idempotency_key ? String(lead.idempotency_key)
-                   : lead.partner_lead_id ? String(lead.partner_lead_id)
-                   : '').trim();
-    if (!idemKey) {
-      return { ok: false, index: index, error: 'Missing idempotency_key (or partner_lead_id).' };
-    }
-
-    // Idempotency: if this (partner, key) already exists, return it.
-    const { data: existing } = await supabaseAdmin
-      .from('leads')
-      .select('id, status, referral_code')
-      .eq('partner_id', partner.id)
-      .eq('idempotency_key', idemKey)
-      .maybeSingle();
-    if (existing) {
-      return { ok: true, index: index, lead_id: existing.id, referral_code: existing.referral_code, status: existing.status, duplicate: true };
-    }
-
-    // Existing-customer suppression: if the email is already an iBoost
-    // account, store but mark suppressed (don't "acquire" a current user).
-    let status = 'ingested';
-    try {
-      const { data: prof } = await supabaseAdmin
-        .from('profiles').select('id').ilike('email', email).limit(1);
-      if (prof && prof[0]) status = 'suppressed';
-    } catch (e) { /* suppression check is best-effort */ }
-
-    const referralCode = genReferralCode();
-
-    const insertRow = {
-      partner_id: partner.id,
-      partner_lead_id: (lead.partner_lead_id ? String(lead.partner_lead_id).slice(0, MAX_FIELD) : null),
-      email: email.slice(0, MAX_FIELD),
-      full_name: (lead.full_name ? String(lead.full_name).slice(0, MAX_FIELD) : null),
-      phone: (lead.phone ? String(lead.phone).slice(0, MAX_FIELD) : null),
-      address: (lead.address && typeof lead.address === 'object') ? lead.address : null,
-      referral_code: referralCode,
-      status: status,
-      idempotency_key: idemKey.slice(0, MAX_FIELD),
-      raw_payload: lead,
-    };
-
-    const { data: inserted, error } = await supabaseAdmin
-      .from('leads').insert(insertRow).select('id, referral_code, status').single();
-
-    if (error) {
-      // Unique-violation race on (partner_id, idempotency_key): another
-      // concurrent POST won. Re-read and return it as a duplicate.
-      if (error.code === '23505') {
-        const { data: raced } = await supabaseAdmin
-          .from('leads').select('id, status, referral_code')
-          .eq('partner_id', partner.id).eq('idempotency_key', idemKey).maybeSingle();
-        if (raced) return { ok: true, index: index, lead_id: raced.id, referral_code: raced.referral_code, status: raced.status, duplicate: true };
-      }
-      return { ok: false, index: index, error: 'Insert failed.' };
-    }
-
-    return { ok: true, index: index, lead_id: inserted.id, referral_code: inserted.referral_code, status: inserted.status, duplicate: false };
-  } catch (err) {
-    return { ok: false, index: index, error: 'Item error.' };
-  }
-}
 
 module.exports = router;

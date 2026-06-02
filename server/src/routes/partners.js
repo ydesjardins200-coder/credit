@@ -24,6 +24,7 @@ const router = express.Router();
 
 const requireAdminSharedSecret = require('../middleware/requireAdminSharedSecret');
 const { supabaseAdmin } = require('../lib/supabase');
+const { ingestOne } = require('../lib/lead-ingest');
 
 // ---- credential helpers ----
 function genApiKey(isTest) {
@@ -299,6 +300,39 @@ router.get('/admin/:id/leads', requireAdminSharedSecret, async function (req, re
 
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ leads: leads || [] });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ POST /api/partners/admin/:id/test-lead ============
+// Fire a synthetic lead through the real ingestion path so the operator can
+// verify the pipeline end-to-end and watch it land in the leads inspector.
+// ONLY allowed for is_test partners — you can never inject synthetic data
+// into a real partner's leads/reconciliation. Each call uses a fresh
+// idempotency key so repeated clicks create distinct leads.
+router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (req, res) {
+  try {
+    const { data: partner } = await supabaseAdmin
+      .from('partners').select('id, is_test, status').eq('id', req.params.id).single();
+    if (!partner) return res.status(404).json({ error: 'Partner not found' });
+    if (!partner.is_test) {
+      return res.status(403).json({ error: 'Test leads can only be sent to a TEST partner.' });
+    }
+
+    const stamp = Date.now();
+    const synthetic = {
+      email: 'test+' + stamp + '@iboost.test',
+      full_name: 'Synthetic Test Lead',
+      phone: '(555) 010-' + String(stamp).slice(-4),
+      partner_lead_id: 'TEST-' + stamp,
+      idempotency_key: 'TEST-' + stamp,
+      address: { line1: '123 Test St', city: 'Montreal', province: 'QC', postal: 'H0H 0H0' },
+    };
+
+    const result = await ingestOne(partner, synthetic, 0);
+    if (!result.ok) return res.status(500).json({ error: result.error || 'Ingestion failed.' });
+    return res.json({ ok: true, lead: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
