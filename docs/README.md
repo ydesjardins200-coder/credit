@@ -79,33 +79,44 @@ Active refactor plan: splitting the monolithic `account.html` (13,700+ lines acr
 
 ## Build roadmap (canonical sequencing)
 
-The three major initiatives ship in this order. **Do not start a later phase before the earlier ones are live** — each depends on the one before it.
+**Key distinction: BUILD order ≠ GO-LIVE order.** Flinks and Equifax incur per-call/subscription fees, so iBoost defers *activating* them as far as possible to avoid burning fees pre-revenue. That cost decision does **not** block building everything around them. So we build the fee-free scaffolding first and flip on the paid integrations when revenue justifies it.
+
+### Build order
 
 ```
-PHASE 1 — Core product stack
-  Flinks (budget intelligence) + Equifax (bureau reading/reporting) live.
-  The product fulfills its actual promise. Nothing downstream matters
-  until this works.
-  Specs: budget-app-vision.md, credit-bureau-integration.md, brain-architecture.md
-                            │
-                            ▼
-PHASE 2 — Partner acquisition platform
-  Lenders send rejected-borrower leads; iBoost converts + tracks rev-share.
-  The monetization engine. Needs the finished product (Phase 1) to convert
-  leads into real value — never pour leads into an unfinished product.
+BUILD 1 — Partner acquisition platform (fee-free scaffolding)
+  Tables, intake webhook, admin deal-config, attribution logic.
+  Costs nothing to build: no Flinks/Equifax dependency, and rev-share
+  accrual hooks the ALREADY-LIVE Stripe invoice.payment_succeeded webhook.
+  Built + tested against a MOCK partner. NOT flowing real leads yet.
   Spec: partner-platform.md
                             │
                             ▼
-PHASE 3 — Email platform (Customer.io)
-  All iBoost email: transactional + marketing + catch-all → case.
-  Built LAST because most of its triggers don't exist until Phases 1 & 2
-  ship (banking alerts need Flinks, bureau-report emails need Equifax,
-  partner outreach needs the partner platform). Also gated on the real
-  domain (reputation can't transfer from the temporary one).
+BUILD 2 — Core product stack (the paid integrations)
+  Flinks (budget intelligence) + Equifax (bureau reading/reporting).
+  Activated when revenue justifies the fees. This is what lets a converted
+  lead actually receive iBoost's value.
+  Specs: budget-app-vision.md, credit-bureau-integration.md, brain-architecture.md
+                            │
+                            ▼
+BUILD 3 — Email platform (Customer.io)
+  All iBoost email. Last because most triggers don't exist until Builds
+  1 & 2 ship (banking alerts need Flinks, bureau-report emails need
+  Equifax, partner outreach needs the partner platform). Gated on the
+  real domain (reputation can't transfer from the temporary one).
   Spec: email-platform.md
 ```
 
-**Near-term exception:** two transactional emails (invoices, case-update notifications) may be pulled forward to launch ahead of the full Phase 3 — see `email-platform.md`. Yan's call.
+### Go-live gate (independent of build order)
+
+Building the partner platform first does **not** mean flowing real leads first. Real lead flow stays gated behind:
+- **Core features active** — a referred lead who signs up is promised bureau reporting + budget intelligence; don't flow real leads into a product whose paid value isn't switched on.
+- **Compliance cleared** — PIPEDA consent-to-share, CROA/CASL outreach copy, the partner data agreement.
+- **Partner's real rev-share terms** — build the deal-config to hold any terms; don't hard-code accrual math against assumptions.
+
+So: **build partner platform → activate Flinks/Equifax → flow real leads + email.** The partner platform is built and ready first; it goes *live* once the product can deliver.
+
+**Near-term exception:** two transactional emails (invoices, case-update notifications) may be pulled forward to launch ahead of the full Email build — see `email-platform.md`. Yan's call.
 
 ---
 
@@ -152,7 +163,7 @@ The first three docs describe **what we're building**. The matrix describes **wh
 | Budget app vision | ✅ Spec complete | ❌ Gated on Flinks contract |
 | Bureau integration | ✅ Spec complete | ❌ Gated on bureau vendor selection |
 | Tier feature matrix | ✅ Decisions complete | ✅ Yes (permissions module + lock overlay component) |
-| Partner platform | ✅ Spec complete | ❌ Gated on Flinks + Equifax live; then top monetization priority |
+| Partner platform | ✅ Spec complete | 🔜 BUILD FIRST (fee-free scaffolding); go-live gated on core features + compliance |
 | Email platform | ✅ Spec complete | ❌ Roadmap Phase 3 — gated on real domain + Phases 1 & 2 |
 
 The BRAIN's Phase 1 is still the most actionable spec-level item.

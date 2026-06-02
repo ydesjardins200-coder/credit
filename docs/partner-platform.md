@@ -37,19 +37,22 @@ Every configurable deal option below is valid **only within this rule.** The rul
 
 ---
 
-## Sequencing — why this is NOT first
+## Sequencing — built FIRST, but go-live gated
 
-This platform is **deliberately gated behind Flinks + Equifax going live.**
+**This platform is built FIRST of the three initiatives** — see `docs/README.md` → Build roadmap. The reason is a cost decision: Flinks + Equifax incur fees, so they're activated as late as possible to avoid burning fees pre-revenue. But the partner platform is **almost entirely fee-free to build** (no Flinks/Equifax dependency; rev-share accrual hooks the already-live Stripe `invoice.payment_succeeded` webhook). So we build the scaffolding now and have it ready.
 
-The reason is simple and non-negotiable: iBoost's core promise is bureau reporting and credit intelligence. Until that promise is *fulfillable*, pouring 10,000 leads/week into the product would burn an irreplaceable lead supply on an experience that can't yet deliver its value. You get one shot at a partner's lead stream; spend it after the product works, not before.
+**Critical distinction — built ≠ live:**
+
+- The **code** is built first, tested against a **mock partner**. No fee dependency.
+- **Flowing real leads** still rides behind the core features being active — a referred lead who signs up is promised bureau reporting + budget intelligence; don't flow real leads into a product whose paid value isn't switched on yet. That go-live moment is also gated by the compliance review and the partner's real terms (below).
 
 **Order of operations:**
 
-1. Flinks integration live (Budget app fulfills its promise).
-2. Equifax (and ideally a second bureau) reading + reporting live (core product promise fulfillable).
-3. **Then** this platform becomes the absolute priority — it is the monetization engine that turns the finished product into revenue at scale.
+1. **Build** the partner platform scaffolding (this doc) — fee-free, mock-partner tested.
+2. **Activate** Flinks + Equifax when revenue justifies the fees (the product can now deliver value).
+3. **Go live**: flow real leads, wire outreach (the email platform / Customer.io).
 
-This doc exists so that when step 3 arrives, the blueprint is already vetted and the build is mechanical.
+This doc exists so the build can start now and be mechanical, and so the go-live gate isn't accidentally crossed early.
 
 ---
 
@@ -226,7 +229,7 @@ RECURRING_COLLECTED each subsequent collected payment within the recurring
 
 Outreach reuses the existing signup/account-creation flow. The only genuinely new runtime piece is **carrying the referral attribution through signup** and **hooking the Stripe collected-payment webhook to accrue rev-share.**
 
-> **Email delivery:** the automated outreach is sent via Customer.io — see [`docs/email-platform.md`](./email-platform.md). The partner outreach is one of the marketing/commercial email types there (CASL consent applies). This is why the partner platform (Phase 2) precedes the email platform (Phase 3) in the build roadmap.
+> **Email delivery:** the automated outreach is sent via Customer.io — see [`docs/email-platform.md`](./email-platform.md). The partner outreach is one of the marketing/commercial email types there (CASL consent applies). This is why the partner platform is built before the email platform in the build roadmap.
 
 ---
 
@@ -282,7 +285,7 @@ Because accrual follows collected revenue, refunds are rare and bounded. But def
 
 ---
 
-## Build phases (when step 3 arrives)
+## Build phases (internal — for when this platform is built)
 
 1. **Phase 1 — Data model + intake.** `partners`, `partner_deals`, `leads` tables; the authenticated webhook (`/api/partners/leads`) with HMAC + idempotency; lands leads + dedup + existing-customer suppression. Returns `202`, async-ready. No outreach yet. Testable with a mock partner.
 2. **Phase 2 — Admin onboarding + deal config.** Admin UI to create partners, generate credentials, configure the structured deal. Lead inspector.
@@ -291,7 +294,7 @@ Because accrual follows collected revenue, refunds are rare and bounded. But def
 5. **Phase 5 — Reconciliation + reporting.** Per-partner dashboard, reconciliation export, clawback handling.
 6. **Phase 6 (v2) — Self-serve partner portal.** Partner auth + scoped live dashboard. Only when partner count justifies it.
 
-Each phase ships something testable. Phases 1–2 are buildable and safe to dry-run with a mock partner before any real lead or any legal clearance — but **no real leads flow until the compliance gate clears.**
+Each phase ships something testable. Phases 1–2 are buildable and safe to dry-run with a mock partner NOW (fee-free, before Flinks/Equifax) — but **no real leads flow until the core features are active AND the compliance gate clears.**
 
 ---
 
