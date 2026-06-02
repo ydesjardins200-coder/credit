@@ -19,6 +19,7 @@ const educationRouter = require('./routes/education');
 const offersRouter = require('./routes/offers');
 const budgetRouter = require('./routes/budget');
 const partnersRouter = require('./routes/partners');
+const partnersWebhookRouter = require('./routes/partners-webhook');
 
 const app = express();
 
@@ -44,6 +45,16 @@ app.use(
   '/api/stripe/webhook',
   express.raw({ type: 'application/json' }),
   stripeWebhookRouter
+);
+
+// Partner intake webhook — also needs the RAW body for HMAC signature
+// verification, so mounted with express.raw() BEFORE express.json(), same
+// as the Stripe webhook. (The partner ADMIN routes use JSON and are
+// mounted normally further down.)
+app.use(
+  '/api/partners/webhook',
+  express.raw({ type: 'application/json' }),
+  partnersWebhookRouter
 );
 
 // Global JSON parser for every other route.
