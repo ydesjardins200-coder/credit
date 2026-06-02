@@ -127,11 +127,15 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
     // Accrual + funnel summary (best-effort; never fails the detail load).
     let summary = { leads: 0, converted: 0, accrued_cents: 0, currencies: {} };
     try {
-      const { count: leadCount } = await supabaseAdmin
-        .from('leads').select('id', { count: 'exact', head: true }).eq('partner_id', partner.id);
-      const { count: convCount } = await supabaseAdmin
-        .from('leads').select('id', { count: 'exact', head: true })
-        .eq('partner_id', partner.id).eq('status', 'converted_collected');
+      // Select lead statuses and count in JS. (A head:true exact-count
+      // query was returning 0 here; selecting rows is reliable and the
+      // per-partner volume is modest.)
+      const { data: leadRows } = await supabaseAdmin
+        .from('leads').select('status').eq('partner_id', partner.id);
+      const leadCount = (leadRows || []).length;
+      const convCount = (leadRows || []).filter(function (l) {
+        return l.status === 'converted_collected' || l.status === 'signed_up_paid';
+      }).length;
       // Sum accrued by currency (never sum across currencies).
       const { data: events } = await supabaseAdmin
         .from('rev_share_events')
@@ -144,7 +148,7 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
         byCur[cur] = (byCur[cur] || 0) + (Number(e.accrued_cents) || 0);
         totalAccrued += (Number(e.accrued_cents) || 0);
       });
-      summary = { leads: leadCount || 0, converted: convCount || 0, accrued_cents: totalAccrued, currencies: byCur };
+      summary = { leads: leadCount, converted: convCount, accrued_cents: totalAccrued, currencies: byCur };
     } catch (e) { /* summary is best-effort */ }
 
     return res.json({ partner: publicPartner(partner), deal: deal || null, summary: summary });

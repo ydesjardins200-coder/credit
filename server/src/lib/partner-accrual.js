@@ -199,12 +199,15 @@ async function accrueOnCollectedPayment(args) {
     }
 
     // How many prior collected payments has this lead produced? (Determines
-    // first-payment vs recurring, and the 1-based payment index.)
-    const { count: priorCount } = await supabaseAdmin
+    // first-payment vs recurring, and the 1-based payment index.) Select
+    // rows and count in JS — an exact head-count was returning 0 here,
+    // which would make every payment look like the first.
+    const { data: priorRows } = await supabaseAdmin
       .from('rev_share_events')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .eq('lead_id', lead.id);
-    const paymentIndex = (priorCount || 0) + 1;
+    const priorCount = (priorRows || []).length;
+    const paymentIndex = priorCount + 1;
     const isFirstPayment = paymentIndex === 1;
 
     const accruedCents = computeAccrualCents(deal, Number(a.amountCents) || 0, {
