@@ -33,6 +33,15 @@ function genApiKey(isTest) {
   const prefix = isTest ? 'pk_test_' : 'pk_live_';
   return prefix + crypto.randomBytes(24).toString('hex');
 }
+
+// Non-secret identifier for a key: its prefix + last 4 chars. Safe to
+// store and display (cannot help reconstruct the key).
+function keyHint(apiKey) {
+  const k = String(apiKey || '');
+  const us = k.indexOf('_', 3); // end of 'pk_live'/'pk_test' before the hex
+  const prefix = us !== -1 ? k.slice(0, us + 1) : k.slice(0, 8);
+  return { prefix: prefix, last4: k.slice(-4) };
+}
 function genHmacSecret() {
   return 'whsec_' + crypto.randomBytes(32).toString('hex');
 }
@@ -52,6 +61,8 @@ function publicPartner(p) {
     contact_name: p.contact_name,
     contact_email: p.contact_email,
     notes: p.notes,
+    api_key_prefix: p.api_key_prefix || null,
+    api_key_last4: p.api_key_last4 || null,
     created_at: p.created_at,
   };
 }
@@ -184,6 +195,8 @@ router.post('/admin', requireAdminSharedSecret, async function (req, res) {
         contact_email: (b.contact_email || '').trim() || null,
         notes: (b.notes || '').trim() || null,
         api_key_hash: hashKey(apiKey),
+        api_key_prefix: keyHint(apiKey).prefix,
+        api_key_last4: keyHint(apiKey).last4,
         hmac_secret: hmacSecret,
       })
       .select('*')
@@ -243,7 +256,12 @@ router.post('/admin/:id/rotate-key', requireAdminSharedSecret, async function (r
 
     const { error } = await supabaseAdmin
       .from('partners')
-      .update({ api_key_hash: hashKey(apiKey), hmac_secret: hmacSecret })
+      .update({
+        api_key_hash: hashKey(apiKey),
+        api_key_prefix: keyHint(apiKey).prefix,
+        api_key_last4: keyHint(apiKey).last4,
+        hmac_secret: hmacSecret,
+      })
       .eq('id', existing.id);
     if (error) return res.status(500).json({ error: error.message });
 
