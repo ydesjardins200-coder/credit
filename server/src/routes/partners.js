@@ -381,7 +381,7 @@ router.get('/prefill', async function (req, res) {
 
     const { data: lead } = await supabaseAdmin
       .from('leads')
-      .select('email, full_name, status, attributed_user_id')
+      .select('email, full_name, phone, status, attributed_user_id')
       .eq('referral_code', ref)
       .maybeSingle();
 
@@ -389,7 +389,7 @@ router.get('/prefill', async function (req, res) {
     if (lead.attributed_user_id) return res.json({});          // already signed up
     if (lead.status === 'suppressed') return res.json({});     // existing customer
 
-    return res.json({ email: lead.email || null, full_name: lead.full_name || null });
+    return res.json({ email: lead.email || null, full_name: lead.full_name || null, phone: lead.phone || null });
   } catch (err) {
     return res.json({});
   }

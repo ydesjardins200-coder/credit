@@ -60,6 +60,13 @@
         }
         firstNameInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
+      // Phone: look it up directly (the phoneInput const is declared later
+      // in this IIFE). Dispatch 'input' so the live formatter normalizes it.
+      var phoneEl = document.getElementById('phone');
+      if (data.phone && phoneEl && !phoneEl.value) {
+        phoneEl.value = data.phone;
+        phoneEl.dispatchEvent(new Event('input', { bubbles: true }));
+      }
     } catch (e) { /* best-effort */ }
   })();
   const phoneInput = document.getElementById('phone');
