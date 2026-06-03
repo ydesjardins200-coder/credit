@@ -30,7 +30,7 @@ const router = express.Router();
 
 const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
-const { accrueOnCollectedPayment } = require('../lib/partner-accrual');
+const { accrueOnCollectedPayment, reverseOnRefund } = require('../lib/partner-accrual');
 
 // Map a Stripe Price ID back to a plan key, so a webhook that only has
 // the price (e.g. future subscription.updated events) can still resolve
@@ -890,6 +890,32 @@ router.post('/', async function (req, res) {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object;
         await handlePaymentSucceeded(invoice);
+        break;
+      }
+
+      // A charge was refunded (full or partial). If it maps to a partner
+      // conversion we accrued on, claw back the accrual proportionally.
+      // Best-effort + idempotent; never blocks the ack.
+      case 'charge.refunded': {
+        try {
+          const charge = event.data.object;
+          const reversal = await reverseOnRefund({
+            chargeId: charge.id,
+            invoiceId: charge.invoice || null, // subscription charges carry the invoice id
+            amountRefundedCents: charge.amount_refunded,
+            originalChargeCents: charge.amount,
+            currency: charge.currency || null,
+            eventId: event.id,
+          });
+          if (reversal && reversal.reversed) {
+            console.log('[webhook] partner clawback: invoice=' + charge.invoice +
+              ' partner=' + reversal.partner_id + ' clawed_back=' + reversal.clawback_cents + 'c');
+          } else if (reversal && !reversal.ok) {
+            console.log('[webhook] partner clawback error: ' + (reversal.error || 'unknown'));
+          }
+        } catch (e) {
+          console.log('[webhook] partner clawback threw: ' + (e && e.message));
+        }
         break;
       }
 

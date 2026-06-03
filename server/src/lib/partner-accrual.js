@@ -274,4 +274,106 @@ async function accrueOnCollectedPayment(args) {
   }
 }
 
-module.exports = { attributeUser, accrueOnCollectedPayment, computeAccrualCents };
+// ---- clawback on a refund --------------------------------------------
+// Called from the Stripe charge.refunded webhook. If the refunded charge
+// maps to an attributed conversion we accrued on, claw back the accrual
+// PROPORTIONALLY to the refunded amount (a refund un-collects revenue, so
+// the anchor rule says we shouldn't keep paying commission on it).
+//
+// Append-only + idempotent: writes a 'refunded' attribution_ledger row and
+// a NEGATIVE 'reversed' rev_share_events row (never mutates the original).
+// Handles full + multiple partial refunds + event re-delivery by keying on
+// (invoice, cumulative-refunded-amount) and only writing the delta.
+// Best-effort — never throws into the webhook.
+async function reverseOnRefund(args) {
+  const a = args || {};
+  try {
+    const invoiceId = a.invoiceId;
+    if (!invoiceId) {
+      console.log('[clawback] refund had no invoice id (charge=' + a.chargeId + ') — cannot map to an accrual');
+      return { ok: true, reversed: false, reason: 'no invoice id' };
+    }
+    const amountRefunded = Number(a.amountRefundedCents) || 0;
+    const originalCharge = Number(a.originalChargeCents) || 0;
+    if (amountRefunded <= 0 || originalCharge <= 0) {
+      return { ok: true, reversed: false, reason: 'nothing refunded' };
+    }
+
+    // The original positive accrual for this invoice.
+    const { data: originals } = await supabaseAdmin
+      .from('rev_share_events')
+      .select('*')
+      .eq('dedupe_key', invoiceId);
+    const original = (originals || []).find(function (r) { return Number(r.accrued_cents) > 0; });
+    if (!original) {
+      console.log('[clawback] no original accrual for invoice=' + invoiceId + ' — not an attributed conversion (or accrued $0)');
+      return { ok: true, reversed: false, reason: 'no original accrual' };
+    }
+
+    const originalAccrued = Number(original.accrued_cents) || 0;
+    // Proportional target: how much of the accrual SHOULD be reversed given
+    // the cumulative refunded fraction. Capped at the original accrual.
+    let targetReversal = Math.round(originalAccrued * (amountRefunded / originalCharge));
+    if (targetReversal > originalAccrued) targetReversal = originalAccrued;
+    if (targetReversal <= 0) return { ok: true, reversed: false, reason: 'zero target' };
+
+    // How much has already been reversed for this invoice? (Reversal rows
+    // are keyed 'refund:<invoiceId>:<cumulativeRefunded>'.)
+    const { data: priorReversals } = await supabaseAdmin
+      .from('rev_share_events')
+      .select('accrued_cents')
+      .like('dedupe_key', 'refund:' + invoiceId + ':%');
+    let alreadyReversed = 0;
+    (priorReversals || []).forEach(function (r) { alreadyReversed += Math.abs(Number(r.accrued_cents) || 0); });
+
+    const delta = targetReversal - alreadyReversed;
+    if (delta <= 0) {
+      return { ok: true, reversed: false, reason: 'already reversed' };
+    }
+
+    const dedupe = 'refund:' + invoiceId + ':' + amountRefunded;
+
+    // Immutable fact in the attribution ledger (idempotent on event+dedupe).
+    const { error: attrErr } = await supabaseAdmin
+      .from('attribution_ledger')
+      .insert({
+        lead_id: original.lead_id, partner_id: original.partner_id, user_id: original.user_id,
+        event: 'refunded',
+        stripe_event_id: a.eventId || null,
+        invoice_id: invoiceId,
+        amount_cents: amountRefunded,
+        currency: a.currency || original.currency || null,
+        dedupe_key: dedupe,
+      });
+    if (attrErr && attrErr.code === '23505') {
+      return { ok: true, reversed: false, reason: 'duplicate (already processed)' };
+    }
+
+    // Negative accrual = clawback. Idempotent on dedupe_key.
+    const { error: revErr } = await supabaseAdmin
+      .from('rev_share_events')
+      .insert({
+        partner_id: original.partner_id, lead_id: original.lead_id, user_id: original.user_id,
+        deal_id: original.deal_id,
+        collected_cents: -amountRefunded,
+        currency: a.currency || original.currency || null,
+        accrued_cents: -delta,
+        basis_snapshot: {
+          kind: 'refund_clawback', reversed_invoice: invoiceId,
+          original_accrued_cents: originalAccrued, cumulative_refunded_cents: amountRefunded,
+          original_charge_cents: originalCharge,
+        },
+        status: 'reversed',
+        dedupe_key: dedupe,
+      });
+    if (revErr && revErr.code !== '23505') {
+      return { ok: false, reversed: false, error: revErr.message };
+    }
+
+    return { ok: true, reversed: true, clawback_cents: delta, partner_id: original.partner_id };
+  } catch (err) {
+    return { ok: false, reversed: false, error: err.message };
+  }
+}
+
+module.exports = { attributeUser, accrueOnCollectedPayment, computeAccrualCents, reverseOnRefund };
