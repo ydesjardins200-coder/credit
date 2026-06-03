@@ -899,10 +899,13 @@ body.iboost-mm:not(.has-dark-hero) .site-logo-dark { display: inline-block !impo
 .iboost-mm .site-header.is-scrolled .site-logo-light,
 body.iboost-mm:not(.has-dark-hero) .site-logo-light { display: none !important; }
 
-/* Hamburger bars light in the dark states. */
+/* Hamburger bars: DARK on the white scrolled/light-hero button so the icon
+   is visible (was mistakenly forced white -> white-on-white, an invisible
+   blank square). White bars belong only over a dark hero (the base rule at
+   .site-hamburger span already handles that). */
 .iboost-mm .site-header.is-scrolled .site-hamburger span,
 body.iboost-mm:not(.has-dark-hero) .site-hamburger span {
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: #0A2540 !important;
 }
 
 /* ===================================================================
