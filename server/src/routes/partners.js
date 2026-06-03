@@ -136,7 +136,7 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
       .maybeSingle();
 
     // Accrual + funnel summary (best-effort; never fails the detail load).
-    let summary = { leads: 0, converted: 0, accrued_cents: 0, currencies: {} };
+    let summary = { leads: 0, free: 0, converted: 0, accrued_cents: 0, currencies: {} };
     try {
       // Select lead statuses and count in JS. (A head:true exact-count
       // query was returning 0 here; selecting rows is reliable and the
@@ -146,6 +146,11 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
       const leadCount = (leadRows || []).length;
       const convCount = (leadRows || []).filter(function (l) {
         return l.status === 'converted_collected' || l.status === 'signed_up_paid';
+      }).length;
+      // Free-plan signups: referred leads who signed up but are still on the
+      // free plan (not yet converted to paid). The middle of the funnel.
+      const freeCount = (leadRows || []).filter(function (l) {
+        return l.status === 'signed_up_free';
       }).length;
       // Sum accrued by currency (never sum across currencies).
       const { data: events } = await supabaseAdmin
@@ -159,7 +164,7 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
         byCur[cur] = (byCur[cur] || 0) + (Number(e.accrued_cents) || 0);
         totalAccrued += (Number(e.accrued_cents) || 0);
       });
-      summary = { leads: leadCount, converted: convCount, accrued_cents: totalAccrued, currencies: byCur };
+      summary = { leads: leadCount, free: freeCount, converted: convCount, accrued_cents: totalAccrued, currencies: byCur };
     } catch (e) { /* summary is best-effort */ }
 
     return res.json({ partner: publicPartner(partner), deal: deal || null, summary: summary });
