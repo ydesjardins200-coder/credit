@@ -136,7 +136,7 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
       .maybeSingle();
 
     // Accrual + funnel summary (best-effort; never fails the detail load).
-    let summary = { leads: 0, free: 0, converted: 0, accrued_cents: 0, currencies: {} };
+    let summary = { clicks: 0, leads: 0, free: 0, converted: 0, accrued_cents: 0, currencies: {} };
     try {
       // Select lead statuses and count in JS. (A head:true exact-count
       // query was returning 0 here; selecting rows is reliable and the
@@ -164,7 +164,11 @@ router.get('/admin/:id', requireAdminSharedSecret, async function (req, res) {
         byCur[cur] = (byCur[cur] || 0) + (Number(e.accrued_cents) || 0);
         totalAccrued += (Number(e.accrued_cents) || 0);
       });
-      summary = { leads: leadCount, free: freeCount, converted: convCount, accrued_cents: totalAccrued, currencies: byCur };
+      // Clicks on this partner's referral links (top of funnel).
+      const { data: clickRows } = await supabaseAdmin
+        .from('referral_clicks').select('id').eq('partner_id', partner.id);
+      const clickCount = (clickRows || []).length;
+      summary = { clicks: clickCount, leads: leadCount, free: freeCount, converted: convCount, accrued_cents: totalAccrued, currencies: byCur };
     } catch (e) { /* summary is best-effort */ }
 
     return res.json({ partner: publicPartner(partner), deal: deal || null, summary: summary });
@@ -387,6 +391,34 @@ router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (re
     return res.json({ ok: true, lead: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ POST /api/partners/click ============
+// Public, fire-and-forget. Records one referral-link click for the funnel.
+// Body: { ref: "ib_...", token?: "<client dedupe token>" }. Resolves the
+// ref to its partner (via the lead) so clicks roll up per partner. The
+// client only fires once per ref per browser, so refreshes don't inflate.
+// Always 200 — never blocks the signup page.
+router.post('/click', async function (req, res) {
+  try {
+    const ref = (req.body && req.body.ref ? String(req.body.ref) : '').trim();
+    const token = (req.body && req.body.token ? String(req.body.token) : '').slice(0, 64) || null;
+    if (!/^ib_[a-f0-9]{6,}$/.test(ref)) return res.json({ ok: true });
+
+    // Resolve the partner from the lead that owns this referral code.
+    let partnerId = null;
+    const { data: lead } = await supabaseAdmin
+      .from('leads').select('partner_id').eq('referral_code', ref).maybeSingle();
+    if (lead) partnerId = lead.partner_id;
+
+    await supabaseAdmin
+      .from('referral_clicks')
+      .insert({ referral_code: ref, partner_id: partnerId, client_token: token });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.json({ ok: true }); // best-effort
   }
 });
 

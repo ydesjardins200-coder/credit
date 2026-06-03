@@ -19,6 +19,39 @@
     if (_ref) { try { window.localStorage.setItem('iboost_ref', _ref); } catch (e) {} }
   } catch (e) { /* URL APIs unavailable */ }
 
+  // Top-of-funnel click tracking: when the visitor lands with ?ref=ib_…,
+  // fire one best-effort beacon per browser per ref code (deduped via a
+  // localStorage flag, so refreshes don't inflate the count). Fire-and-
+  // forget — never blocks or delays the page. Reads API base lazily.
+  (function trackReferralClick() {
+    try {
+      var ref = (new URLSearchParams(window.location.search).get('ref') || '').trim();
+      if (!/^ib_[a-f0-9]{6,}$/.test(ref)) return;
+      var dedupeKey = 'iboost_click_' + ref;
+      if (window.localStorage.getItem(dedupeKey)) return; // already counted in this browser
+
+      // Stable-ish per-browser token (non-PII) for coarse distinct counting.
+      var token = window.localStorage.getItem('iboost_click_token');
+      if (!token) {
+        token = 'c_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        try { window.localStorage.setItem('iboost_click_token', token); } catch (e) {}
+      }
+
+      var cfg = window.IBOOST_CONFIG || {};
+      var base = (cfg.API_BASE_URL || '').replace(/\/$/, '');
+      if (!base) return;
+
+      fetch(base + '/api/partners/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: ref, token: token }),
+        keepalive: true,
+      }).then(function () {
+        try { window.localStorage.setItem(dedupeKey, '1'); } catch (e) {}
+      }).catch(function () { /* best-effort */ });
+    } catch (e) { /* never block the page */ }
+  })();
+
   const form = document.getElementById('signup-form');
   if (!form) return;
 
