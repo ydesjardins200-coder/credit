@@ -27,6 +27,7 @@ const requireAuth = require('../middleware/requireAuth');
 const { supabaseAdmin } = require('../lib/supabase');
 const { ingestOne } = require('../lib/lead-ingest');
 const { attributeUser } = require('../lib/partner-accrual');
+const { gatherStatementData, renderStatementPdf } = require('../lib/partner-statement');
 
 // ---- credential helpers ----
 function genApiKey(isTest) {
@@ -391,6 +392,31 @@ router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (re
     return res.json({ ok: true, lead: result });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// ============ GET /api/partners/admin/:id/statement?month=YYYY-MM ============
+// Monthly partner statement as a PDF: financial summary (per currency,
+// never combined) + lead funnel. Aggregates only, no consumer PII.
+router.get('/admin/:id/statement', requireAdminSharedSecret, async function (req, res) {
+  try {
+    const m = String(req.query.month || '').match(/^(\d{4})-(\d{2})$/);
+    if (!m) return res.status(400).json({ error: 'month must be YYYY-MM' });
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    if (month < 1 || month > 12) return res.status(400).json({ error: 'invalid month' });
+
+    const data = await gatherStatementData(req.params.id, year, month);
+    const pdf = await renderStatementPdf(data);
+
+    const fname = 'iboost-statement-' + (data.partner.slug || data.partner.id) + '-' + req.query.month + '.pdf';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + fname + '"');
+    return res.send(pdf);
+  } catch (err) {
+    if (err.message === 'partner not found') return res.status(404).json({ error: 'partner not found' });
+    console.error('[partners] statement error:', err.message);
+    return res.status(500).json({ error: 'statement generation failed' });
   }
 });
 
