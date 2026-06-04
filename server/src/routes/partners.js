@@ -253,6 +253,35 @@ router.patch('/admin/:id', requireAdminSharedSecret, async function (req, res) {
   }
 });
 
+// ============ DELETE /api/partners/admin/:id ============
+// TEST PARTNERS ONLY — hard gate, not a UI nicety. Real partners carry
+// financial records (rev_share_events = money owed, attribution_ledger,
+// statements); the retention policy says those are never hard-deleted —
+// offboarding a real partner is a status change ('disabled'), not a
+// delete. Test partners are the $0-commission dummies the is_test flag
+// exists for; deleting one cascades its deals, leads, attribution rows,
+// rev-share events, and referral clicks (all FKs are on delete cascade;
+// verified no cascade path touches profiles).
+router.delete('/admin/:id', requireAdminSharedSecret, async function (req, res) {
+  try {
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from('partners').select('id, name, is_test').eq('id', req.params.id).single();
+    if (readErr || !existing) return res.status(404).json({ error: 'Partner not found' });
+    if (existing.is_test !== true) {
+      return res.status(409).json({
+        error: 'Only test partners can be deleted. Real partners carry financial records that must be retained — set status to disabled instead.',
+        reason: 'not_test_partner',
+      });
+    }
+    const { error: delErr } = await supabaseAdmin
+      .from('partners').delete().eq('id', req.params.id);
+    if (delErr) return res.status(500).json({ error: delErr.message });
+    return res.json({ ok: true, deleted: true, id: existing.id, name: existing.name });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // ============ POST /api/partners/admin/:id/rotate-key ============
 // Regenerate api_key + hmac_secret. Returns new raw values ONCE.
 router.post('/admin/:id/rotate-key', requireAdminSharedSecret, async function (req, res) {
