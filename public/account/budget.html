@@ -200,7 +200,13 @@
                         aria-selected="false"
                         data-spending-view="calendar">Calendar</button>
               </div>
+              <!-- CSV import parked (2026-06): free-tier import invites DB bloat
+                   without revenue; re-enable behind a paid tier when Phase 5d v2
+                   (Desjardins support) ships. Modal markup below + lib/csv-import.js
+                   left intact — uncomment this one button to restore.
               <button type="button" class="dash-card-action-link" data-budget-import-cta>Import</button>
+              -->
+
               <button type="button" class="dash-card-action-link" data-budget-manage-cta>Manage</button>
               <button type="button" class="dash-card-action" data-budget-add-entry-cta>+ Add entry</button>
             </div>
