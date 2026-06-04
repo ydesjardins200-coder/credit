@@ -203,7 +203,7 @@ async function cancelToFree(userId, reason, note, actor) {
 
   const effectiveAtIso = unixToIso(readPeriodEndUnix(updatedSub));
   try {
-    await supabaseAdmin
+    const r = await supabaseAdmin
       .from('profiles')
       .update({
         cancel_at_period_end: true,
@@ -215,6 +215,12 @@ async function cancelToFree(userId, reason, note, actor) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
+    if (r.error) {
+      // Don't bail — Stripe already accepted the cancel. Log + continue so
+      // the history row is still written; the webhook reconciles the flag.
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/cancel] profile update failed:', r.error.message);
+    }
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('[sub-ops/cancel] profile update threw:', e && e.message);
@@ -233,21 +239,137 @@ async function cancelToFree(userId, reason, note, actor) {
     // eslint-disable-next-line no-console
     console.error('[sub-ops/cancel] mark-schedule-cancelled threw:', e && e.message);
   }
+  let pendingRowId = null;
   try {
-    await supabaseAdmin.from('plan_changes').insert({
+    const r = await supabaseAdmin.from('plan_changes').insert({
       user_id: userId,
       from_plan: profile.plan,
       to_plan: 'free',
       source: 'admin_cancel',
       effective_at: effectiveAtIso,
       note: 'reason=' + (reason || 'customer_request') + (note ? '; ' + note : '') + '; actor=' + (actor || 'unknown'),
-    });
+    }).select('id').single();
+    if (r.error) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/cancel] history insert failed:', r.error.message);
+    } else {
+      pendingRowId = r.data.id;
+    }
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('[sub-ops/cancel] history insert threw:', e && e.message);
   }
 
-  return { ok: true, status: 200, body: { ok: true, scheduled: true, target_plan: 'free', effective_at: effectiveAtIso } };
+  return { ok: true, status: 200, body: { ok: true, scheduled: true, target_plan: 'free', effective_at: effectiveAtIso, pending_change_id: pendingRowId } };
+}
+
+// ---- resume : undo a pending cancel-at-period-end -----------------------
+// Stripe-side: cancel_at_period_end = false (no money moves; the sub just
+// keeps renewing on its current plan). DB-side: clear the cancel flag and
+// any stale pending-change marker (a released schedule is NOT recreated by
+// resume), rescind pending admin_cancel/admin_schedule history rows, and
+// write an admin_resume audit row. Ported verbatim from the admin route's
+// inline implementation during the subscription-ops consolidation.
+async function resumeSubscription(userId, note, actor) {
+  let profile;
+  try {
+    const r = await supabaseAdmin
+      .from('profiles')
+      .select('id, plan, stripe_subscription_id, cancel_at_period_end')
+      .eq('id', userId)
+      .single();
+    if (r.error) {
+      if (r.error.code === 'PGRST116') return { ok: false, status: 404, body: { error: 'User not found.' } };
+      return { ok: false, status: 500, body: { error: 'Could not read profile.' } };
+    }
+    profile = r.data;
+  } catch (e) {
+    return { ok: false, status: 500, body: { error: 'Profile lookup error.' } };
+  }
+
+  if (!profile.stripe_subscription_id) {
+    return { ok: false, status: 400, body: { error: 'User has no Stripe subscription to resume.', reason: 'no_subscription' } };
+  }
+  if (!profile.cancel_at_period_end) {
+    return { ok: false, status: 409, body: { error: 'Subscription is not scheduled for cancellation.', reason: 'not_canceling' } };
+  }
+
+  try {
+    const stripe = getStripe();
+    await stripe.subscriptions.update(
+      profile.stripe_subscription_id,
+      { cancel_at_period_end: false },
+      { idempotencyKey: 'resume-' + userId + '-' + Date.now() }
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/resume] stripe update failed:', err.message);
+    return { ok: false, status: 502, body: { error: 'Payment provider error: ' + err.message } };
+  }
+
+  try {
+    const r = await supabaseAdmin
+      .from('profiles')
+      .update({
+        cancel_at_period_end: false,
+        // A released schedule isn't recreated by resume, so clear any
+        // stale pending-change marker too.
+        pending_plan: null,
+        pending_plan_currency: null,
+        pending_plan_effective_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+    if (r.error) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/resume] profile update failed:', r.error.message);
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/resume] profile update threw:', e && e.message);
+  }
+
+  // Rescind pending admin_cancel rows; also clear pending admin_schedule
+  // rows — the cancel released their Stripe schedule and resume does NOT
+  // recreate it, so a lingering row must not keep showing as pending.
+  try {
+    const r = await supabaseAdmin
+      .from('plan_changes')
+      .update({ cancelled_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .in('source', ['admin_cancel', 'admin_schedule'])
+      .is('cancelled_at', null)
+      .gt('effective_at', new Date().toISOString());
+    if (r.error) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/resume] mark-pending failed:', r.error.message);
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/resume] mark-pending threw:', e && e.message);
+  }
+
+  // Resume audit row (same plan in and out; resume changes nothing else).
+  try {
+    const r = await supabaseAdmin
+      .from('plan_changes')
+      .insert({
+        user_id: userId,
+        from_plan: profile.plan,
+        to_plan: profile.plan,
+        source: 'admin_resume',
+        note: (note ? note + '; ' : '') + 'actor=' + (actor || 'unknown'),
+      });
+    if (r.error) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/resume] history insert failed:', r.error.message);
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[sub-ops/resume] history insert threw:', e && e.message);
+  }
+
+  return { ok: true, status: 200, body: { ok: true, cancel_at_period_end: false } };
 }
 
 // ---- Cancel a pending scheduled plan change (undo) ---------------------
@@ -352,4 +474,4 @@ async function cancelScheduledChange(userId, actor) {
   return { ok: true, status: 200, body: { ok: true, cancelled_scheduled_change: true, plan: profile.plan } };
 }
 
-module.exports = { schedulePlanChange, cancelToFree, cancelScheduledChange };
+module.exports = { schedulePlanChange, cancelToFree, resumeSubscription, cancelScheduledChange };
