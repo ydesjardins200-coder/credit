@@ -77,6 +77,37 @@ async function schedulePlanChange(userId, targetPlan, currency, actor) {
   let effectiveAtIso;
   try {
     const stripe = getStripe();
+
+    // Guard against the DB flag being stale (webhook ordering can lag):
+    // check the LIVE subscription before creating a schedule. Creating a
+    // schedule from a canceling sub absorbs the cancellation into the
+    // schedule, where our phase rewrite (end_behavior: 'release') would
+    // destroy it — the customer would silently renew. Fail CLOSED: if we
+    // can't read live state, refuse the write rather than proceed blind.
+    let liveSub;
+    try {
+      liveSub = await stripe.subscriptions.retrieve(profile.stripe_subscription_id);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/schedule] live sub retrieve failed:', e && e.message);
+      return { ok: false, status: 502, body: { error: 'Could not verify subscription state with the payment provider. Try again.' } };
+    }
+    if (liveSub && liveSub.cancel_at_period_end) {
+      // Self-noting: the DB said false but Stripe says true — the exact
+      // drift this guard exists for. The webhook hardening will converge
+      // the DB; here we just refuse the change.
+      // eslint-disable-next-line no-console
+      console.error('[sub-ops/schedule] DRIFT: profiles.cancel_at_period_end=false but Stripe cancel_at_period_end=true for user ' + userId);
+      return { ok: false, status: 409, body: { error: 'Subscription is scheduled to cancel; resume it before changing plans.', reason: 'pending_cancel' } };
+    }
+    if (liveSub && liveSub.cancel_at) {
+      // Do NOT block on cancel_at: the sandbox 90-day retention policy
+      // can surface a cancel date on every test sub, and blocking would
+      // freeze all plan changes in sandbox. Log for visibility only.
+      // eslint-disable-next-line no-console
+      console.log('[sub-ops/schedule] note: cancel_at is set on sub for user ' + userId + ' (not blocking)');
+    }
+
     const schedule = await stripe.subscriptionSchedules.create(
       { from_subscription: profile.stripe_subscription_id },
       { idempotencyKey: 'sched-create-' + userId + '-' + Date.now() }
@@ -182,7 +213,11 @@ async function cancelToFree(userId, reason, note, actor) {
     }
     if (scheduleId) {
       try {
-        await stripe.subscriptionSchedules.release(scheduleId);
+        // preserve_cancel_date: a release otherwise silently DROPS any
+        // cancellation the schedule holds. Redundant here (we set the
+        // cancel ourselves right below) but kept so every release call
+        // in this file has the same safe shape.
+        await stripe.subscriptionSchedules.release(scheduleId, { preserve_cancel_date: true });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error('[sub-ops/cancel] schedule release failed:', e && e.message);
@@ -419,7 +454,10 @@ async function cancelScheduledChange(userId, actor) {
       console.error('[sub-ops/cancel-scheduled] sub retrieve failed:', e && e.message);
     }
     if (scheduleId) {
-      await stripe.subscriptionSchedules.release(scheduleId);
+      // preserve_cancel_date: if the schedule absorbed a pending cancel
+      // (created from a canceling sub), a bare release silently drops it
+      // and the customer renews against their wishes. Preserve it.
+      await stripe.subscriptionSchedules.release(scheduleId, { preserve_cancel_date: true });
     }
   } catch (err) {
     // eslint-disable-next-line no-console

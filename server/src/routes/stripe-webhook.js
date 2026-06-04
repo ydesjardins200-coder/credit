@@ -233,7 +233,32 @@ async function readCustomerCard(stripe, stripeCustomerId, subscription) {
 //   3) Renewal: Stripe updates current_period_end to the next cycle.
 //      Keeps profile.next_billing_date current.
 async function syncSubscriptionState(stripe, sub) {
-  const stripeCustomerId = sub.customer;
+  // The event payload is a snapshot taken when the event was CREATED,
+  // and Stripe does not guarantee delivery order. A cancel-with-pending-
+  // change does two Stripe writes (release schedule, then set cancel) =
+  // two subscription.updated events; if the stale one arrives last, its
+  // cancel_at_period_end:false clobbers the true flag in our DB. That
+  // exact clobber let a plan change sail past the pending_cancel guard.
+  // Cure the whole ordering class: retrieve the subscription fresh and
+  // sync from live state. Every queued event then converges on the same
+  // (current) truth, regardless of arrival order.
+  let live = sub;
+  try {
+    const fresh = await stripe.subscriptions.retrieve(sub.id);
+    if (fresh && fresh.id === sub.id) live = fresh;
+  } catch (e) {
+    // Degraded, not broken: fall back to the event payload so we never
+    // drop a sync entirely. The ordering clobber is only possible while
+    // Stripe's API itself is erroring — log loudly so it's visible.
+    // eslint-disable-next-line no-console
+    console.error(
+      '[webhook] LIVE RETRIEVE FAILED for ' + sub.id +
+      ' — syncing from event payload; out-of-order state is possible: ' +
+      (e && e.message)
+    );
+  }
+
+  const stripeCustomerId = live.customer || sub.customer;
   if (!stripeCustomerId) return;
 
   const profile = await findUserByStripeCustomerId(stripeCustomerId);
@@ -248,16 +273,16 @@ async function syncSubscriptionState(stripe, sub) {
 
   // Period end lives on the subscription item in Basil API (same as
   // grantPlan handles).
-  const firstItem = sub.items && sub.items.data && sub.items.data[0];
+  const firstItem = live.items && live.items.data && live.items.data[0];
   const currentPeriodEnd =
     (firstItem && firstItem.current_period_end) ||
-    sub.current_period_end ||
+    live.current_period_end ||
     null;
   const nextBillingDate = currentPeriodEnd
     ? new Date(currentPeriodEnd * 1000).toISOString().slice(0, 10)
     : null;
 
-  const desiredCancel = !!sub.cancel_at_period_end;
+  const desiredCancel = !!live.cancel_at_period_end;
   const update = {};
 
   if (profile.cancel_at_period_end !== desiredCancel) {
@@ -272,7 +297,7 @@ async function syncSubscriptionState(stripe, sub) {
   // 'incomplete' | 'trialing' | etc. We store whatever it says (no
   // CHECK constraint), and the UI treats anything != 'past_due' as
   // "no banner", so an unexpected value fails safe.
-  const desiredStatus = sub.status || null;
+  const desiredStatus = live.status || null;
   if (desiredStatus && profile.subscription_status !== desiredStatus) {
     update.subscription_status = desiredStatus;
   }
@@ -288,7 +313,7 @@ async function syncSubscriptionState(stripe, sub) {
   // Sync card details. The webhook's sub object isn't expanded, so
   // resolve the current default card via Stripe. Only write when it
   // actually changed (avoids a needless write on every renewal event).
-  const card = await readCustomerCard(stripe, stripeCustomerId, sub);
+  const card = await readCustomerCard(stripe, stripeCustomerId, live);
   if (card.cardLast4 && /^[0-9]{4}$/.test(card.cardLast4) &&
       card.cardLast4 !== profile.card_last_four) {
     update.card_last_four = card.cardLast4;
