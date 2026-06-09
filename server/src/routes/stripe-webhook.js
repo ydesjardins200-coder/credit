@@ -31,6 +31,13 @@ const router = express.Router();
 const { getStripe } = require('../lib/stripe');
 const { supabaseAdmin } = require('../lib/supabase');
 const { accrueOnCollectedPayment, reverseOnRefund } = require('../lib/partner-accrual');
+const cio = require('../lib/customerio');
+
+// Build a deep link into the customer's account from FRONTEND_URL.
+function acctUrl(path) {
+  const base = (process.env.FRONTEND_URL || 'https://www.iboost.ca').replace(/\/+$/, '');
+  return base + (path || '/account/profile');
+}
 
 // Map a Stripe Price ID back to a plan key, so a webhook that only has
 // the price (e.g. future subscription.updated events) can still resolve
@@ -556,6 +563,26 @@ async function handleSubscriptionEnded(sub) {
     '[webhook] subscription ended: user=' + profile.id +
     ' was=' + profile.plan + ' now=free'
   );
+
+  // PHASE 1 transactional: cancellation confirmation. Best-effort; never
+  // throws into the webhook. (Idempotency for the email rides on the same
+  // at-least-once delivery as the rest of this handler; Customer.io's own
+  // de-dup plus the rarity of true cancellations keeps this acceptable for
+  // Phase 1 — revisit if duplicate confirmations ever surface.)
+  try {
+    await cio.identify(profile.id, { email: profile.email, plan: 'free', subscription_status: 'canceled' });
+    await cio.sendTransactional('canceled', {
+      to: profile.email,
+      identifiers: { id: profile.id, email: profile.email },
+      message_data: {
+        former_plan: profile.plan || 'subscription',
+        account_url: acctUrl('/account/profile'),
+      },
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log('[webhook] cio canceled threw: ' + (e && e.message));
+  }
 }
 
 // invoice.payment_failed fires when a renewal charge fails. Stripe then
@@ -604,6 +631,25 @@ async function handlePaymentFailed(invoice) {
   }
   // eslint-disable-next-line no-console
   console.log('[webhook] payment failed: user=' + profile.id + ' marked past_due');
+
+  // PHASE 1 transactional: dunning email. We're inside the first-failure
+  // guard (payment_failed_at was null), so Stripe's dunning retries never
+  // reach here — exactly one email per failure episode. Best-effort; must
+  // never throw into the webhook.
+  try {
+    await cio.identify(profile.id, { email: profile.email, subscription_status: 'past_due' });
+    await cio.sendTransactional('payment_failed', {
+      to: profile.email,
+      identifiers: { id: profile.id, email: profile.email },
+      message_data: {
+        plan: profile.plan || 'subscription',
+        update_card_url: acctUrl('/account/profile'),
+      },
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log('[webhook] cio payment_failed threw: ' + (e && e.message));
+  }
 
   // Create an INTERNAL customer-service case so a human follows up
   // (call/email the customer). We're inside the first-failure block
@@ -684,6 +730,27 @@ async function handlePaymentSucceeded(invoice) {
     }
   } catch (e) {
     console.log('[webhook] partner accrual threw: ' + (e && e.message));
+  }
+
+  // PHASE 1 transactional: payment receipt on every collected payment.
+  // Placed BEFORE the past-due early-return below so routine successful
+  // renewals still get a receipt. Best-effort; never throws into the webhook.
+  try {
+    const amountCents = invoice.amount_paid != null ? invoice.amount_paid : invoice.amount_due;
+    await cio.sendTransactional('receipt', {
+      to: profile.email,
+      identifiers: { id: profile.id, email: profile.email },
+      message_data: {
+        plan: profile.plan || 'subscription',
+        amount: amountCents != null ? (amountCents / 100).toFixed(2) : null,
+        currency: (invoice.currency || 'cad').toUpperCase(),
+        invoice_number: invoice.number || null,
+        invoice_url: invoice.hosted_invoice_url || null,
+      },
+    });
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log('[webhook] cio receipt threw: ' + (e && e.message));
   }
 
   // Nothing to clear if not currently flagged. Avoids a needless write
@@ -838,6 +905,31 @@ router.post('/', async function (req, res) {
           cardLast4,
           cardBrand,
         });
+
+        // PHASE 1 transactional: welcome / first-payment email. Identify the
+        // person (so the profile carries current traits) then send. Best-
+        // effort; must never throw into the webhook.
+        try {
+          const newEmail = (session.customer_details && session.customer_details.email) || null;
+          if (userId) {
+            await cio.identify(userId, {
+              email: newEmail,
+              plan: planKey || null,
+              subscription_status: 'active',
+            });
+          }
+          await cio.sendTransactional('welcome', {
+            to: newEmail,
+            identifiers: { id: userId, email: newEmail },
+            message_data: {
+              plan: planKey || 'subscription',
+              account_url: acctUrl('/account/profile'),
+            },
+          });
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.log('[webhook] cio welcome threw: ' + (e && e.message));
+        }
 
         // Partner rev-share accrual for the FIRST conversion. We accrue here
         // (not only on invoice.payment_succeeded) because this event carries

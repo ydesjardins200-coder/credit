@@ -23,6 +23,7 @@ const router = express.Router();
 
 const requireAuth = require('../middleware/requireAuth');
 const { supabaseAdmin } = require('../lib/supabase');
+const cio = require('../lib/customerio');
 
 const MAX_BODY = 5000;       // a single message
 const MAX_SUBJECT = 200;
@@ -226,6 +227,13 @@ router.post('/cases', requireAuth, async function (req, res, next) {
       });
     }
 
+    // PHASE 1: emit a behavioural event (ops visibility / future routing).
+    // cio.track is internally fail-safe and never throws.
+    await cio.track(req.user.id, 'cs_case_opened', {
+      case_id: caseRow.id,
+      case_number: caseRow.case_number,
+    });
+
     return res.json({
       ok: true,
       case_id: caseRow.id,
@@ -363,6 +371,9 @@ router.post('/cases/:id/messages', requireAuth, async function (req, res, next) 
       .from('support_cases')
       .update(patch)
       .eq('id', caseId);
+
+    // PHASE 1: behavioural event for the customer's reply (fail-safe).
+    await cio.track(req.user.id, 'cs_customer_reply', { case_id: caseId });
 
     return res.json({ ok: true });
   } catch (err) {

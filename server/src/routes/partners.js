@@ -27,6 +27,7 @@ const requireAuth = require('../middleware/requireAuth');
 const { supabaseAdmin } = require('../lib/supabase');
 const { ingestOne } = require('../lib/lead-ingest');
 const { attributeUser } = require('../lib/partner-accrual');
+const cio = require('../lib/customerio');
 const { gatherStatementData, renderStatementPdf } = require('../lib/partner-statement');
 
 // ---- credential helpers ----
@@ -514,6 +515,20 @@ router.post('/attribute', requireAuth, async function (req, res) {
   try {
     const ref = req.body && req.body.ref ? String(req.body.ref) : null;
     const result = await attributeUser(req.user.id, req.user.email, ref);
+
+    // PHASE 1: identify the new person in Customer.io so they exist with
+    // baseline traits before any transactional message. Best-effort and
+    // independent of attribution — must never surface as a signup error.
+    try {
+      await cio.identify(req.user.id, {
+        email: req.user.email,
+        plan: 'free',
+        created_at: Math.floor(Date.now() / 1000),
+      });
+    } catch (e) {
+      // swallowed — identify is a side-effect, never blocks signup
+    }
+
     // Always 200 — attribution is best-effort and must not surface as a
     // signup error. The client ignores the body.
     return res.json({ ok: true, attributed: !!(result && result.attributed) });
