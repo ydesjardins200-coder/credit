@@ -71,7 +71,10 @@ async function handleStripeMode({ req, res, userId, userEmail, planKey }) {
       subscription_data: {
         metadata: { supabase_user_id: userId, plan_key: planKey },
       },
-      success_url: FRONTEND_URL + '/account/profile?upgrade=success',
+      // Land on the Welcome tab (/account.html) after payment — that's
+      // where KYC + onboarding live. The cutover briefly pointed this at
+      // /account/profile, which skipped the KYC step.
+      success_url: FRONTEND_URL + '/account.html?upgrade=success',
       cancel_url: FRONTEND_URL + '/checkout.html?canceled=1',
       allow_promotion_codes: true,
     },
