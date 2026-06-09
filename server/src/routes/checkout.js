@@ -71,11 +71,7 @@ async function handleStripeMode({ req, res, userId, userEmail, planKey }) {
       subscription_data: {
         metadata: { supabase_user_id: userId, plan_key: planKey },
       },
-      success_url:
-        FRONTEND_URL +
-        '/account.html?signup=success&plan=' +
-        encodeURIComponent(planKey) +
-        '&session_id={CHECKOUT_SESSION_ID}',
+      success_url: FRONTEND_URL + '/account/profile?upgrade=success',
       cancel_url: FRONTEND_URL + '/checkout.html?canceled=1',
       allow_promotion_codes: true,
     },
