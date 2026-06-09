@@ -262,11 +262,15 @@
     return allMet;
   }
 
-  // Country is captured via a radio group named "country" with values "CA"
-  // or "US". Returns null if no radio is selected yet.
+  // Country is bound to a hidden input (value "CA") for the Canada-only
+  // launch; historically it was a CA/US radio group. Read by value so it
+  // works for both a hidden input and a (future) checked radio. Returns
+  // null only if the field is absent entirely.
   function getSelectedCountry() {
     const checked = form.querySelector('input[name="country"]:checked');
-    return checked ? checked.value : null;
+    if (checked) return checked.value;
+    const hidden = form.querySelector('input[name="country"]');
+    return hidden ? hidden.value || null : null;
   }
 
   // ----- Overall form-can-submit gate -----
@@ -314,9 +318,8 @@
       if (emailInput) emailInput.value = 'demo+' + ts + '@iboost.test';
       if (phoneInput) phoneInput.value = '(514) 555-0100';
 
-      // US is already the default checked radio — make sure it stays
-      var usRadio = document.getElementById('country-us');
-      if (usRadio) usRadio.checked = true;
+      // Country is a hidden CA input now (Canada-only launch) — nothing
+      // to set; it submits CA automatically.
 
       // Password that passes all 5 criteria: 8+ chars, uppercase,
       // lowercase, number, special char
