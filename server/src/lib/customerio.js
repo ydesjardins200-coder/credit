@@ -117,8 +117,19 @@ async function sendTransactional(txKey, opts) {
   if (!messageId) { dbg('tx skipped (no template id ' + envName + '): ' + txKey); return { ok: false, skipped: 'no-template' }; }
 
   const to = o.to || (o.identifiers && o.identifiers.email) || null;
-  const identifiers = o.identifiers || (to ? { email: to } : null);
-  if (!to && !(identifiers && (identifiers.id || identifiers.email))) {
+  // Customer.io requires EXACTLY ONE identifier (id, email, OR cio_id) —
+  // sending more than one 400s. We identify people by the Supabase user id
+  // at signup, so prefer id; fall back to email (which every Phase-1 send
+  // also has). NOTE: this assumes the workspace identifies people by id —
+  // confirm "identify people by" in Workspace Settings matches.
+  let identifiers = null;
+  if (o.identifiers) {
+    if (o.identifiers.id) identifiers = { id: String(o.identifiers.id) };
+    else if (o.identifiers.email) identifiers = { email: o.identifiers.email };
+    else if (o.identifiers.cio_id) identifiers = { cio_id: String(o.identifiers.cio_id) };
+  }
+  if (!identifiers && to) identifiers = { email: to };
+  if (!to && !identifiers) {
     dbg('tx skipped (no recipient): ' + txKey);
     return { ok: false, skipped: 'no-recipient' };
   }
