@@ -613,7 +613,7 @@
     var historyList = document.getElementById('profile-plan-history-list');
 
     var plan = (profile && profile.plan) || null;
-    var currency = (profile && profile.plan_currency) || 'usd';
+    var currency = (profile && profile.plan_currency) || 'cad';
 
     // Fetch plans catalog from DB (with 24h cache). planMap is
     // { free: {...}, essential: {...}, complete: {...} }.

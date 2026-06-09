@@ -38,17 +38,11 @@
   }
 
   function guessDefaultCurrency() {
-    // Best-effort default. User can override with the toggle anytime.
-    // Prefer saved choice; else guess CAD for French pages and fr-CA locale.
-    const saved = getSavedCurrency();
-    if (saved === 'usd' || saved === 'cad') return saved;
-    const htmlLang = (document.documentElement.lang || '').toLowerCase();
-    if (htmlLang.startsWith('fr')) return 'cad';
-    try {
-      const lang = (navigator.language || '').toLowerCase();
-      if (lang.includes('ca')) return 'cad';
-    } catch (_) { /* ignore */ }
-    return 'usd';
+    // Canada-only launch: CAD is the only currency. The toggle is hidden
+    // and saved/locale guesses are ignored so a stale 'usd' preference
+    // from before the pivot can't resurface. To restore multi-currency,
+    // bring back the saved/locale logic below and un-hide the toggle.
+    return 'cad';
   }
 
   function initCurrency() {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="iBoost pricing: Free forever, Essential at $15 USD / $20 CAD per month, or Complete at $30 USD / $40 CAD per month. No credit check, cancel anytime." />
+  <meta name="description" content="iBoost pricing: Free forever, Essential at $20 CAD/month, or Complete at $40 CAD/month. No credit check, cancel anytime." />
   <title>Pricing — iBoost</title>
 
   <!-- Favicons -->
@@ -179,7 +179,7 @@
             Pick what fits today. Upgrade when you're ready. Cancel in 2 clicks — no credit check to start.
           </p>
           <p class="hero-microtrust">
-            Free plan always available · No contract · USD or CAD billing
+            Free plan always available · No contract · CAD billing
           </p>
         </div>
       </div>
@@ -189,9 +189,12 @@
     <section id="pricing" class="section section-surface pricing-page-section">
       <div class="container">
         <div class="pricing-wrap">
-          <div class="currency-toggle" role="group" aria-label="Currency">
-            <button type="button" data-currency-toggle="usd" aria-pressed="true">🇺🇸 USD</button>
-            <button type="button" data-currency-toggle="cad" aria-pressed="false">🇨🇦 CAD</button>
+          <!-- Currency toggle hidden for CAD-only launch (US undecided).
+               To restore: remove `hidden`, restore guessDefaultCurrency()
+               logic in landing.js, and add USD price IDs to the backend. -->
+          <div class="currency-toggle" role="group" aria-label="Currency" hidden>
+            <button type="button" data-currency-toggle="usd" aria-pressed="false">🇺🇸 USD</button>
+            <button type="button" data-currency-toggle="cad" aria-pressed="true">🇨🇦 CAD</button>
           </div>
 
           <div class="pricing-grid">
@@ -200,8 +203,8 @@
             <div class="pricing-card pricing-card-free" data-plan-card="free">
               <h3 data-plan-name>Free</h3>
               <div class="price-line">
-                <span class="price-amount" data-currency="usd" data-plan-price-usd>$0</span>
-                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$0</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd hidden>$0</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad>$0</span>
                 <span class="price-period">forever</span>
               </div>
               <p class="pricing-tagline" data-plan-tagline>Learn the system. Build the habits. Upgrade when you're ready.</p>
@@ -222,10 +225,10 @@
               <span class="pricing-card-badge">Most popular</span>
               <h3 data-plan-name>iBoost Essential</h3>
               <div class="price-line">
-                <span class="price-amount" data-currency="usd" data-plan-price-usd>$15</span>
-                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$20</span>
-                <span class="price-currency" data-currency="usd">USD</span>
-                <span class="price-currency" data-currency="cad" hidden>CAD</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd hidden>$15</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad>$20</span>
+                <span class="price-currency" data-currency="usd" hidden>USD</span>
+                <span class="price-currency" data-currency="cad">CAD</span>
                 <span class="price-period">/ month</span>
               </div>
               <p class="pricing-tagline" data-plan-tagline>Real credit work without the premium add-ons.</p>
@@ -245,10 +248,10 @@
             <div class="pricing-card pricing-card-complete" data-plan-card="complete">
               <h3 data-plan-name>iBoost Complete</h3>
               <div class="price-line">
-                <span class="price-amount" data-currency="usd" data-plan-price-usd>$30</span>
-                <span class="price-amount" data-currency="cad" data-plan-price-cad hidden>$40</span>
-                <span class="price-currency" data-currency="usd">USD</span>
-                <span class="price-currency" data-currency="cad" hidden>CAD</span>
+                <span class="price-amount" data-currency="usd" data-plan-price-usd hidden>$30</span>
+                <span class="price-amount" data-currency="cad" data-plan-price-cad>$40</span>
+                <span class="price-currency" data-currency="usd" hidden>USD</span>
+                <span class="price-currency" data-currency="cad">CAD</span>
                 <span class="price-period">/ month</span>
               </div>
               <p class="pricing-tagline" data-plan-tagline>Everything we offer. Maximum score-building velocity.</p>

@@ -194,7 +194,9 @@
     }
 
     var plan = plansMap[recommendedTier];
-    var currency = (profile && profile.plan_currency === 'cad') ? 'cad' : 'usd';
+    // Canada-only launch: default to CAD; honor an explicit 'usd' only
+    // (dormant — no live USD plans today).
+    var currency = (profile && profile.plan_currency === 'usd') ? 'usd' : 'cad';
     var price = currency === 'cad' ? plan.price_cad : plan.price_usd;
 
     // If price is missing/null/zero, skip the price portion. Free plan
