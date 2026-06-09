@@ -154,6 +154,13 @@
     var session = settled && settled.session;
     var token = session && session.access_token;
     if (!token) return;
+    // Marketing consent (CASL) + first name for the nurture campaign. Read
+    // straight from the form at submit time. Consent box is checked by
+    // default; first name personalizes campaign email.
+    var mcEl = document.getElementById('marketing_consent');
+    var marketingConsent = !!(mcEl && mcEl.checked);
+    var fnEl = document.getElementById('first_name');
+    var firstName = ((fnEl && fnEl.value) || '').trim();
     // Fire the attribution. Email-match fallback runs server-side even when
     // ref is null, so we call regardless of whether a ref code is present.
     await fetch(base + '/api/partners/attribute', {
@@ -162,7 +169,7 @@
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token,
       },
-      body: JSON.stringify({ ref: ref }),
+      body: JSON.stringify({ ref: ref, marketing_consent: marketingConsent, first_name: firstName }),
     }).catch(function () { /* best-effort */ });
   }
 

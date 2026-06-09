@@ -513,18 +513,40 @@ router.get('/prefill', async function (req, res) {
 // the signup flow. Body: { ref?: "ib_..." }.
 router.post('/attribute', requireAuth, async function (req, res) {
   try {
-    const ref = req.body && req.body.ref ? String(req.body.ref) : null;
+    const b = req.body || {};
+    const ref = b.ref ? String(b.ref) : null;
+    const marketingConsent = b.marketing_consent === true;
+    const firstName = (b.first_name ? String(b.first_name) : '').trim().slice(0, 80) || null;
     const result = await attributeUser(req.user.id, req.user.email, ref);
+
+    // Persist CASL marketing consent on the profile. Service-role write so
+    // it is reliable (this is the proof-of-consent record). Logged on
+    // failure but never thrown — it must not surface as a signup error.
+    try {
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          marketing_consent: marketingConsent,
+          marketing_consent_at: marketingConsent ? new Date().toISOString() : null,
+        })
+        .eq('id', req.user.id);
+    } catch (e) {
+      console.error('[attribute] consent write failed:', e && e.message);
+    }
 
     // PHASE 1: identify the new person in Customer.io so they exist with
     // baseline traits before any transactional message. Best-effort and
     // independent of attribution — must never surface as a signup error.
+    // marketing_consent gates campaign entry; first_name personalizes it.
     try {
-      await cio.identify(req.user.id, {
+      const traits = {
         email: req.user.email,
         plan: 'free',
         created_at: Math.floor(Date.now() / 1000),
-      });
+        marketing_consent: marketingConsent,
+      };
+      if (firstName) traits.first_name = firstName;
+      await cio.identify(req.user.id, traits);
     } catch (e) {
       // swallowed — identify is a side-effect, never blocks signup
     }
