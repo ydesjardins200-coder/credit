@@ -3648,6 +3648,16 @@ a:hover { text-decoration: underline; }
   margin-top: 0.2rem;
 }
 
+/* Tailored-suggestion line on the iBoost Brain card (in the bundle
+   showcase). Normal-case muted body text, distinct from the uppercase
+   scale labels. */
+.bureau-card-note {
+  font-size: 0.74rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+  margin-top: 0.1rem;
+}
+
 .bureaus-showcase-footer {
   display: inline-flex;
   align-items: center;
