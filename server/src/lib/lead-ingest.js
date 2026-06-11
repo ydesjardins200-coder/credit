@@ -10,6 +10,25 @@ const cio = require('./customerio');
 
 const MAX_FIELD = 300;
 
+// Normalize a free-form phone to E.164 (+15145550142) so it's SMS-ready in
+// Customer.io / Twilio. Partner phones arrive in many shapes; a raw number
+// in the `phone` attribute looks fine but won't send. Canada + US are both
+// NANP (+1), which is the launch market, so:
+//   - already +<digits> (11+)        -> keep (+ and digits only)
+//   - 11 digits starting with 1      -> prefix +
+//   - 10 digits                      -> assume NANP, prefix +1
+//   - anything else                  -> null (don't ship a bad number)
+function normalizePhoneE164(raw) {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  const hadPlus = s.charAt(0) === '+';
+  const digits = s.replace(/\D/g, '');
+  if (hadPlus) return digits.length >= 11 ? '+' + digits : null;
+  if (digits.length === 11 && digits.charAt(0) === '1') return '+' + digits;
+  if (digits.length === 10) return '+1' + digits;
+  return null;
+}
+
 // A partner's leads sync to Customer.io only when consent is confirmed for
 // that partner — or when it's a TEST partner (synthetic leads, for exercising
 // the pipeline). Mirrors the gate documented in migration 0042.
@@ -102,7 +121,8 @@ async function ingestOne(partner, lead, index) {
         source_partner_id: partner.id,
         referral_code: inserted.referral_code,
         referred_at: Math.floor(Date.now() / 1000),
-        phone: insertRow.phone || null,
+        phone: normalizePhoneE164(insertRow.phone),
+        phone_raw: insertRow.phone || null,
         first_name: firstName,
       }).then(function () {}, function () {});
     }
