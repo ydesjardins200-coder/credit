@@ -65,6 +65,10 @@ function publicPartner(p) {
     notes: p.notes,
     api_key_prefix: p.api_key_prefix || null,
     api_key_last4: p.api_key_last4 || null,
+    leads_consent_confirmed: p.leads_consent_confirmed === true,
+    leads_consent_confirmed_at: p.leads_consent_confirmed_at || null,
+    leads_consent_confirmed_by: p.leads_consent_confirmed_by || null,
+    leads_consent_notes: p.leads_consent_notes || null,
     created_at: p.created_at,
   };
 }
@@ -241,6 +245,24 @@ router.patch('/admin/:id', requireAdminSharedSecret, async function (req, res) {
     if (typeof b.notes === 'string') patch.notes = b.notes.trim() || null;
     if (b.status && ['active', 'paused', 'disabled'].includes(b.status)) patch.status = b.status;
     if (typeof b.is_test === 'boolean') patch.is_test = b.is_test;
+
+    // Lead-consent gate (per-partner). When an operator confirms consent we
+    // stamp the proof record: when (now), who (passed by the admin app from
+    // the logged-in operator — not client-trusted UI input), and any notes.
+    // Un-confirming clears the timestamp so a stale "confirmed_at" can't
+    // imply consent that was revoked.
+    if (typeof b.leads_consent_confirmed === 'boolean') {
+      patch.leads_consent_confirmed = b.leads_consent_confirmed;
+      patch.leads_consent_confirmed_at = b.leads_consent_confirmed ? new Date().toISOString() : null;
+      patch.leads_consent_confirmed_by = b.leads_consent_confirmed
+        ? (typeof b.leads_consent_confirmed_by === 'string' && b.leads_consent_confirmed_by.trim()
+            ? b.leads_consent_confirmed_by.trim().slice(0, 200)
+            : 'admin')
+        : null;
+    }
+    if (typeof b.leads_consent_notes === 'string') {
+      patch.leads_consent_notes = b.leads_consent_notes.trim() || null;
+    }
 
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Nothing to update.' });
 
