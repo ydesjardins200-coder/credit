@@ -423,7 +423,7 @@ router.get('/admin/:id/leads', requireAdminSharedSecret, async function (req, re
 router.post('/admin/:id/test-lead', requireAdminSharedSecret, async function (req, res) {
   try {
     const { data: partner } = await supabaseAdmin
-      .from('partners').select('id, is_test, status').eq('id', req.params.id).single();
+      .from('partners').select('id, is_test, status, leads_consent_confirmed').eq('id', req.params.id).single();
     if (!partner) return res.status(404).json({ error: 'Partner not found' });
     if (!partner.is_test) {
       return res.status(403).json({ error: 'Test leads can only be sent to a TEST partner.' });
@@ -566,6 +566,12 @@ router.post('/attribute', requireAuth, async function (req, res) {
         plan: 'free',
         created_at: Math.floor(Date.now() / 1000),
         marketing_consent: marketingConsent,
+        // Lead-funnel exit signal. Identify is by id WITH email, so with
+        // multi-identifier merge ON this lands on any existing email-keyed
+        // lead profile too — flipping has_account=true makes the partner
+        // convert-to-signup workflow exit the moment a lead signs up.
+        has_account: true,
+        lead_status: 'signed_up',
       };
       if (firstName) traits.first_name = firstName;
       await cio.identify(req.user.id, traits);

@@ -77,7 +77,7 @@ router.post('/', async function (req, res) {
 
     const { data: partner } = await supabaseAdmin
       .from('partners')
-      .select('id, status, hmac_secret, is_test')
+      .select('id, status, hmac_secret, is_test, leads_consent_confirmed')
       .eq('api_key_hash', sha256(apiKey))
       .single();
 

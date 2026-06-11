@@ -6,8 +6,16 @@
 
 const crypto = require('crypto');
 const { supabaseAdmin } = require('./supabase');
+const cio = require('./customerio');
 
 const MAX_FIELD = 300;
+
+// A partner's leads sync to Customer.io only when consent is confirmed for
+// that partner — or when it's a TEST partner (synthetic leads, for exercising
+// the pipeline). Mirrors the gate documented in migration 0042.
+function partnerSyncEnabled(partner) {
+  return !!(partner && (partner.is_test === true || partner.leads_consent_confirmed === true));
+}
 
 function looksLikeEmail(s) {
   return typeof s === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
@@ -78,6 +86,25 @@ async function ingestOne(partner, lead, index) {
         if (raced) return { ok: true, index: index, lead_id: raced.id, referral_code: raced.referral_code, status: raced.status, duplicate: true };
       }
       return { ok: false, index: index, error: 'Insert failed.' };
+    }
+
+    // Sync a NEW (non-suppressed) lead into Customer.io — keyed by email,
+    // so it merges onto the id profile at signup. Gated: only consent-cleared
+    // (or TEST) partners. Fire-and-forget + fail-safe: a sync failure must
+    // never affect the ingestion result (we already returned the lead to the
+    // partner's CRM). Suppressed leads (already an iBoost customer) are not
+    // synced — they're not acquirable leads.
+    if (inserted.status === 'ingested' && partnerSyncEnabled(partner)) {
+      const firstName = (insertRow.full_name || '').trim().split(/\s+/)[0] || null;
+      cio.identifyByEmail(email, {
+        lead_status: 'lead',
+        has_account: false,
+        source_partner_id: partner.id,
+        referral_code: inserted.referral_code,
+        referred_at: Math.floor(Date.now() / 1000),
+        phone: insertRow.phone || null,
+        first_name: firstName,
+      }).then(function () {}, function () {});
     }
 
     return { ok: true, index: index, lead_id: inserted.id, referral_code: inserted.referral_code, status: inserted.status, duplicate: false };

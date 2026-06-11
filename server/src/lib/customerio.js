@@ -90,6 +90,33 @@ async function identify(id, traits) {
   }
 }
 
+// Identify a person keyed by EMAIL — for partner leads that have no Supabase
+// id yet. `email` is also written into the body so it's set as the email
+// identifier on the profile. With the workspace's multi-identifier profile
+// merge ON, when this person later signs up and is identified by `id` WITH
+// this same email in the traits, Customer.io auto-merges the email-keyed lead
+// profile and the id-keyed user into ONE record — so the lead becomes the
+// user with no duplicate and the convert workflow exits cleanly.
+//
+// VERIFY EMPIRICALLY before trusting at scale: ingest a synthetic lead via a
+// TEST partner, confirm the resulting Customer.io profile carries email as an
+// identifier (not id=<email-string>), then sign that email up and confirm the
+// two profiles merge into one.
+async function identifyByEmail(email, traits) {
+  const e = (email ? String(email) : '').trim();
+  if (!e) return { ok: false, skipped: 'no-email' };
+  if (!TRACK_ENABLED) { dbg('identifyByEmail skipped (track disabled): ' + e); return { ok: false, skipped: 'disabled' }; }
+  try {
+    const body = Object.assign({}, traits || {}, { email: e });
+    await trackClient().identify(e, body);
+    dbg('identifyByEmail ok: ' + e);
+    return { ok: true };
+  } catch (err) {
+    dbg('identifyByEmail error: ' + (err && err.message));
+    return { ok: false, error: err && err.message };
+  }
+}
+
 // Emit a behavioural event for a known person.
 async function track(id, name, data) {
   if (!id || !name) return { ok: false, skipped: 'missing-args' };
@@ -166,4 +193,4 @@ function status() {
   };
 }
 
-module.exports = { identify, track, sendTransactional, status };
+module.exports = { identify, identifyByEmail, track, sendTransactional, status };
